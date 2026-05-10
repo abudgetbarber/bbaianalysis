@@ -6,8 +6,8 @@
 <title>Budget Barber · Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -112,8 +112,8 @@ header {
 /* ══════════════════════════════
    TAB PANELS
 ══════════════════════════════ */
-.tab-panel { display: none; flex: 1; }
-.tab-panel.active { display: flex; flex-direction: column; flex: 1; }
+.tab-panel { display: none; }
+.tab-panel.active { display: flex; flex-direction: column; min-height: calc(100vh - var(--header-h) - var(--tabs-h)); }
 
 /* ══════════════════════════════
    HAIRSTYLE TOOL (Panel 1) — exact copy from index.html
@@ -662,9 +662,9 @@ details[open] .accordion summary::after { content: '↑'; }
 // ═══════════════════════════════════════════════════
 // SKIN ANALYSIS MODULE — Configuration
 // ═══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
-const YOUCAM_API_KEY   = 'sk-_DqRLIN1iHacG-RHKf8RCjqTKx060p6bxz4QrAUal14AGW2Jg5F50ML_fh6TMr37';
+const SK_SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SK_SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const YOUCAM_API_KEY   = 'YOUR_YOUCAM_API_KEY';
 const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
 
 const skSb = supabase.createClient(SK_SUPABASE_URL, SK_SUPABASE_ANON);
@@ -980,7 +980,7 @@ function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 // ⚠️ REQUIRED: Replace with your actual Cloudflare Worker URL before deploying.
 // e.g. https://budget-barber.yourname.workers.dev
 // The "Generate My AI Hairstyle" button will not work until this is set.
-const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
+const WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL";
 // ============================================================
 
 // ── Auth guard — redirect to login if no session exists ──
@@ -990,7 +990,7 @@ const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
 let _session = sessionStorage.getItem('bb_auth');
 if (!_session) {
   // Fallback: set a guest session so the page is usable when opened directly.
-  // In production, replace this with: window.location.href = 'index.html';
+  // In production, replace this with: window.location.href = 'login.html';
   _session = JSON.stringify({ name: 'Guest' });
   sessionStorage.setItem('bb_auth', _session);
 }
@@ -1006,7 +1006,7 @@ if (session.name) {
 
 function logout() {
   sessionStorage.removeItem('bb_auth');
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 }
 
 // ── Module tab switching ──
