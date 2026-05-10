@@ -690,7 +690,7 @@ details[open] .accordion summary::after { content: '↑'; }
 // ⚠️ REQUIRED: Replace with your actual Cloudflare Worker URL before deploying.
 // e.g. https://budget-barber.yourname.workers.dev
 // The "Generate My AI Hairstyle" button will not work until this is set.
-const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
+const WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL";
 // ============================================================
 
 // ── Auth guard — redirect to login if no session exists ──
@@ -700,7 +700,7 @@ const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
 let _session = sessionStorage.getItem('bb_auth');
 if (!_session) {
   // Fallback: set a guest session so the page is usable when opened directly.
-  // In production, replace this with: window.location.href = 'index.html';
+  // In production, replace this with: window.location.href = 'login.html';
   _session = JSON.stringify({ name: 'Guest' });
   sessionStorage.setItem('bb_auth', _session);
 }
@@ -716,7 +716,7 @@ if (session.name) {
 
 function logout() {
   sessionStorage.removeItem('bb_auth');
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 }
 
 // ── Module tab switching ──
@@ -991,9 +991,9 @@ function downloadImg() {
 // ═══════════════════════════════════════════════════
 // SKIN ANALYSIS MODULE — Configuration
 // ═══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
-const YOUCAM_API_KEY   = 'sk-_DqRLIN1iHacG-RHKf8RCjqTKx060p6bxz4QrAUal14AGW2Jg5F50ML_fh6TMr37';
+const SK_SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SK_SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const YOUCAM_API_KEY   = 'YOUR_YOUCAM_API_KEY';
 const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
 
 let skSb = null;
@@ -1161,17 +1161,74 @@ async function skStartAnalysis() {
 }
 
 async function skApiUpload(blob) {
-  const initRes=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/file`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_ext:'jpg'})});
-  if(!initRes.ok) throw new Error(`File init failed: ${initRes.status}`);
-  const initData=await initRes.json();
-  const uploadRes=await fetch(initData.data.upload_url,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob});
-  if(!uploadRes.ok) throw new Error(`Image upload failed: ${uploadRes.status}`);
-  return initData.data.file_id;
+  // Step 1: Convert blob to JPEG if needed, then to base64
+  const jpegBlob = await skToJpeg(blob);
+  const base64 = await skBlobToBase64(jpegBlob);
+
+  // Step 2: Upload via multipart/form-data (YouCam V2 format)
+  const formData = new FormData();
+  formData.append('file', jpegBlob, 'skin.jpg');
+
+  const uploadRes = await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/file`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${YOUCAM_API_KEY}` },
+    // No Content-Type header — let browser set multipart boundary automatically
+    body: formData
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`File init failed: ${uploadRes.status} — ${errText.slice(0,120)}`);
+  }
+  const initData = await uploadRes.json();
+  // Support both response shapes: data.file_id or data.data.file_id
+  return initData?.data?.file_id || initData?.file_id;
 }
+
+async function skToJpeg(blob) {
+  // If already jpeg, return as-is
+  if (blob.type === 'image/jpeg') return blob;
+  // Otherwise convert via canvas
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(resolve, 'image/jpeg', 0.92);
+    };
+    img.src = url;
+  });
+}
+
+function skBlobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function skApiRunTask(fileId) {
-  const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_id:fileId,concerns:SK_PARAMS.map(p=>p.youcam),analysis_type:'SD'})});
-  if(!res.ok) throw new Error(`Run task failed: ${res.status}`);
-  const data=await res.json(); return data.data.task_id;
+  // SD concerns only — must not mix SD and HD in one request
+  const SD_CONCERNS = ['spot','wrinkle','oily','moisture','acne','firmness','radiance','eye_bag','dark_circle'];
+  const res = await fetch(`${YOUCAM_API_BASE}/task/skin-analysis`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${YOUCAM_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ file_id: fileId, concerns: SD_CONCERNS, analysis_type: 'SD' })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Run task failed: ${res.status} — ${errText.slice(0,120)}`);
+  }
+  const data = await res.json();
+  return data?.data?.task_id || data?.task_id;
 }
 async function skApiPollResults(taskId) {
   for(let i=0;i<25;i++){
@@ -1181,7 +1238,7 @@ async function skApiPollResults(taskId) {
     const data=await res.json();
     const status=data.data?.status||data.status;
     if(status==='completed'||status==='success') return skParseApiResults(data.data||data);
-    if(status==='failed'||status==='error') throw new Error('Analysis failed');
+    if(status==='failed'||status==='error') throw new Error('Analysis failed: '+(data.data?.message||data.message||'unknown'));
   }
   throw new Error('Timeout waiting for results');
 }
