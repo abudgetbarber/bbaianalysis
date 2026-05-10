@@ -360,8 +360,8 @@ code { font-size: 11px; background: var(--off-white); padding: 2px 7px; border-r
 // ============================================================
 // CONFIGURATION
 // ============================================================
-const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
+const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 // ============================================================
 
 const { createClient } = supabase;
@@ -370,9 +370,15 @@ const sb = db; // alias used by skin functions
 
 // Auth guard — admin only
 const _sess = sessionStorage.getItem('bb_auth');
-if (!_sess) { window.location.href = 'index.html'; }
-const _s = JSON.parse(_sess || '{}');
-if (_s.role !== 'admin') { window.location.href = 'admin.html'; }
+if (!_sess) {
+  window.location.href = 'login.html';
+  throw new Error('No session — redirecting to login.');
+}
+const _s = JSON.parse(_sess);
+if (_s.role !== 'admin') {
+  window.location.href = 'dashboard.html';
+  throw new Error('Not an admin — redirecting to dashboard.');
+}
 
 // Skin parameters
 const PARAMS = [
@@ -614,7 +620,7 @@ function showA(id,msg){const el=document.getElementById(id);el.textContent=msg;e
 function hideA(id){document.getElementById(id).style.display='none';}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function logout(){sessionStorage.removeItem('bb_auth');window.location.href='index.html';}
+function logout(){sessionStorage.removeItem('bb_auth');window.location.href='login.html';}
 
 // Close modals on overlay click
 document.getElementById('editModal').addEventListener('click',e=>{if(e.target===document.getElementById('editModal'))closeModal();});
