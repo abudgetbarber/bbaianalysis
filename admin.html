@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Budget Barber · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:#0b3d2e; --green-mid:#1a5c42; --green-lt:#e8f2ed;
+  --yellow:#f5d800; --yellow-lt:#fdf9d6; --yellow-md:#f0c800;
+  --white:#ffffff; --off-white:#f7f6f2; --gray-lt:#efefeb;
+  --gray:#c8c5bc; --gray-dk:#7a776e; --ink:#1a1a14;
+  --radius:8px; --radius-lg:14px;
+  --shadow:0 2px 12px rgba(11,61,46,0.10);
+  --shadow-lg:0 6px 32px rgba(11,61,46,0.14);
+}
+html { font-size: 16px; }
+body { font-family: 'Barlow', sans-serif; background: var(--off-white); color: var(--ink); min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: var(--white); border-bottom: 3px solid var(--yellow);
+  padding: 0 2rem; height: 70px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 16px rgba(11,61,46,0.08);
+}
+.logo-wrap { display: flex; align-items: center; gap: 14px; }
+.logo-badge { background: var(--yellow); border-radius: 7px; padding: 5px 8px; display: flex; flex-direction: column; gap: 3px; border: 2px solid var(--yellow-md); box-shadow: 0 2px 6px rgba(11,61,46,0.18); }
+.logo-badge-top { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.08em; line-height: 1; text-align: center; }
+.logo-badge-divider { height: 2px; background: var(--green); border-radius: 2px; margin: 0 -2px; }
+.logo-badge-bottom { background: var(--yellow); border-radius: 3px; padding: 1px 4px; text-align: center; }
+.logo-badge-bottom span { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.14em; line-height: 1; }
+.logo-text { display: flex; flex-direction: column; gap: 2px; }
+.logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); }
+.logo-desc { font-size: 12px; color: var(--gray-dk); font-weight: 300; }
+
+.header-right { display: flex; align-items: center; gap: 12px; }
+.admin-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--green); background: var(--green-lt); border: 1px solid #b8d8c8; border-radius: 20px; padding: 4px 12px; }
+.logout-btn { height: 34px; padding: 0 14px; background: none; border: 1.5px solid var(--gray); border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-dk); cursor: pointer; transition: all 0.15s; }
+.logout-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* MAIN */
+.main { max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem; }
+.page-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; color: var(--green); margin-bottom: 4px; }
+.page-sub { font-size: 14px; color: var(--gray-dk); margin-bottom: 2rem; }
+
+/* CARDS */
+.section-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 2rem; }
+.section-head { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--gray-lt); display: flex; align-items: center; justify-content: space-between; }
+.section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-mid); display: flex; align-items: center; gap: 8px; }
+.section-label::before { content: ''; display: inline-block; width: 3px; height: 14px; background: var(--yellow); border-radius: 2px; }
+.section-body { padding: 1.5rem; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.field { }
+.field.full { grid-column: 1 / -1; }
+.field label { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 7px; }
+.field input, .field select {
+  width: 100%; height: 46px;
+  border: 1.5px solid var(--gray); border-radius: var(--radius);
+  padding: 0 14px; font-family: 'Barlow', sans-serif; font-size: 15px;
+  color: var(--ink); background: var(--off-white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 3px rgba(26,92,66,0.12);
+  background: var(--white);
+}
+.field input::placeholder { color: var(--gray); }
+.field .hint { font-size: 11px; color: var(--gray-dk); margin-top: 5px; }
+
+/* PIN field with dots preview */
+.pin-preview { display: flex; gap: 6px; margin-top: 8px; }
+.pin-preview-dot { width: 32px; height: 38px; border: 1.5px solid var(--gray-lt); border-radius: 6px; background: var(--gray-lt); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--green); transition: all 0.15s; }
+.pin-preview-dot.filled { background: var(--green-lt); border-color: var(--green-mid); }
+
+.form-actions { display: flex; gap: 10px; margin-top: 1.25rem; }
+.btn-primary { height: 46px; padding: 0 24px; background: var(--yellow); color: var(--green); border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; box-shadow: 0 3px 0 var(--yellow-md); display: flex; align-items: center; gap: 8px; }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 var(--yellow-md); }
+.btn-primary:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 var(--yellow-md); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-secondary { height: 46px; padding: 0 20px; background: var(--white); color: var(--green-mid); border: 1.5px solid var(--gray); border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+.btn-secondary:hover { border-color: var(--green-mid); background: var(--green-lt); }
+
+.spinner { width: 16px; height: 16px; border: 2.5px solid rgba(11,61,46,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ALERTS */
+.alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 1rem; display: none; animation: fadeIn 0.2s ease; }
+.alert.success { background: var(--green-lt); color: var(--green); border: 1px solid #b8d8c8; }
+.alert.error { background: #fbeae8; color: #8b2a1e; border: 1px solid #f0b8b0; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom: 2px solid var(--gray-lt); }
+th { padding: 10px 14px; text-align: left; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-dk); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--gray-lt); font-size: 14px; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--off-white); }
+
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.badge.active { background: var(--green-lt); color: var(--green); }
+.badge.inactive { background: var(--gray-lt); color: var(--gray-dk); }
+.badge.admin { background: var(--yellow-lt); color: var(--green); border: 1px solid var(--yellow-md); }
+
+.tbl-btn { height: 30px; padding: 0 12px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
+.tbl-btn.edit { background: var(--green-lt); color: var(--green); border-color: #b8d8c8; }
+.tbl-btn.edit:hover { background: var(--green); color: var(--yellow); }
+.tbl-btn.deact { background: #fbeae8; color: #8b2a1e; border-color: #f0b8b0; }
+.tbl-btn.deact:hover { background: #c0392b; color: var(--white); }
+.tbl-btn.react { background: var(--gray-lt); color: var(--gray-dk); border-color: var(--gray); }
+.tbl-btn.react:hover { background: var(--green-lt); color: var(--green); border-color: #b8d8c8; }
+.tbl-actions { display: flex; gap: 6px; }
+
+.empty-row td { text-align: center; color: var(--gray-dk); font-size: 13px; padding: 2.5rem; }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(11,61,46,0.5); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; display: none; animation: fadeIn 0.2s ease; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: var(--radius-lg); padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 24px 80px rgba(0,0,0,0.3); animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--green); letter-spacing: 0.04em; margin-bottom: 1.25rem; }
+.modal-actions { display: flex; gap: 10px; margin-top: 1.25rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-badge">
+      <div class="logo-badge-top">BUDGET</div>
+      <div class="logo-badge-divider"></div>
+      <div class="logo-badge-bottom"><span>BARBER</span></div>
+    </div>
+    <div class="logo-text">
+      <div class="logo-sub">Admin Panel</div>
+      <div class="logo-desc">Franchise User Management</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="admin-badge">Admin</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="page-title">Franchise Users</div>
+  <div class="page-sub">Create and manage franchise owner accounts. Each owner logs in with their phone number and 6-digit PIN.</div>
+
+  <!-- Create User -->
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-label">Add New Franchise User</div>
+    </div>
+    <div class="section-body">
+      <div class="alert success" id="createSuccess"></div>
+      <div class="alert error" id="createError"></div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="newName" placeholder="e.g. Rajesh Kumar" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="newPhone" placeholder="+91 98765 43210" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label>6-Digit PIN</label>
+          <input type="text" id="newPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off" oninput="updatePinPreview(this.value, 'createPinDots')"/>
+          <div class="pin-preview" id="createPinDots">
+            <div class="pin-preview-dot" id="cpd0"></div>
+            <div class="pin-preview-dot" id="cpd1"></div>
+            <div class="pin-preview-dot" id="cpd2"></div>
+            <div class="pin-preview-dot" id="cpd3"></div>
+            <div class="pin-preview-dot" id="cpd4"></div>
+            <div class="pin-preview-dot" id="cpd5"></div>
+          </div>
+          <div class="hint">Choose a memorable 6-digit PIN for this user</div>
+        </div>
+        <div class="field">
+          <label>Role</label>
+          <select id="newRole">
+            <option value="franchise">Franchise Owner</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" id="createBtn" onclick="createUser()">
+          <span id="createBtnLabel">Create User</span>
+        </button>
+        <button class="btn-secondary" onclick="clearForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-label">All Franchise Users</div>
+      <button class="btn-secondary" onclick="loadUsers()" style="height:34px; font-size:12px; padding:0 14px;">↻ Refresh</button>
+    </div>
+    <div class="section-body" style="padding:0;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr class="empty-row"><td colspan="6">Loading users…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit PIN Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Reset PIN</div>
+    <div class="alert error" id="editError"></div>
+    <div class="field">
+      <label>User</label>
+      <input type="text" id="editName" readonly style="background:var(--gray-lt); color:var(--gray-dk);"/>
+    </div>
+    <div class="field" style="margin-top:1rem;">
+      <label>New 6-Digit PIN</label>
+      <input type="text" id="editPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off" oninput="updatePinPreview(this.value, 'editPinDots')"/>
+      <div class="pin-preview" id="editPinDots">
+        <div class="pin-preview-dot" id="epd0"></div>
+        <div class="pin-preview-dot" id="epd1"></div>
+        <div class="pin-preview-dot" id="epd2"></div>
+        <div class="pin-preview-dot" id="epd3"></div>
+        <div class="pin-preview-dot" id="epd4"></div>
+        <div class="pin-preview-dot" id="epd5"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="editSaveBtn" onclick="savePinReset()">
+        <span id="editSaveBtnLabel">Save PIN</span>
+      </button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ============================================================
+  // CONFIGURATION
+  // ============================================================
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // Admin PIN to access this page — change this!
+  const ADMIN_PIN = 'admin_session_flag'; // set via sessionStorage
+  // ============================================================
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Guard: only admin role can access
+  const session = JSON.parse(sessionStorage.getItem('bb_auth') || 'null');
+  if (!session || session.role !== 'admin') {
+    window.location.href = 'login.html';
+  }
+
+  let editingUserId = null;
+
+  // ── Load users ──
+  async function loadUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Loading…</td></tr>';
+
+    const { data, error } = await db
+      .from('franchise_users')
+      .select('id, name, phone, role, is_active, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error || !data?.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users found. Create one above.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.map(u => `
+      <tr>
+        <td><strong>${esc(u.name)}</strong></td>
+        <td>${esc(u.phone)}</td>
+        <td><span class="badge ${u.role === 'admin' ? 'admin' : 'active'}">${u.role}</span></td>
+        <td><span class="badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? '● Active' : '○ Inactive'}</span></td>
+        <td>${new Date(u.created_at).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})}</td>
+        <td>
+          <div class="tbl-actions">
+            <button class="tbl-btn edit" onclick="openEditModal('${u.id}', '${esc(u.name)}')">Reset PIN</button>
+            ${u.is_active
+              ? `<button class="tbl-btn deact" onclick="toggleActive('${u.id}', false)">Deactivate</button>`
+              : `<button class="tbl-btn react" onclick="toggleActive('${u.id}', true)">Activate</button>`
+            }
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Create user ──
+  async function createUser() {
+    const name  = document.getElementById('newName').value.trim();
+    const phone = document.getElementById('newPhone').value.trim().replace(/\s+/g, '');
+    const pin   = document.getElementById('newPin').value.trim();
+    const role  = document.getElementById('newRole').value;
+
+    hideAlert('createSuccess'); hideAlert('createError');
+
+    if (!name) { showAlert('createError', 'Please enter a name.'); return; }
+    if (!phone) { showAlert('createError', 'Please enter a phone number.'); return; }
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) { showAlert('createError', 'PIN must be exactly 6 digits.'); return; }
+
+    const btn = document.getElementById('createBtn');
+    const lbl = document.getElementById('createBtnLabel');
+    btn.disabled = true;
+    lbl.innerHTML = '<div class="spinner"></div>';
+
+    const pinHash = await hashPin(pin);
+
+    const { error } = await db.from('franchise_users').insert({
+      name, phone, pin_hash: pinHash, role, is_active: true
+    });
+
+    btn.disabled = false;
+    lbl.textContent = 'Create User';
+
+    if (error) {
+      if (error.code === '23505') {
+        showAlert('createError', 'This phone number is already registered.');
+      } else {
+        showAlert('createError', 'Error: ' + error.message);
+      }
+      return;
+    }
+
+    showAlert('createSuccess', `✓ User "${name}" created successfully with phone ${phone}.`);
+    clearForm();
+    loadUsers();
+  }
+
+  function clearForm() {
+    document.getElementById('newName').value = '';
+    document.getElementById('newPhone').value = '';
+    document.getElementById('newPin').value = '';
+    document.getElementById('newRole').value = 'franchise';
+    updatePinPreview('', 'createPinDots');
+    hideAlert('createSuccess'); hideAlert('createError');
+  }
+
+  // ── Toggle active ──
+  async function toggleActive(id, active) {
+    const { error } = await db.from('franchise_users').update({ is_active: active }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    loadUsers();
+  }
+
+  // ── Edit PIN modal ──
+  function openEditModal(id, name) {
+    editingUserId = id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editPin').value = '';
+    updatePinPreview('', 'editPinDots');
+    hideAlert('editError');
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.remove('open');
+    editingUserId = null;
+  }
+
+  async function savePinReset() {
+    const pin = document.getElementById('editPin').value.trim();
+    hideAlert('editError');
+
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      showAlert('editError', 'PIN must be exactly 6 digits.');
+      return;
+    }
+
+    const btn = document.getElementById('editSaveBtn');
+    const lbl = document.getElementById('editSaveBtnLabel');
+    btn.disabled = true;
+    lbl.innerHTML = '<div class="spinner"></div>';
+
+    const pinHash = await hashPin(pin);
+
+    const { error } = await db.from('franchise_users')
+      .update({ pin_hash: pinHash })
+      .eq('id', editingUserId);
+
+    btn.disabled = false;
+    lbl.textContent = 'Save PIN';
+
+    if (error) { showAlert('editError', 'Error: ' + error.message); return; }
+
+    closeModal();
+    loadUsers();
+  }
+
+  // ── Helpers ──
+  async function hashPin(pin) {
+    const data = new TextEncoder().encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function updatePinPreview(val, containerId) {
+    const prefix = containerId === 'createPinDots' ? 'cpd' : 'epd';
+    for (let i = 0; i < 6; i++) {
+      const dot = document.getElementById(prefix + i);
+      if (i < val.length) {
+        dot.classList.add('filled');
+        dot.textContent = '•';
+      } else {
+        dot.classList.remove('filled');
+        dot.textContent = '';
+      }
+    }
+  }
+
+  function showAlert(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideAlert(id) {
+    const el = document.getElementById(id);
+    el.style.display = 'none';
+  }
+
+  function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function logout() {
+    sessionStorage.removeItem('bb_auth');
+    window.location.href = 'login.html';
+  }
+
+  // Block modal close on overlay click
+  document.getElementById('editModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('editModal')) closeModal();
+  });
+
+  loadUsers();
+</script>
+</body>
+</html>

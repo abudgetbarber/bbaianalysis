@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Budget Barber · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:#0b3d2e; --green-mid:#1a5c42; --green-lt:#e8f2ed;
+  --yellow:#f5d800; --yellow-lt:#fdf9d6; --yellow-md:#f0c800;
+  --white:#ffffff; --off-white:#f7f6f2; --gray-lt:#efefeb;
+  --gray:#c8c5bc; --gray-dk:#7a776e; --ink:#1a1a14;
+  --radius:8px; --radius-lg:14px;
+  --shadow:0 2px 12px rgba(11,61,46,0.10);
+  --shadow-lg:0 6px 32px rgba(11,61,46,0.14);
+  --header-h: 64px;
+  --tabs-h: 52px;
+}
+html { font-size: 16px; }
+body { font-family: 'Barlow', sans-serif; background: var(--off-white); color: var(--ink); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ══════════════════════════════
+   HEADER
+══════════════════════════════ */
+header {
+  background: var(--white);
+  border-bottom: 3px solid var(--yellow);
+  padding: 0 1.75rem;
+  height: var(--header-h);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 16px rgba(11,61,46,0.08);
+}
+.logo-wrap { display: flex; align-items: center; gap: 12px; }
+.logo-badge { background: var(--yellow); border-radius: 7px; padding: 5px 8px; display: flex; flex-direction: column; gap: 3px; border: 2px solid var(--yellow-md); box-shadow: 0 2px 6px rgba(11,61,46,0.18); }
+.logo-badge-top { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--green); letter-spacing: 0.08em; line-height: 1; text-align: center; }
+.logo-badge-divider { height: 2px; background: var(--green); border-radius: 2px; margin: 0 -2px; }
+.logo-badge-bottom span { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--green); letter-spacing: 0.14em; line-height: 1; display: block; text-align: center; }
+.logo-text { display: flex; flex-direction: column; gap: 1px; }
+.logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); }
+.logo-desc { font-size: 11px; color: var(--gray-dk); font-weight: 300; }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--green-lt); border: 1px solid #b8d8c8;
+  border-radius: 24px; padding: 5px 12px 5px 8px;
+}
+.user-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--green); color: var(--yellow);
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-name { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--green); }
+.logout-btn {
+  height: 32px; padding: 0 14px;
+  background: none; border: 1.5px solid var(--gray);
+  border-radius: 20px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-dk);
+  transition: all 0.15s;
+}
+.logout-btn:hover { border-color: #c0392b; color: #c0392b; background: #fbeae8; }
+
+/* ══════════════════════════════
+   MODULE TABS
+══════════════════════════════ */
+.tabs-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-lt);
+  padding: 0 1.75rem;
+  height: var(--tabs-h);
+  display: flex; align-items: flex-end;
+  gap: 2px;
+  position: sticky; top: var(--header-h); z-index: 150;
+  box-shadow: 0 1px 8px rgba(11,61,46,0.04);
+  overflow-x: auto;
+}
+.tabs-bar::-webkit-scrollbar { height: 0; }
+
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  height: 44px; padding: 0 18px;
+  border: none; border-bottom: 3px solid transparent;
+  background: none; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--gray-dk);
+  white-space: nowrap;
+  transition: all 0.15s;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+}
+.tab-btn:hover { color: var(--green); background: var(--green-lt); }
+.tab-btn.active { color: var(--green); border-bottom-color: var(--yellow); background: var(--yellow-lt); }
+.tab-btn .tab-icon { font-size: 16px; line-height: 1; }
+.tab-soon {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--gray-lt); color: var(--gray-dk);
+  border-radius: 10px; padding: 1px 6px;
+  margin-left: 2px;
+}
+
+/* ══════════════════════════════
+   TAB PANELS
+══════════════════════════════ */
+.tab-panel { display: none; flex: 1; }
+.tab-panel.active { display: flex; flex-direction: column; flex: 1; }
+
+/* ══════════════════════════════
+   HAIRSTYLE TOOL (Panel 1) — exact copy from index.html
+══════════════════════════════ */
+.page { display: grid; grid-template-columns: 400px 1fr; flex: 1; min-height: calc(100vh - var(--header-h) - var(--tabs-h)); }
+
+.panel { background: var(--white); border-right: 1px solid var(--gray-lt); padding: 2rem 1.75rem; display: flex; flex-direction: column; gap: 1.75rem; overflow-y: auto; }
+.section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.section-label::before { content: ''; display: inline-block; width: 3px; height: 12px; background: var(--yellow); border-radius: 2px; }
+
+.img-source-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px solid var(--gray); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
+.img-tab { padding: 9px 12px; background: var(--gray-lt); border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-dk); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.img-tab:first-child { border-right: 1px solid var(--gray); }
+.img-tab.active { background: var(--green); color: var(--yellow); }
+.img-tab svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.75; flex-shrink: 0; }
+
+.upload-zone { border: 2px dashed var(--gray); border-radius: var(--radius-lg); padding: 2rem 1rem; text-align: center; cursor: pointer; position: relative; transition: all 0.18s; background: var(--gray-lt); }
+.upload-zone:hover { border-color: var(--green-mid); background: var(--green-lt); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 50%; background: var(--white); border: 1.5px solid var(--gray); display: flex; align-items: center; justify-content: center; }
+.upload-icon svg { width: 22px; height: 22px; stroke: var(--green-mid); fill: none; stroke-width: 1.75; }
+.upload-zone h4 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.upload-zone p { font-size: 12px; color: var(--gray-dk); }
+
+.camera-zone { border: 2px solid var(--gray); border-radius: var(--radius-lg); overflow: hidden; background: var(--ink); position: relative; display: flex; flex-direction: column; align-items: center; }
+.camera-zone video { width: 100%; max-height: 220px; object-fit: cover; display: block; }
+.camera-controls { display: flex; gap: 8px; padding: 10px; width: 100%; background: rgba(11,61,46,0.85); justify-content: center; }
+.cam-btn { height: 38px; padding: 0 16px; border: none; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.cam-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.cam-btn-snap { background: var(--yellow); color: var(--green); }
+.cam-btn-snap:hover { background: var(--yellow-md); }
+.cam-btn-flip { background: rgba(255,255,255,0.12); color: var(--white); }
+.cam-btn-flip:hover { background: rgba(255,255,255,0.22); }
+.camera-placeholder { padding: 2.5rem 1rem; text-align: center; width: 100%; }
+.camera-placeholder svg { width: 44px; height: 44px; stroke: var(--gray); fill: none; stroke-width: 1.5; margin-bottom: 10px; }
+.camera-placeholder p { font-size: 12px; color: var(--gray); }
+.cam-start-btn { margin-top: 10px; height: 36px; padding: 0 18px; background: var(--green-mid); color: var(--yellow); border: none; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.cam-start-btn:hover { background: var(--green); }
+.cam-err { font-size: 12px; color: #c0392b; text-align: center; padding: 8px 12px; background: #fbeae8; border-radius: var(--radius); margin-top: 8px; }
+
+.preview-card { display: flex; align-items: center; gap: 12px; background: var(--green-lt); border: 1.5px solid #b8d8c8; border-radius: var(--radius-lg); padding: 10px 12px; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+.preview-card img { width: 58px; height: 58px; border-radius: var(--radius); object-fit: cover; flex-shrink: 0; border: 2px solid var(--white); }
+.preview-info { flex: 1; min-width: 0; }
+.preview-info p { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview-info span { font-size: 11px; color: var(--green-mid); font-weight: 500; }
+.rm-btn { background: none; border: none; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray-dk); font-size: 20px; transition: background 0.15s; flex-shrink: 0; }
+.rm-btn:hover { background: var(--gray-lt); color: var(--ink); }
+
+.accordion { border: 1px solid var(--gray); border-radius: var(--radius); overflow: hidden; }
+.accordion summary { padding: 10px 14px; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--gray-lt); color: var(--gray-dk); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.accordion summary::-webkit-details-marker { display: none; }
+.accordion summary::after { content: '↓'; font-size: 11px; }
+details[open] .accordion summary::after { content: '↑'; }
+.accordion pre { padding: 12px 14px; font-size: 10.5px; line-height: 1.65; color: var(--gray-dk); white-space: pre-wrap; background: var(--white); border-top: 1px solid var(--gray-lt); max-height: 200px; overflow-y: auto; font-family: 'Courier New', monospace; }
+
+.gen-btn { width: 100%; height: 52px; background: var(--yellow); color: var(--green); border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 3px 0 var(--yellow-md), var(--shadow); }
+.gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 var(--yellow-md), var(--shadow-lg); }
+.gen-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 var(--yellow-md); }
+.gen-btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
+.gen-btn .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(11,61,46,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.output { background: var(--off-white); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem; min-height: calc(100vh - var(--header-h) - var(--tabs-h)); }
+.empty-state { text-align: center; max-width: 340px; }
+.empty-grid { width: 110px; height: 140px; margin: 0 auto 1.5rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+.eg-cell { background: var(--white); border-radius: 4px; border: 1px solid var(--gray); }
+.eg-cell:nth-child(2) { background: var(--yellow-lt); }
+.eg-cell:nth-child(5) { background: var(--green-lt); }
+.empty-state h3 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; color: var(--green); margin-bottom: 6px; }
+.empty-state p { font-size: 14px; color: var(--gray-dk); line-height: 1.6; }
+
+.status-bar { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--radius); font-size: 13px; line-height: 1.5; width: 100%; max-width: 540px; margin-bottom: 1.5rem; }
+.status-bar .spin2 { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.status-bar.info    { background: #e8f0fb; color: #1a4f8a; border: 1px solid #b8d0f0; }
+.status-bar.error   { background: #fbeae8; color: #8b2a1e; border: 1px solid #f0b8b0; }
+.status-bar.success { background: var(--green-lt); color: var(--green); border: 1px solid #b8d8c8; font-weight: 500; }
+
+.result-wrap { width: 100%; max-width: 480px; animation: fadeIn 0.3s ease; }
+.result-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 10px; text-align: center; }
+.result-img-box { border-radius: var(--radius-lg); overflow: hidden; border: 2px solid var(--yellow); box-shadow: var(--shadow-lg); margin-bottom: 12px; }
+.result-img-box img { width: 100%; display: block; }
+.result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-dl { height: 44px; background: var(--green); color: var(--yellow); border: none; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; }
+.btn-dl:hover { opacity: 0.85; }
+.btn-retry { height: 44px; background: var(--white); color: var(--green); border: 1.5px solid var(--green); border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background 0.15s; }
+.btn-retry:hover { background: var(--green-lt); }
+
+/* ══════════════════════════════
+   COMING SOON PANELS
+══════════════════════════════ */
+.coming-panel {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3rem 2rem; text-align: center;
+  min-height: calc(100vh - var(--header-h) - var(--tabs-h));
+}
+.coming-icon {
+  width: 80px; height: 80px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 1.5rem;
+  border: 2px solid var(--gray-lt);
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+.coming-panel h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 30px;
+  letter-spacing: 0.04em; color: var(--green); margin-bottom: 8px;
+}
+.coming-panel p { font-size: 14px; color: var(--gray-dk); max-width: 300px; line-height: 1.6; margin-bottom: 1.5rem; }
+.coming-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--yellow-lt); border: 1.5px solid var(--yellow-md);
+  border-radius: 20px; padding: 6px 16px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase; color: var(--green);
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--gray); border-radius: 10px; }
+
+@media (max-width: 800px) {
+  .page { grid-template-columns: 1fr; }
+  .panel { border-right: none; border-bottom: 1px solid var(--gray-lt); }
+  .output { min-height: auto; padding: 2rem 1rem; }
+  .tab-btn { padding: 0 12px; font-size: 12px; }
+  .user-name { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-badge">
+      <div class="logo-badge-top">BUDGET</div>
+      <div class="logo-badge-divider"></div>
+      <div class="logo-badge-bottom"><span>BARBER</span></div>
+    </div>
+    <div class="logo-text">
+      <div class="logo-sub">Digital Men's Salon</div>
+      <div class="logo-desc">Franchise Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <div class="user-avatar" id="userAvatar">—</div>
+      <div class="user-name" id="userName">Loading…</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<!-- ══ MODULE TABS ══ -->
+<div class="tabs-bar">
+  <button class="tab-btn active" id="tab-hairstyle" onclick="switchModule('hairstyle')">
+    <span class="tab-icon">✂️</span> AI Hairstyle Grid
+  </button>
+  <button class="tab-btn" id="tab-skin" onclick="switchModule('skin')">
+    <span class="tab-icon">🔬</span> AI Skin Analysis
+    <span class="tab-soon">Soon</span>
+  </button>
+  <button class="tab-btn" id="tab-colour" onclick="switchModule('colour')">
+    <span class="tab-icon">🎨</span> Hair Colour
+    <span class="tab-soon">Soon</span>
+  </button>
+  <button class="tab-btn" id="tab-beard" onclick="switchModule('beard')">
+    <span class="tab-icon">🧔</span> Beard Styles
+    <span class="tab-soon">Soon</span>
+  </button>
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 1 — AI Hairstyle Grid
+══════════════════════════════ -->
+<div class="tab-panel active" id="panel-hairstyle">
+  <div class="page">
+    <aside class="panel">
+      <div>
+        <div class="section-label">Your Portrait</div>
+        <div class="img-source-tabs">
+          <button class="img-tab active" id="tab-camera" onclick="switchTab('camera')">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Camera
+          </button>
+          <button class="img-tab" id="tab-upload" onclick="switchTab('upload')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload File
+          </button>
+        </div>
+
+        <!-- Camera panel -->
+        <div id="cameraPanel">
+          <div class="camera-zone" id="cameraZone">
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <p>Click below to start your camera</p>
+              <button class="cam-start-btn" onclick="startCamera()">Start Camera</button>
+            </div>
+            <video id="cameraFeed" autoplay playsinline style="display:none; width:100%; max-height:220px; object-fit:cover;"></video>
+            <canvas id="snapCanvas" style="display:none;"></canvas>
+            <div class="camera-controls" id="cameraControls" style="display:none;">
+              <button class="cam-btn cam-btn-snap" onclick="snapPhoto()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" style="fill:currentColor"/></svg>
+                Capture
+              </button>
+              <button class="cam-btn cam-btn-flip" onclick="flipCamera()">
+                <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Flip
+              </button>
+              <button class="cam-btn cam-btn-flip" onclick="stopCamera()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Stop
+              </button>
+            </div>
+          </div>
+          <div id="cameraError" style="display:none;" class="cam-err"></div>
+        </div>
+
+        <!-- Upload panel -->
+        <div id="uploadPanel" style="display:none;">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" onchange="handleFile(event)"/>
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <h4>Drop or click to upload</h4>
+            <p>Clear front-facing portrait · JPG / PNG / WebP · Max 10MB</p>
+          </div>
+        </div>
+
+        <div id="previewSection" style="display:none; margin-top:8px;"></div>
+      </div>
+
+      <details id="promptAccordion" style="display:none;">
+        <div class="accordion">
+          <summary>View AI prompt being sent</summary>
+          <pre id="promptText"></pre>
+        </div>
+      </details>
+
+      <button class="gen-btn" id="genBtn" onclick="generate()" disabled>
+        <span id="genBtnLabel">Generate My AI Hairstyle</span>
+      </button>
+    </aside>
+
+    <main class="output">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-grid">
+          <div class="eg-cell"></div><div class="eg-cell"></div><div class="eg-cell"></div>
+          <div class="eg-cell"></div><div class="eg-cell"></div><div class="eg-cell"></div>
+          <div class="eg-cell"></div><div class="eg-cell"></div><div class="eg-cell"></div>
+        </div>
+        <h3>Your AI Hairstyle Grid</h3>
+        <p>Capture or upload a clear front-facing portrait and generate your AI Hairstyle Grid.</p>
+      </div>
+      <div id="statusArea" style="display:none; width:100%; max-width:540px;"></div>
+      <div id="resultArea" style="display:none;"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 2 — AI Skin Analysis (Coming Soon)
+══════════════════════════════ -->
+<div class="tab-panel" id="panel-skin">
+  <div class="coming-panel">
+    <div class="coming-icon">🔬</div>
+    <h2>AI Skin Analysis</h2>
+    <p>Analyse skin tone, texture, and conditions to recommend the right treatments before a shave or facial service.</p>
+    <div class="coming-badge">⏳ Coming Soon</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 3 — Hair Colour (Coming Soon)
+══════════════════════════════ -->
+<div class="tab-panel" id="panel-colour">
+  <div class="coming-panel">
+    <div class="coming-icon">🎨</div>
+    <h2>Hair Colour Preview</h2>
+    <p>Virtually try different hair colour options on the customer's photo before applying any dye.</p>
+    <div class="coming-badge">⏳ Coming Soon</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 4 — Beard Styles (Coming Soon)
+══════════════════════════════ -->
+<div class="tab-panel" id="panel-beard">
+  <div class="coming-panel">
+    <div class="coming-icon">🧔</div>
+    <h2>Beard Style Preview</h2>
+    <p>Show customers how different beard styles and lengths look on their face before picking up the trimmer.</p>
+    <div class="coming-badge">⏳ Coming Soon</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CONFIGURATION — update with your Cloudflare Worker URL
+// ============================================================
+const WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL"; // e.g. https://budget-barber.yourname.workers.dev
+// ============================================================
+
+// ── Auth guard — no redirect loop, session persists until logout ──
+const _session = sessionStorage.getItem('bb_auth');
+if (!_session) {
+  window.location.href = 'login.html';
+}
+const session = JSON.parse(_session || '{}');
+
+// Show user info in header
+const nameEl = document.getElementById('userName');
+const avatarEl = document.getElementById('userAvatar');
+if (session.name) {
+  nameEl.textContent = session.name;
+  avatarEl.textContent = session.name.charAt(0).toUpperCase();
+}
+
+function logout() {
+  sessionStorage.removeItem('bb_auth');
+  window.location.href = 'login.html';
+}
+
+// ── Module tab switching ──
+const MODULES = ['hairstyle', 'skin', 'colour', 'beard'];
+function switchModule(id) {
+  MODULES.forEach(m => {
+    document.getElementById('tab-' + m).classList.toggle('active', m === id);
+    document.getElementById('panel-' + m).classList.toggle('active', m === id);
+  });
+}
+
+// ── Hairstyle tool prompt ──
+const PROMPT = `ABSOLUTE RULE: The subject is MALE. All 9 tiles must show a MALE person with a masculine men's haircut.
+
+Use the uploaded image as a STRICT, NON-NEGOTIABLE identity reference.
+
+ABSOLUTE FACE LOCK (HIGHEST PRIORITY):
+- The face in the output MUST be pixel-identical to the uploaded image
+- SAME facial geometry, SAME skin texture, SAME pores, SAME moles, SAME asymmetry
+- SAME expression, SAME head tilt, SAME eye direction
+- NO beautification, NO symmetry correction, NO aging or de-aging
+- NO gender change — the subject is MALE, every tile must show a MALE face
+- NO feminine hairstyles — nothing that goes past the ears on the sides or back
+- NO curly voluminous styles, NO layers, NO side-swept long styles
+- NO facial feature enhancement
+- NO lighting changes that alter facial appearance
+
+FIRST (INTERNAL STEP ONLY - DO NOT OUTPUT TEXT):
+Analyze the uploaded face to determine:
+- Face shape, Hair density, Hair texture and curl pattern
+- Natural growth direction and hairline
+- Confirm subject is male before proceeding
+
+SECOND (FINAL OUTPUT - IMAGE ONLY):
+Generate ONE single vertical 9:16, true-4K composite image containing a 3x3 grid.
+
+GRID RULES:
+- 9 UNIQUE hairstyles (no repeats)
+- ALL styles must be masculine men's haircuts
+- Hairstyles applied realistically while preserving the EXACT SAME FACE
+- Hair is the ONLY editable region
+- Face, skin tone, shadows, proportions MUST remain unchanged in every tile
+
+STRICT CONSISTENCY REQUIREMENTS:
+- SAME pose, SAME camera angle, SAME focal length
+- SAME background, SAME lighting direction and intensity
+- SAME facial expression across all 9 tiles
+
+HAIRSTYLE VARIATION RULES:
+- Mix short and medium men's haircuts ONLY — no hairstyle should go past the ears
+- Professional, college, and youthful MALE styles only
+- Respect real hair density, texture, and scalp visibility
+- Natural male hairlines and realistic parting
+- NO wigs, NO fantasy volume, NO AI over-styling
+- NO hairstyle that could appear on a woman — every tile must be identifiably male
+- If a hairstyle would look feminine, replace it with a buzz cut or taper fade instead
+
+STRICT MALE HAIRSTYLE LIST (pick 9 from these):
+Crew cut, buzz cut, taper fade, skin fade, side part, slick back, pompadour,
+quiff, french crop, textured crop, ivy league, undercut, disconnected undercut,
+classic comb-over, caesar cut
+
+TECHNICAL REQUIREMENTS:
+- Vertical 9:16 layout, True 4K clarity
+- Photorealistic hair texture and shadows
+- Natural hair movement without distortion
+
+ABSOLUTE RESTRICTIONS:
+- OUTPUT IMAGE ONLY
+- NO text, captions, labels, or explanations
+- NO background changes
+- NO makeup or facial changes unless present in the original image
+- NO feminine hairstyles in any tile under any circumstances
+
+GOAL: Create a barber-grade haircut reference grid where the uploaded MALE face is IDENTICAL in all 9 tiles and ONLY the hairstyle changes.`;
+
+let imageBase64 = null;
+let imageMime = null;
+let lastDataUrl = null;
+let stream = null;
+let facingMode = 'user';
+
+// ── Tab switching (camera/upload) ──
+function switchTab(tab) {
+  const isCamera = tab === 'camera';
+  document.getElementById('tab-camera').className = 'img-tab' + (isCamera ? ' active' : '');
+  document.getElementById('tab-upload').className = 'img-tab' + (!isCamera ? ' active' : '');
+  document.getElementById('cameraPanel').style.display = isCamera ? 'block' : 'none';
+  document.getElementById('uploadPanel').style.display = isCamera ? 'none' : 'block';
+  if (!isCamera) stopCamera();
+}
+
+// ── Camera ──
+async function startCamera() {
+  document.getElementById('cameraError').style.display = 'none';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+    });
+    const video = document.getElementById('cameraFeed');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('cameraControls').style.display = 'flex';
+  } catch (err) {
+    const errEl = document.getElementById('cameraError');
+    errEl.style.display = 'block';
+    errEl.textContent = err.name === 'NotAllowedError'
+      ? '⚠ Camera access denied. Please allow camera permission and try again.'
+      : '⚠ Could not access camera: ' + err.message;
+  }
+}
+
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const video = document.getElementById('cameraFeed');
+  video.srcObject = null;
+  video.style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'block';
+  document.getElementById('cameraControls').style.display = 'none';
+}
+
+async function flipCamera() {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  stopCamera(); await startCamera();
+}
+
+function snapPhoto() {
+  const video = document.getElementById('cameraFeed');
+  const canvas = document.getElementById('snapCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  imageBase64 = dataUrl.split(',')[1];
+  imageMime = 'image/jpeg';
+  stopCamera();
+  showPreview(dataUrl, 'Camera Snapshot');
+}
+
+// ── File upload ──
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('File too large — max 10MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    imageBase64 = dataUrl.split(',')[1];
+    imageMime = file.type || 'image/jpeg';
+    showPreview(dataUrl, file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(dataUrl, name) {
+  const sec = document.getElementById('previewSection');
+  sec.style.display = 'block';
+  sec.innerHTML = `<div class="preview-card">
+    <img src="${dataUrl}" alt="preview"/>
+    <div class="preview-info">
+      <p>${name}</p>
+      <span>✓ Ready to generate</span>
+    </div>
+    <button class="rm-btn" onclick="removeImage()">×</button>
+  </div>`;
+  document.getElementById('promptText').textContent = PROMPT;
+  document.getElementById('promptAccordion').style.display = 'block';
+  checkReady();
+}
+
+function removeImage() {
+  imageBase64 = null; imageMime = null;
+  document.getElementById('previewSection').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('promptAccordion').style.display = 'none';
+  resetOutput(); checkReady();
+}
+
+function checkReady() {
+  document.getElementById('genBtn').disabled = !imageBase64;
+}
+
+function resetOutput() {
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('statusArea').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'none';
+}
+
+function showStatus(type, msg, spinner) {
+  document.getElementById('emptyState').style.display = 'none';
+  const sa = document.getElementById('statusArea');
+  sa.style.display = 'block';
+  sa.innerHTML = `<div class="status-bar ${type}">
+    ${spinner ? '<div class="spin2"></div>' : ''}
+    <span>${msg}</span>
+  </div>`;
+}
+
+async function generate() {
+  if (!imageBase64) return;
+  const btn = document.getElementById('genBtn');
+  const label = document.getElementById('genBtnLabel');
+  btn.disabled = true;
+  label.innerHTML = '<div class="spinner"></div> Generating Grid...';
+  document.getElementById('resultArea').style.display = 'none';
+  showStatus('info', 'Sending portrait to Gemini — generating your 9-hairstyle grid. This takes 30–90 seconds…', true);
+
+  try {
+    const payload = {
+      contents: [{
+        parts: [
+          { text: PROMPT },
+          { inline_data: { mime_type: imageMime, data: imageBase64 } }
+        ]
+      }],
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 1 }
+    };
+
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || data?.error || 'Error ' + res.status);
+
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+
+    if (!imgPart) {
+      const txt = parts.find(p => p.text);
+      throw new Error(txt?.text?.slice(0, 220) || 'No image returned. Try a clearer front-facing portrait.');
+    }
+
+    lastDataUrl = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+    showStatus('success', '✓ 9-hairstyle grid generated! Download below or regenerate for a new set.', false);
+
+    const ra = document.getElementById('resultArea');
+    ra.style.display = 'block';
+    ra.innerHTML = `<div class="result-wrap">
+      <div class="result-label">Your Budget Barber Reference Grid</div>
+      <div class="result-img-box">
+        <img src="${lastDataUrl}" alt="9-hairstyle reference grid"/>
+      </div>
+      <div class="result-actions">
+        <button class="btn-dl" onclick="downloadImg()">↓ Download Grid</button>
+        <button class="btn-retry" onclick="generate()">↻ Regenerate</button>
+      </div>
+    </div>`;
+
+  } catch (err) {
+    showStatus('error', '⚠ ' + err.message, false);
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Generate My AI Hairstyle';
+    checkReady();
+  }
+}
+
+function downloadImg() {
+  if (!lastDataUrl) return;
+  const a = document.createElement('a');
+  a.href = lastDataUrl;
+  a.download = 'budget-barber-haircut-grid.png';
+  a.click();
+}
+</script>
+</body>
+</html>

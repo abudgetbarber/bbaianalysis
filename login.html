@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Budget Barber · Franchise Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:#0b3d2e; --green-mid:#1a5c42; --green-lt:#e8f2ed;
+  --yellow:#f5d800; --yellow-lt:#fdf9d6; --yellow-md:#f0c800;
+  --white:#ffffff; --off-white:#f7f6f2; --gray-lt:#efefeb;
+  --gray:#c8c5bc; --gray-dk:#7a776e; --ink:#1a1a14;
+  --radius:8px; --radius-lg:14px;
+  --shadow:0 2px 12px rgba(11,61,46,0.10);
+  --shadow-lg:0 6px 32px rgba(11,61,46,0.18);
+}
+html, body { height: 100%; }
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background pattern */
+body::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(245,216,0,0.03) 0px, rgba(245,216,0,0.03) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(-45deg, rgba(245,216,0,0.03) 0px, rgba(245,216,0,0.03) 1px, transparent 1px, transparent 40px);
+  pointer-events: none;
+}
+
+/* Glowing orb */
+body::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(245,216,0,0.08) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.card {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Logo */
+.logo-wrap { display: flex; align-items: center; gap: 14px; justify-content: center; margin-bottom: 2.5rem; }
+.logo-badge {
+  background: var(--yellow);
+  border-radius: 7px;
+  padding: 5px 8px;
+  display: flex; flex-direction: column; gap: 3px;
+  border: 2px solid var(--yellow-md);
+  box-shadow: 0 2px 6px rgba(11,61,46,0.18);
+}
+.logo-badge-top { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.08em; line-height: 1; text-align: center; }
+.logo-badge-divider { height: 2px; background: var(--green); border-radius: 2px; margin: 0 -2px; }
+.logo-badge-bottom { background: var(--yellow); border-radius: 3px; padding: 1px 4px; text-align: center; }
+.logo-badge-bottom span { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.14em; line-height: 1; }
+.logo-text { display: flex; flex-direction: column; gap: 2px; }
+.logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); }
+.logo-desc { font-size: 12px; color: var(--gray-dk); font-weight: 300; }
+
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.card-sub {
+  font-size: 13px;
+  color: var(--gray-dk);
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 300;
+}
+
+.field { margin-bottom: 1.25rem; }
+.field label {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--green-mid);
+  margin-bottom: 7px;
+}
+.field input {
+  width: 100%;
+  height: 50px;
+  border: 1.5px solid var(--gray);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--off-white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.field input:focus {
+  border-color: var(--green-mid);
+  box-shadow: 0 0 0 3px rgba(26,92,66,0.12);
+  background: var(--white);
+}
+.field input::placeholder { color: var(--gray); }
+
+/* PIN dots */
+.pin-wrap { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
+.pin-dot {
+  width: 44px; height: 54px;
+  border: 1.5px solid var(--gray);
+  border-radius: var(--radius);
+  background: var(--off-white);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  position: relative;
+}
+.pin-dot.filled {
+  background: var(--green-lt);
+  border-color: var(--green-mid);
+}
+.pin-dot.active {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(11,61,46,0.12);
+}
+.pin-dot .dot-val { line-height: 1; }
+.pin-dot .cursor {
+  width: 2px; height: 28px;
+  background: var(--green);
+  border-radius: 2px;
+  animation: blink 1s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Hidden real input */
+#pinInput {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+  pointer-events: none;
+}
+
+/* Numpad */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+.np-btn {
+  height: 52px;
+  border: 1.5px solid var(--gray-lt);
+  border-radius: var(--radius);
+  background: var(--white);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none;
+}
+.np-btn:hover { background: var(--green-lt); border-color: var(--green-mid); }
+.np-btn:active { transform: scale(0.95); background: var(--green-lt); }
+.np-btn.del {
+  font-size: 18px;
+  color: var(--gray-dk);
+}
+.np-btn.del:hover { background: #fbeae8; border-color: #f0b8b0; color: #8b2a1e; }
+
+.login-btn {
+  width: 100%;
+  height: 52px;
+  background: var(--yellow);
+  color: var(--green);
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 3px 0 var(--yellow-md), var(--shadow);
+}
+.login-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 var(--yellow-md), var(--shadow-lg); }
+.login-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 var(--yellow-md); }
+.login-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.spinner { width: 18px; height: 18px; border: 2.5px solid rgba(11,61,46,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.err-msg {
+  background: #fbeae8; color: #8b2a1e; border: 1px solid #f0b8b0;
+  border-radius: var(--radius); padding: 10px 14px;
+  font-size: 13px; text-align: center;
+  margin-bottom: 1rem;
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+
+.shake { animation: shake 0.35s ease; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+
+.divider { height: 1px; background: var(--gray-lt); margin: 1.5rem 0; }
+.phone-step, .pin-step { }
+.pin-step { display: none; }
+.back-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--green-mid); padding: 0; margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.back-btn:hover { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+
+  <div class="logo-wrap">
+    <div class="logo-badge">
+      <div class="logo-badge-top">BUDGET</div>
+      <div class="logo-badge-divider"></div>
+      <div class="logo-badge-bottom"><span>BARBER</span></div>
+    </div>
+    <div class="logo-text">
+      <div class="logo-sub">Franchise Portal</div>
+      <div class="logo-desc">Owner Login</div>
+    </div>
+  </div>
+
+  <div class="err-msg" id="errMsg"></div>
+
+  <!-- Step 1: Phone -->
+  <div class="phone-step" id="phoneStep">
+    <div class="card-title">Welcome Back</div>
+    <div class="card-sub">Enter your registered phone number</div>
+
+    <div class="field">
+      <label>Phone Number</label>
+      <input type="tel" id="phoneInput" placeholder="+91 98765 43210" autocomplete="off"/>
+    </div>
+
+    <button class="login-btn" id="phoneNextBtn" onclick="goToPin()">
+      <span id="phoneBtnLabel">Continue</span>
+    </button>
+  </div>
+
+  <!-- Step 2: PIN -->
+  <div class="pin-step" id="pinStep">
+    <button class="back-btn" onclick="goBack()">← Back</button>
+    <div class="card-title">Enter Your PIN</div>
+    <div class="card-sub" id="pinSub">6-digit PIN for <strong id="phoneDisplay"></strong></div>
+
+    <div class="pin-wrap" id="pinDots">
+      <div class="pin-dot active" id="dot0"><div class="cursor"></div></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+      <div class="pin-dot" id="dot4"></div>
+      <div class="pin-dot" id="dot5"></div>
+    </div>
+
+    <input type="text" id="pinInput" inputmode="numeric" maxlength="6"/>
+
+    <div class="numpad">
+      <button class="np-btn" onclick="numPress('1')">1</button>
+      <button class="np-btn" onclick="numPress('2')">2</button>
+      <button class="np-btn" onclick="numPress('3')">3</button>
+      <button class="np-btn" onclick="numPress('4')">4</button>
+      <button class="np-btn" onclick="numPress('5')">5</button>
+      <button class="np-btn" onclick="numPress('6')">6</button>
+      <button class="np-btn" onclick="numPress('7')">7</button>
+      <button class="np-btn" onclick="numPress('8')">8</button>
+      <button class="np-btn" onclick="numPress('9')">9</button>
+      <button class="np-btn" style="visibility:hidden"></button>
+      <button class="np-btn" onclick="numPress('0')">0</button>
+      <button class="np-btn del" onclick="numDel()">⌫</button>
+    </div>
+
+    <button class="login-btn" id="loginBtn" onclick="doLogin()" disabled>
+      <span id="loginBtnLabel">Login</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ============================================================
+  // CONFIGURATION — Replace with your Supabase project details
+  // ============================================================
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // ============================================================
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let phone = '';
+  let pin = '';
+
+  // If already logged in, skip to app
+  if (sessionStorage.getItem('bb_auth')) {
+    window.location.href = 'dashboard.html';
+  }
+
+  // ── Phone step ──
+  document.getElementById('phoneInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') goToPin();
+  });
+
+  async function goToPin() {
+    const raw = document.getElementById('phoneInput').value.trim();
+    if (!raw) { showErr('Please enter your phone number.'); return; }
+    phone = raw.replace(/\s+/g, '');
+
+    const btn = document.getElementById('phoneNextBtn');
+    const lbl = document.getElementById('phoneBtnLabel');
+    btn.disabled = true;
+    lbl.innerHTML = '<div class="spinner"></div>';
+
+    // Check phone exists
+    const { data, error } = await db
+      .from('franchise_users')
+      .select('id')
+      .eq('phone', phone)
+      .eq('is_active', true)
+      .single();
+
+    btn.disabled = false;
+    lbl.textContent = 'Continue';
+
+    if (error || !data) {
+      showErr('Phone number not found. Please contact your admin.');
+      shakeCard();
+      return;
+    }
+
+    hideErr();
+    document.getElementById('phoneDisplay').textContent = phone;
+    document.getElementById('phoneStep').style.display = 'none';
+    document.getElementById('pinStep').style.display = 'block';
+    pin = '';
+    updateDots();
+  }
+
+  function goBack() {
+    document.getElementById('pinStep').style.display = 'none';
+    document.getElementById('phoneStep').style.display = 'block';
+    pin = '';
+    hideErr();
+  }
+
+  // ── PIN entry ──
+  function numPress(d) {
+    if (pin.length >= 6) return;
+    pin += d;
+    updateDots();
+    if (pin.length === 6) doLogin();
+  }
+
+  function numDel() {
+    if (pin.length === 0) return;
+    pin = pin.slice(0, -1);
+    updateDots();
+  }
+
+  function updateDots() {
+    for (let i = 0; i < 6; i++) {
+      const dot = document.getElementById('dot' + i);
+      dot.className = 'pin-dot';
+      if (i < pin.length) {
+        dot.className += ' filled';
+        dot.innerHTML = '<div class="dot-val">•</div>';
+      } else if (i === pin.length) {
+        dot.className += ' active';
+        dot.innerHTML = '<div class="cursor"></div>';
+      } else {
+        dot.innerHTML = '';
+      }
+    }
+    document.getElementById('loginBtn').disabled = pin.length < 6;
+  }
+
+  // Also support keyboard on desktop
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('pinStep').style.display !== 'block') return;
+    if (e.key >= '0' && e.key <= '9') numPress(e.key);
+    else if (e.key === 'Backspace') numDel();
+  });
+
+  // ── Login ──
+  async function doLogin() {
+    if (pin.length < 6) return;
+
+    const btn = document.getElementById('loginBtn');
+    const lbl = document.getElementById('loginBtnLabel');
+    btn.disabled = true;
+    lbl.innerHTML = '<div class="spinner"></div>';
+
+    // Hash PIN with SHA-256
+    const pinHash = await hashPin(pin);
+
+    const { data, error } = await db
+      .from('franchise_users')
+      .select('id, name, phone, role')
+      .eq('phone', phone)
+      .eq('pin_hash', pinHash)
+      .eq('is_active', true)
+      .single();
+
+    btn.disabled = false;
+    lbl.textContent = 'Login';
+
+    if (error || !data) {
+      showErr('Incorrect PIN. Please try again.');
+      shakeCard();
+      pin = '';
+      updateDots();
+      return;
+    }
+
+    // Save session
+    sessionStorage.setItem('bb_auth', JSON.stringify({
+      id: data.id,
+      name: data.name,
+      phone: data.phone,
+      role: data.role,
+      ts: Date.now()
+    }));
+
+    // Redirect
+    window.location.href = 'dashboard.html';
+  }
+
+  // ── Helpers ──
+  async function hashPin(pin) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function showErr(msg) {
+    const el = document.getElementById('errMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideErr() {
+    document.getElementById('errMsg').style.display = 'none';
+  }
+
+  function shakeCard() {
+    const card = document.getElementById('card');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+  }
+</script>
+</body>
+</html>
