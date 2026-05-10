@@ -372,7 +372,7 @@ const sb = db; // alias used by skin functions
 const _sess = sessionStorage.getItem('bb_auth');
 if (!_sess) { window.location.href = 'index.html'; }
 const _s = JSON.parse(_sess || '{}');
-if (_s.role !== 'admin') { window.location.href = 'dashboard.html'; }
+if (_s.role !== 'admin') { window.location.href = 'admin.html'; }
 
 // Skin parameters
 const PARAMS = [
