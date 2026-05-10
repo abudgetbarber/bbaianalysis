@@ -4,7 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Budget Barber · Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -15,39 +16,48 @@
   --radius:8px; --radius-lg:14px;
   --shadow:0 2px 12px rgba(11,61,46,0.10);
   --shadow-lg:0 6px 32px rgba(11,61,46,0.14);
+  /* Skin palette */
+  --cream:#FAF8F5; --sage:#7A9E7E; --sage-light:#EAF2EB; --sage-dark:#4A7150;
+  --mid:#5F5E5A; --light:#B4B2A9; --border:#E8E6E1;
+  --amber:#D4860B; --amber-light:#FDF3E3; --red:#C0392B; --red-light:#FDF0EE;
+  --blue:#2471A3;
+  --r:12px; --rs:8px;
 }
 html { font-size: 16px; }
 body { font-family: 'Barlow', sans-serif; background: var(--off-white); color: var(--ink); min-height: 100vh; }
 
 /* HEADER */
-header {
-  background: var(--white); border-bottom: 3px solid var(--yellow);
-  padding: 0 2rem; height: 70px;
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 16px rgba(11,61,46,0.08);
-}
+header { background: var(--white); border-bottom: 3px solid var(--yellow); padding: 0 2rem; height: 70px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 16px rgba(11,61,46,0.08); }
 .logo-wrap { display: flex; align-items: center; gap: 14px; }
 .logo-badge { background: var(--yellow); border-radius: 7px; padding: 5px 8px; display: flex; flex-direction: column; gap: 3px; border: 2px solid var(--yellow-md); box-shadow: 0 2px 6px rgba(11,61,46,0.18); }
 .logo-badge-top { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.08em; line-height: 1; text-align: center; }
 .logo-badge-divider { height: 2px; background: var(--green); border-radius: 2px; margin: 0 -2px; }
-.logo-badge-bottom { background: var(--yellow); border-radius: 3px; padding: 1px 4px; text-align: center; }
-.logo-badge-bottom span { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.14em; line-height: 1; }
+.logo-badge-bottom span { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 0.14em; line-height: 1; display: block; text-align: center; }
 .logo-text { display: flex; flex-direction: column; gap: 2px; }
 .logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); }
 .logo-desc { font-size: 12px; color: var(--gray-dk); font-weight: 300; }
-
 .header-right { display: flex; align-items: center; gap: 12px; }
 .admin-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--green); background: var(--green-lt); border: 1px solid #b8d8c8; border-radius: 20px; padding: 4px 12px; }
 .logout-btn { height: 34px; padding: 0 14px; background: none; border: 1.5px solid var(--gray); border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-dk); cursor: pointer; transition: all 0.15s; }
 .logout-btn:hover { border-color: var(--green); color: var(--green); }
 
+/* TABS BAR */
+.tabs-bar { background: var(--white); border-bottom: 1px solid var(--gray-lt); padding: 0 2rem; height: 52px; display: flex; align-items: flex-end; gap: 2px; position: sticky; top: 70px; z-index: 150; box-shadow: 0 1px 8px rgba(11,61,46,0.04); overflow-x: auto; }
+.tabs-bar::-webkit-scrollbar { height: 0; }
+.atab { display: flex; align-items: center; gap: 7px; height: 44px; padding: 0 18px; border: none; border-bottom: 3px solid transparent; background: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; color: var(--gray-dk); white-space: nowrap; transition: all 0.15s; border-radius: 6px 6px 0 0; }
+.atab:hover { color: var(--green); background: var(--green-lt); }
+.atab.active { color: var(--green); border-bottom-color: var(--yellow); background: var(--yellow-lt); }
+
+/* TAB PANELS */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
 /* MAIN */
-.main { max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem; }
-.page-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.04em; color: var(--green); margin-bottom: 4px; }
+.main { max-width: 1000px; margin: 0 auto; padding: 2.5rem 2rem; }
+.page-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; color: var(--green); margin-bottom: 4px; }
 .page-sub { font-size: 14px; color: var(--gray-dk); margin-bottom: 2rem; }
 
-/* CARDS */
+/* SECTION CARDS */
 .section-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 2rem; }
 .section-head { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--gray-lt); display: flex; align-items: center; justify-content: space-between; }
 .section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-mid); display: flex; align-items: center; gap: 8px; }
@@ -56,83 +66,103 @@ header {
 
 /* FORM */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.field { }
-.field.full { grid-column: 1 / -1; }
 .field label { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 7px; }
-.field input, .field select {
-  width: 100%; height: 46px;
-  border: 1.5px solid var(--gray); border-radius: var(--radius);
-  padding: 0 14px; font-family: 'Barlow', sans-serif; font-size: 15px;
-  color: var(--ink); background: var(--off-white);
-  transition: border-color 0.15s, box-shadow 0.15s;
-  outline: none;
-}
-.field input:focus, .field select:focus {
-  border-color: var(--green-mid);
-  box-shadow: 0 0 0 3px rgba(26,92,66,0.12);
-  background: var(--white);
-}
+.field input, .field select { width: 100%; height: 46px; border: 1.5px solid var(--gray); border-radius: var(--radius); padding: 0 14px; font-family: 'Barlow', sans-serif; font-size: 15px; color: var(--ink); background: var(--off-white); transition: border-color 0.15s, box-shadow 0.15s; outline: none; }
+.field input:focus, .field select:focus { border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(26,92,66,0.12); background: var(--white); }
 .field input::placeholder { color: var(--gray); }
-.field .hint { font-size: 11px; color: var(--gray-dk); margin-top: 5px; }
-
-/* PIN field with dots preview */
+.hint { font-size: 11px; color: var(--gray-dk); margin-top: 5px; }
 .pin-preview { display: flex; gap: 6px; margin-top: 8px; }
-.pin-preview-dot { width: 32px; height: 38px; border: 1.5px solid var(--gray-lt); border-radius: 6px; background: var(--gray-lt); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--green); transition: all 0.15s; }
-.pin-preview-dot.filled { background: var(--green-lt); border-color: var(--green-mid); }
+.ppd { width: 32px; height: 38px; border: 1.5px solid var(--gray-lt); border-radius: 6px; background: var(--gray-lt); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--green); transition: all 0.15s; }
+.ppd.filled { background: var(--green-lt); border-color: var(--green-mid); }
 
+/* BUTTONS */
 .form-actions { display: flex; gap: 10px; margin-top: 1.25rem; }
-.btn-primary { height: 46px; padding: 0 24px; background: var(--yellow); color: var(--green); border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; box-shadow: 0 3px 0 var(--yellow-md); display: flex; align-items: center; gap: 8px; }
-.btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 var(--yellow-md); }
-.btn-primary:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 var(--yellow-md); }
-.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-primary { height: 46px; padding: 0 24px; background: var(--yellow); color: var(--green); border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.06em; cursor: pointer; transition: all 0.15s; box-shadow: 0 3px 0 var(--yellow-md); display: inline-flex; align-items: center; gap: 8px; }
+.btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-secondary { height: 46px; padding: 0 20px; background: var(--white); color: var(--green-mid); border: 1.5px solid var(--gray); border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
 .btn-secondary:hover { border-color: var(--green-mid); background: var(--green-lt); }
-
-.spinner { width: 16px; height: 16px; border: 2.5px solid rgba(11,61,46,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+.btn-sm { height: 32px !important; padding: 0 14px !important; font-size: 12px !important; }
 
 /* ALERTS */
-.alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 1rem; display: none; animation: fadeIn 0.2s ease; }
+.alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 1rem; display: none; }
 .alert.success { background: var(--green-lt); color: var(--green); border: 1px solid #b8d8c8; }
-.alert.error { background: #fbeae8; color: #8b2a1e; border: 1px solid #f0b8b0; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+.alert.error   { background: #fbeae8; color: #8b2a1e; border: 1px solid #f0b8b0; }
 
 /* TABLE */
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-thead tr { border-bottom: 2px solid var(--gray-lt); }
+thead tr { border-bottom: 2px solid var(--gray-lt); background: var(--off-white); }
 th { padding: 10px 14px; text-align: left; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gray-dk); }
 td { padding: 12px 14px; border-bottom: 1px solid var(--gray-lt); font-size: 14px; vertical-align: middle; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--off-white); }
-
+.td-bold { font-weight: 600; }
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.badge.active { background: var(--green-lt); color: var(--green); }
-.badge.inactive { background: var(--gray-lt); color: var(--gray-dk); }
-.badge.admin { background: var(--yellow-lt); color: var(--green); border: 1px solid var(--yellow-md); }
-
+.b-green   { background: var(--green-lt); color: var(--green); }
+.b-gray    { background: var(--gray-lt); color: var(--gray-dk); }
+.b-yellow  { background: var(--yellow-lt); color: var(--green); border: 1px solid var(--yellow-md); }
+.b-sage    { background: var(--sage-light); color: var(--sage-dark); border: 1px solid #c5dcc8; }
+.b-cream   { background: var(--cream); color: var(--mid); border: 1px solid var(--border); }
+.tbl-actions { display: flex; gap: 6px; }
 .tbl-btn { height: 30px; padding: 0 12px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
-.tbl-btn.edit { background: var(--green-lt); color: var(--green); border-color: #b8d8c8; }
-.tbl-btn.edit:hover { background: var(--green); color: var(--yellow); }
+.tbl-btn.edit  { background: var(--green-lt); color: var(--green); border-color: #b8d8c8; }
+.tbl-btn.edit:hover  { background: var(--green); color: var(--yellow); }
 .tbl-btn.deact { background: #fbeae8; color: #8b2a1e; border-color: #f0b8b0; }
 .tbl-btn.deact:hover { background: #c0392b; color: var(--white); }
 .tbl-btn.react { background: var(--gray-lt); color: var(--gray-dk); border-color: var(--gray); }
-.tbl-btn.react:hover { background: var(--green-lt); color: var(--green); border-color: #b8d8c8; }
-.tbl-actions { display: flex; gap: 6px; }
+.tbl-btn.react:hover { background: var(--green-lt); color: var(--green); }
+.empty-row td, .loading-row td { text-align: center; color: var(--gray-dk); font-size: 13px; padding: 2rem; }
+code { font-size: 11px; background: var(--off-white); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--gray-lt); font-family: 'Courier New', monospace; }
 
-.empty-row td { text-align: center; color: var(--gray-dk); font-size: 13px; padding: 2.5rem; }
+/* SKIN PARAMS GRID */
+.pg { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 14px; }
+.pc { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.pc-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.pc-name { font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--ink); }
+.pc-desc { font-size: 11px; color: var(--mid); margin-top: 2px; }
+.pc-body { padding: 12px 16px; }
+.pp-row { display: flex; align-items: center; gap: 8px; padding: 8px 9px; border: 1px solid var(--border); border-radius: var(--rs); margin-bottom: 7px; background: var(--cream); }
+.pp-emoji { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.pp-info { flex: 1; min-width: 0; }
+.pp-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.pp-url  { font-size: 10px; color: var(--blue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-del { cursor: pointer; color: var(--light); padding: 4px; flex-shrink: 0; border: none; background: none; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.15s; }
+.pp-del:hover { color: var(--red); }
+.pp-del svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+.add-prod-btn { width: 100%; padding: 8px; border: 1.5px dashed var(--border); border-radius: var(--rs); background: none; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--mid); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
+.add-prod-btn:hover { border-color: var(--sage); color: var(--sage-dark); background: var(--sage-light); }
+.add-prod-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
 
 /* MODAL */
-.modal-overlay { position: fixed; inset: 0; background: rgba(11,61,46,0.5); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; display: none; animation: fadeIn 0.2s ease; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(11,61,46,0.5); backdrop-filter: blur(4px); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.open { display: flex; }
-.modal { background: var(--white); border-radius: var(--radius-lg); padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 24px 80px rgba(0,0,0,0.3); animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+.modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.3); animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
 @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--green); letter-spacing: 0.04em; margin-bottom: 1.25rem; }
-.modal-actions { display: flex; gap: 10px; margin-top: 1.25rem; }
+.modal-head { padding: 18px 22px; border-bottom: 1px solid var(--gray-lt); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1; }
+.modal-head h3 { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--green); letter-spacing: 0.04em; }
+.modal-close { cursor: pointer; color: var(--gray-dk); padding: 4px; border: none; background: none; border-radius: 4px; display: flex; }
+.modal-close:hover { color: var(--ink); }
+.modal-close svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
+.modal-body { padding: 22px; }
+.modal-foot { padding: 14px 22px; border-top: 1px solid var(--gray-lt); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* SPINNER + TOAST */
+.spinner { width: 16px; height: 16px; border: 2.5px solid rgba(11,61,46,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--green); color: var(--yellow); padding: 11px 22px; border-radius: 40px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; z-index: 999; transition: transform 0.3s; white-space: nowrap; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 700px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .atab { padding: 0 10px; font-size: 12px; }
+  .main { padding: 1.5rem 1rem; }
+}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header>
   <div class="logo-wrap">
     <div class="logo-badge">
@@ -142,7 +172,7 @@ tbody tr:hover td { background: var(--off-white); }
     </div>
     <div class="logo-text">
       <div class="logo-sub">Admin Panel</div>
-      <div class="logo-desc">Franchise User Management</div>
+      <div class="logo-desc">Franchise & Skin Analysis Management</div>
     </div>
   </div>
   <div class="header-right">
@@ -151,322 +181,447 @@ tbody tr:hover td { background: var(--off-white); }
   </div>
 </header>
 
-<div class="main">
-  <div class="page-title">Franchise Users</div>
-  <div class="page-sub">Create and manage franchise owner accounts. Each owner logs in with their phone number and 6-digit PIN.</div>
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="atab active" id="atab-users" onclick="switchAdminTab('users')">
+    👥 Franchise Users
+  </button>
+  <button class="atab" id="atab-skin" onclick="switchAdminTab('skin')">
+    🔬 Skin Parameters & Products
+  </button>
+  <button class="atab" id="atab-reports" onclick="switchAdminTab('reports')">
+    📋 Analysis Reports
+  </button>
+</div>
 
-  <!-- Create User -->
-  <div class="section-card">
-    <div class="section-head">
-      <div class="section-label">Add New Franchise User</div>
-    </div>
-    <div class="section-body">
-      <div class="alert success" id="createSuccess"></div>
-      <div class="alert error" id="createError"></div>
+<!-- ══ TAB 1: FRANCHISE USERS ══ -->
+<div class="tab-panel active" id="panel-users">
+  <div class="main">
+    <div class="page-title">Franchise Users</div>
+    <div class="page-sub">Create and manage franchise owner accounts. Each owner logs in with phone number and 6-digit PIN.</div>
 
-      <div class="form-grid">
-        <div class="field">
-          <label>Full Name</label>
-          <input type="text" id="newName" placeholder="e.g. Rajesh Kumar" autocomplete="off"/>
-        </div>
-        <div class="field">
-          <label>Phone Number</label>
-          <input type="tel" id="newPhone" placeholder="+91 98765 43210" autocomplete="off"/>
-        </div>
-        <div class="field">
-          <label>6-Digit PIN</label>
-          <input type="text" id="newPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off" oninput="updatePinPreview(this.value, 'createPinDots')"/>
-          <div class="pin-preview" id="createPinDots">
-            <div class="pin-preview-dot" id="cpd0"></div>
-            <div class="pin-preview-dot" id="cpd1"></div>
-            <div class="pin-preview-dot" id="cpd2"></div>
-            <div class="pin-preview-dot" id="cpd3"></div>
-            <div class="pin-preview-dot" id="cpd4"></div>
-            <div class="pin-preview-dot" id="cpd5"></div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-label">Add New Franchise User</div>
+      </div>
+      <div class="section-body">
+        <div class="alert success" id="createSuccess"></div>
+        <div class="alert error"   id="createError"></div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="newName" placeholder="e.g. Rajesh Kumar" autocomplete="off"/>
           </div>
-          <div class="hint">Choose a memorable 6-digit PIN for this user</div>
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="tel" id="newPhone" placeholder="+91 98765 43210" autocomplete="off"/>
+          </div>
+          <div class="field">
+            <label>6-Digit PIN</label>
+            <input type="text" id="newPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off" oninput="updatePinPreview(this.value,'cp')"/>
+            <div class="pin-preview">
+              <div class="ppd" id="cp0"></div><div class="ppd" id="cp1"></div><div class="ppd" id="cp2"></div>
+              <div class="ppd" id="cp3"></div><div class="ppd" id="cp4"></div><div class="ppd" id="cp5"></div>
+            </div>
+            <div class="hint">Choose a memorable 6-digit PIN</div>
+          </div>
+          <div class="field">
+            <label>Role</label>
+            <select id="newRole">
+              <option value="franchise">Franchise Owner</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
         </div>
-        <div class="field">
-          <label>Role</label>
-          <select id="newRole">
-            <option value="franchise">Franchise Owner</option>
-            <option value="admin">Admin</option>
-          </select>
+        <div class="form-actions">
+          <button class="btn-primary" id="createBtn" onclick="createUser()"><span id="createBtnLabel">Create User</span></button>
+          <button class="btn-secondary" onclick="clearForm()">Clear</button>
         </div>
       </div>
+    </div>
 
-      <div class="form-actions">
-        <button class="btn-primary" id="createBtn" onclick="createUser()">
-          <span id="createBtnLabel">Create User</span>
-        </button>
-        <button class="btn-secondary" onclick="clearForm()">Clear</button>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-label">All Franchise Users</div>
+        <button class="btn-secondary btn-sm" onclick="loadUsers()">↻ Refresh</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Users Table -->
-  <div class="section-card">
-    <div class="section-head">
-      <div class="section-label">All Franchise Users</div>
-      <button class="btn-secondary" onclick="loadUsers()" style="height:34px; font-size:12px; padding:0 14px;">↻ Refresh</button>
-    </div>
-    <div class="section-body" style="padding:0;">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody">
-            <tr class="empty-row"><td colspan="6">Loading users…</td></tr>
-          </tbody>
-        </table>
+      <div class="section-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="usersTableBody"><tr class="loading-row"><td colspan="6">Loading users…</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Edit PIN Modal -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal">
-    <div class="modal-title">Reset PIN</div>
-    <div class="alert error" id="editError"></div>
-    <div class="field">
-      <label>User</label>
-      <input type="text" id="editName" readonly style="background:var(--gray-lt); color:var(--gray-dk);"/>
-    </div>
-    <div class="field" style="margin-top:1rem;">
-      <label>New 6-Digit PIN</label>
-      <input type="text" id="editPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off" oninput="updatePinPreview(this.value, 'editPinDots')"/>
-      <div class="pin-preview" id="editPinDots">
-        <div class="pin-preview-dot" id="epd0"></div>
-        <div class="pin-preview-dot" id="epd1"></div>
-        <div class="pin-preview-dot" id="epd2"></div>
-        <div class="pin-preview-dot" id="epd3"></div>
-        <div class="pin-preview-dot" id="epd4"></div>
-        <div class="pin-preview-dot" id="epd5"></div>
+<!-- ══ TAB 2: SKIN PARAMETERS & PRODUCTS ══ -->
+<div class="tab-panel" id="panel-skin">
+  <div class="main">
+    <div class="page-title">Skin Parameters & Products</div>
+    <div class="page-sub">Attach recommended products to each skin parameter. They appear in franchise owner skin reports with buy links.</div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-label">9 Skin Parameters</div>
+        <button class="btn-secondary btn-sm" onclick="loadParameters()">↻ Refresh</button>
+      </div>
+      <div class="section-body">
+        <div class="pg" id="pgGrid">
+          <div style="text-align:center;padding:2rem;color:var(--gray-dk)">Loading…</div>
+        </div>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn-primary" id="editSaveBtn" onclick="savePinReset()">
-        <span id="editSaveBtnLabel">Save PIN</span>
-      </button>
+  </div>
+</div>
+
+<!-- ══ TAB 3: ANALYSIS REPORTS ══ -->
+<div class="tab-panel" id="panel-reports">
+  <div class="main">
+    <div class="page-title">Analysis Reports</div>
+    <div class="page-sub">All skin analyses run by franchise owners. Live = real YouCam API result. Demo = mock data.</div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-label">All Reports</div>
+        <button class="btn-secondary btn-sm" onclick="loadReports()">↻ Refresh</button>
+      </div>
+      <div class="section-body" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Report Code</th><th>Skin Type</th><th>Skin Age</th><th>Overall Score</th><th>Mode</th><th>Date</th></tr></thead>
+            <tbody id="rptTbl"><tr class="loading-row"><td colspan="6">Loading reports…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reset PIN -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Reset PIN</h3>
+      <button class="modal-close" onclick="closeModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert error" id="editError"></div>
+      <div class="field">
+        <label>User</label>
+        <input type="text" id="editName" readonly style="background:var(--gray-lt);color:var(--gray-dk)"/>
+      </div>
+      <div class="field" style="margin-top:1rem">
+        <label>New 6-Digit PIN</label>
+        <input type="text" id="editPin" placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="off" oninput="updatePinPreview(this.value,'ep')"/>
+        <div class="pin-preview">
+          <div class="ppd" id="ep0"></div><div class="ppd" id="ep1"></div><div class="ppd" id="ep2"></div>
+          <div class="ppd" id="ep3"></div><div class="ppd" id="ep4"></div><div class="ppd" id="ep5"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-primary" id="editSaveBtn" onclick="savePinReset()"><span id="editSaveLbl">Save PIN</span></button>
       <button class="btn-secondary" onclick="closeModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- MODAL: Add Product -->
+<div class="modal-overlay" id="moProd">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Product — <span id="moProdParam" style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;letter-spacing:0;color:var(--sage-dark)"></span></h3>
+      <button class="modal-close" onclick="closeProdModal()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pParamId"/>
+      <div class="form-grid">
+        <div class="field"><label>Product Name *</label><input type="text" id="pName" placeholder="Vitamin C Serum"/></div>
+        <div class="field"><label>Brand</label><input type="text" id="pBrand" placeholder="The Ordinary"/></div>
+      </div>
+      <div class="field" style="margin-top:1rem"><label>Product URL (Buy Link)</label><input type="url" id="pUrl" placeholder="https://example.com/product"/></div>
+      <div class="form-grid" style="margin-top:1rem">
+        <div class="field"><label>Price</label><input type="text" id="pPrice" placeholder="₹499"/></div>
+        <div class="field"><label>Icon Emoji</label><input type="text" id="pEmoji" placeholder="🧴" maxlength="4"/></div>
+      </div>
+      <div class="alert error" id="prodSaveErr" style="margin-top:1rem"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-primary" id="prodSaveBtn" onclick="saveProduct()"><span id="prodSaveLbl">Add Product</span></button>
+      <button class="btn-secondary" onclick="closeProdModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-  // ============================================================
-  // CONFIGURATION
-  // ============================================================
-  const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
-  // Admin PIN to access this page — change this!
-  const ADMIN_PIN = 'admin_session_flag'; // set via sessionStorage
-  // ============================================================
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// ============================================================
 
-  const { createClient } = supabase;
-  const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = db; // alias used by skin functions
 
-  // Guard: only admin role can access
-  const session = JSON.parse(sessionStorage.getItem('bb_auth') || 'null');
-  if (!session || session.role !== 'admin') {
-    window.location.href = 'login.html';
-  }
+// Auth guard — admin only
+const _sess = sessionStorage.getItem('bb_auth');
+if (!_sess) { window.location.href = 'login.html'; }
+const _s = JSON.parse(_sess || '{}');
+if (_s.role !== 'admin') { window.location.href = 'dashboard.html'; }
 
-  let editingUserId = null;
+// Skin parameters
+const PARAMS = [
+  { id:'spots',       label:'Spots',       desc:'Pigmentation & dark marks' },
+  { id:'wrinkles',    label:'Wrinkles',     desc:'Fine lines & expression lines' },
+  { id:'oiliness',    label:'Oiliness',     desc:'Sebum & shine levels' },
+  { id:'moisture',    label:'Moisture',     desc:'Hydration & water content' },
+  { id:'acne',        label:'Acne',         desc:'Breakouts & blemishes' },
+  { id:'firmness',    label:'Firmness',     desc:'Skin elasticity & tone' },
+  { id:'radiance',    label:'Radiance',     desc:'Overall glow & brightness' },
+  { id:'eyebag',      label:'Eye Bag',      desc:'Puffiness under eyes' },
+  { id:'dark_circle', label:'Dark Circles', desc:'Under-eye discolouration' },
+];
 
-  // ── Load users ──
-  async function loadUsers() {
-    const tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Loading…</td></tr>';
-
-    const { data, error } = await db
-      .from('franchise_users')
-      .select('id, name, phone, role, is_active, created_at')
-      .order('created_at', { ascending: false });
-
-    if (error || !data?.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users found. Create one above.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = data.map(u => `
-      <tr>
-        <td><strong>${esc(u.name)}</strong></td>
-        <td>${esc(u.phone)}</td>
-        <td><span class="badge ${u.role === 'admin' ? 'admin' : 'active'}">${u.role}</span></td>
-        <td><span class="badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? '● Active' : '○ Inactive'}</span></td>
-        <td>${new Date(u.created_at).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})}</td>
-        <td>
-          <div class="tbl-actions">
-            <button class="tbl-btn edit" onclick="openEditModal('${u.id}', '${esc(u.name)}')">Reset PIN</button>
-            ${u.is_active
-              ? `<button class="tbl-btn deact" onclick="toggleActive('${u.id}', false)">Deactivate</button>`
-              : `<button class="tbl-btn react" onclick="toggleActive('${u.id}', true)">Activate</button>`
-            }
-          </div>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // ── Create user ──
-  async function createUser() {
-    const name  = document.getElementById('newName').value.trim();
-    const phone = document.getElementById('newPhone').value.trim().replace(/\s+/g, '');
-    const pin   = document.getElementById('newPin').value.trim();
-    const role  = document.getElementById('newRole').value;
-
-    hideAlert('createSuccess'); hideAlert('createError');
-
-    if (!name) { showAlert('createError', 'Please enter a name.'); return; }
-    if (!phone) { showAlert('createError', 'Please enter a phone number.'); return; }
-    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) { showAlert('createError', 'PIN must be exactly 6 digits.'); return; }
-
-    const btn = document.getElementById('createBtn');
-    const lbl = document.getElementById('createBtnLabel');
-    btn.disabled = true;
-    lbl.innerHTML = '<div class="spinner"></div>';
-
-    const pinHash = await hashPin(pin);
-
-    const { error } = await db.from('franchise_users').insert({
-      name, phone, pin_hash: pinHash, role, is_active: true
-    });
-
-    btn.disabled = false;
-    lbl.textContent = 'Create User';
-
-    if (error) {
-      if (error.code === '23505') {
-        showAlert('createError', 'This phone number is already registered.');
-      } else {
-        showAlert('createError', 'Error: ' + error.message);
-      }
-      return;
-    }
-
-    showAlert('createSuccess', `✓ User "${name}" created successfully with phone ${phone}.`);
-    clearForm();
-    loadUsers();
-  }
-
-  function clearForm() {
-    document.getElementById('newName').value = '';
-    document.getElementById('newPhone').value = '';
-    document.getElementById('newPin').value = '';
-    document.getElementById('newRole').value = 'franchise';
-    updatePinPreview('', 'createPinDots');
-    hideAlert('createSuccess'); hideAlert('createError');
-  }
-
-  // ── Toggle active ──
-  async function toggleActive(id, active) {
-    const { error } = await db.from('franchise_users').update({ is_active: active }).eq('id', id);
-    if (error) { alert('Error: ' + error.message); return; }
-    loadUsers();
-  }
-
-  // ── Edit PIN modal ──
-  function openEditModal(id, name) {
-    editingUserId = id;
-    document.getElementById('editName').value = name;
-    document.getElementById('editPin').value = '';
-    updatePinPreview('', 'editPinDots');
-    hideAlert('editError');
-    document.getElementById('editModal').classList.add('open');
-  }
-
-  function closeModal() {
-    document.getElementById('editModal').classList.remove('open');
-    editingUserId = null;
-  }
-
-  async function savePinReset() {
-    const pin = document.getElementById('editPin').value.trim();
-    hideAlert('editError');
-
-    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
-      showAlert('editError', 'PIN must be exactly 6 digits.');
-      return;
-    }
-
-    const btn = document.getElementById('editSaveBtn');
-    const lbl = document.getElementById('editSaveBtnLabel');
-    btn.disabled = true;
-    lbl.innerHTML = '<div class="spinner"></div>';
-
-    const pinHash = await hashPin(pin);
-
-    const { error } = await db.from('franchise_users')
-      .update({ pin_hash: pinHash })
-      .eq('id', editingUserId);
-
-    btn.disabled = false;
-    lbl.textContent = 'Save PIN';
-
-    if (error) { showAlert('editError', 'Error: ' + error.message); return; }
-
-    closeModal();
-    loadUsers();
-  }
-
-  // ── Helpers ──
-  async function hashPin(pin) {
-    const data = new TextEncoder().encode(pin);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
-  function updatePinPreview(val, containerId) {
-    const prefix = containerId === 'createPinDots' ? 'cpd' : 'epd';
-    for (let i = 0; i < 6; i++) {
-      const dot = document.getElementById(prefix + i);
-      if (i < val.length) {
-        dot.classList.add('filled');
-        dot.textContent = '•';
-      } else {
-        dot.classList.remove('filled');
-        dot.textContent = '';
-      }
-    }
-  }
-
-  function showAlert(id, msg) {
-    const el = document.getElementById(id);
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-
-  function hideAlert(id) {
-    const el = document.getElementById(id);
-    el.style.display = 'none';
-  }
-
-  function esc(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function logout() {
-    sessionStorage.removeItem('bb_auth');
-    window.location.href = 'login.html';
-  }
-
-  // Block modal close on overlay click
-  document.getElementById('editModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('editModal')) closeModal();
+// ── Tab switching ──
+function switchAdminTab(id) {
+  ['users','skin','reports'].forEach(t => {
+    document.getElementById('atab-'  + t).classList.toggle('active', t === id);
+    document.getElementById('panel-' + t).classList.toggle('active', t === id);
   });
+  if (id === 'skin')    loadParameters();
+  if (id === 'reports') loadReports();
+}
 
+// ════════════════════════════════════════════════
+// TAB 1 — FRANCHISE USERS
+// ════════════════════════════════════════════════
+async function loadUsers() {
+  const tbody = document.getElementById('usersTableBody');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Loading…</td></tr>';
+  const { data, error } = await db
+    .from('franchise_users')
+    .select('id,name,phone,role,is_active,created_at')
+    .order('created_at', { ascending:false });
+  if (error || !data?.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No users found. Create one above.</td></tr>'; return;
+  }
+  tbody.innerHTML = data.map(u => `
+    <tr>
+      <td class="td-bold">${esc(u.name)}</td>
+      <td>${esc(u.phone)}</td>
+      <td><span class="badge ${u.role==='admin'?'b-yellow':'b-green'}">${u.role}</span></td>
+      <td><span class="badge ${u.is_active?'b-green':'b-gray'}">${u.is_active?'● Active':'○ Inactive'}</span></td>
+      <td>${new Date(u.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td><div class="tbl-actions">
+        <button class="tbl-btn edit" onclick="openEditModal('${u.id}','${esc(u.name)}')">Reset PIN</button>
+        ${u.is_active
+          ? `<button class="tbl-btn deact" onclick="toggleActive('${u.id}',false)">Deactivate</button>`
+          : `<button class="tbl-btn react" onclick="toggleActive('${u.id}',true)">Activate</button>`}
+      </div></td>
+    </tr>`).join('');
+}
+
+async function createUser() {
+  const name  = document.getElementById('newName').value.trim();
+  const phone = document.getElementById('newPhone').value.trim().replace(/\s+/g,'');
+  const pin   = document.getElementById('newPin').value.trim();
+  const role  = document.getElementById('newRole').value;
+  hideA('createSuccess'); hideA('createError');
+  if (!name)  { showA('createError','Please enter a name.'); return; }
+  if (!phone) { showA('createError','Please enter a phone number.'); return; }
+  if (pin.length!==6||!/^\d{6}$/.test(pin)) { showA('createError','PIN must be exactly 6 digits.'); return; }
+  const btn=document.getElementById('createBtn'), lbl=document.getElementById('createBtnLabel');
+  btn.disabled=true; lbl.innerHTML='<div class="spinner"></div>';
+  const pinHash = await hashPin(pin);
+  const { error } = await db.from('franchise_users').insert({ name, phone, pin_hash:pinHash, role, is_active:true });
+  btn.disabled=false; lbl.textContent='Create User';
+  if (error) { showA('createError', error.code==='23505'?'Phone number already registered.':'Error: '+error.message); return; }
+  showA('createSuccess',`✓ User "${name}" created successfully.`);
+  clearForm(); loadUsers();
+}
+
+function clearForm() {
+  ['newName','newPhone','newPin'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newRole').value='franchise';
+  updatePinPreview('','cp');
+  hideA('createSuccess'); hideA('createError');
+}
+
+async function toggleActive(id, active) {
+  const { error } = await db.from('franchise_users').update({is_active:active}).eq('id',id);
+  if (error) { showToast('Error: '+error.message); return; }
   loadUsers();
+}
+
+let editingUserId = null;
+function openEditModal(id, name) {
+  editingUserId = id;
+  document.getElementById('editName').value = name;
+  document.getElementById('editPin').value = '';
+  updatePinPreview('','ep');
+  hideA('editError');
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal() { document.getElementById('editModal').classList.remove('open'); editingUserId=null; }
+
+async function savePinReset() {
+  const pin = document.getElementById('editPin').value.trim();
+  hideA('editError');
+  if (pin.length!==6||!/^\d{6}$/.test(pin)) { showA('editError','PIN must be exactly 6 digits.'); return; }
+  const btn=document.getElementById('editSaveBtn'), lbl=document.getElementById('editSaveLbl');
+  btn.disabled=true; lbl.innerHTML='<div class="spinner"></div>';
+  const pinHash = await hashPin(pin);
+  const { error } = await db.from('franchise_users').update({pin_hash:pinHash}).eq('id',editingUserId);
+  btn.disabled=false; lbl.textContent='Save PIN';
+  if (error) { showA('editError','Error: '+error.message); return; }
+  closeModal(); loadUsers(); showToast('PIN updated');
+}
+
+// ════════════════════════════════════════════════
+// TAB 2 — SKIN PARAMETERS & PRODUCTS
+// ════════════════════════════════════════════════
+async function loadParameters() {
+  const grid = document.getElementById('pgGrid');
+  grid.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray-dk)">Loading…</div>';
+  try {
+    const { data, error } = await sb.from('bb_products').select('*').eq('active',true).order('sort_order');
+    if (error) throw error;
+    const byParam = {};
+    (data||[]).forEach(p => { (byParam[p.param_id]=byParam[p.param_id]||[]).push(p); });
+    grid.innerHTML = PARAMS.map(p => {
+      const prods = byParam[p.id]||[];
+      return `<div class="pc">
+        <div class="pc-head">
+          <div><div class="pc-name">${p.label}</div><div class="pc-desc">${p.desc}</div></div>
+          <span class="badge ${prods.length>0?'b-sage':'b-cream'}">${prods.length} product${prods.length!==1?'s':''}</span>
+        </div>
+        <div class="pc-body">
+          ${prods.map(pr=>`
+            <div class="pp-row">
+              <div class="pp-emoji">${pr.emoji||'🧴'}</div>
+              <div class="pp-info">
+                <div class="pp-name">${esc(pr.name)}${pr.price?' · '+esc(pr.price):''}</div>
+                <div class="pp-url">${esc(pr.url||pr.brand||'No link')}</div>
+              </div>
+              <button class="pp-del" onclick="deleteProduct('${pr.id}')" title="Remove">
+                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>`).join('')}
+          <button class="add-prod-btn" onclick="openProdModal('${p.id}','${p.label}')">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add product
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { grid.innerHTML=`<div style="color:var(--red);font-size:12px;padding:1rem">Error: ${esc(e.message)}</div>`; }
+}
+
+function openProdModal(paramId, paramLabel) {
+  document.getElementById('prodSaveErr').style.display='none';
+  document.getElementById('moProdParam').textContent = paramLabel;
+  document.getElementById('pParamId').value = paramId;
+  ['pName','pBrand','pUrl','pPrice'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pEmoji').value='🧴';
+  document.getElementById('moProd').classList.add('open');
+}
+function closeProdModal() { document.getElementById('moProd').classList.remove('open'); }
+
+async function saveProduct() {
+  document.getElementById('prodSaveErr').style.display='none';
+  const paramId = document.getElementById('pParamId').value;
+  const name    = document.getElementById('pName').value.trim();
+  if (!name) { showProdErr('Product name is required'); return; }
+  const payload = {
+    param_id: paramId, name,
+    brand: document.getElementById('pBrand').value.trim()||null,
+    url:   document.getElementById('pUrl').value.trim()||null,
+    price: document.getElementById('pPrice').value.trim()||null,
+    emoji: document.getElementById('pEmoji').value.trim()||'🧴',
+    active: true,
+  };
+  const btn=document.getElementById('prodSaveBtn'), lbl=document.getElementById('prodSaveLbl');
+  btn.disabled=true; lbl.innerHTML='<div class="spinner"></div>';
+  try {
+    const { error } = await sb.from('bb_products').insert(payload);
+    if (error) throw error;
+    closeProdModal(); await loadParameters(); showToast('Product added');
+  } catch(e) { showProdErr(e.message); }
+  finally { btn.disabled=false; lbl.textContent='Add Product'; }
+}
+
+async function deleteProduct(prodId) {
+  if (!confirm('Remove this product?')) return;
+  const { error } = await sb.from('bb_products').delete().eq('id',prodId);
+  if (error) { showToast('Error: '+error.message); return; }
+  await loadParameters(); showToast('Product removed');
+}
+
+function showProdErr(msg) { const el=document.getElementById('prodSaveErr'); el.textContent=msg; el.style.display='block'; }
+
+// ════════════════════════════════════════════════
+// TAB 3 — ANALYSIS REPORTS
+// ════════════════════════════════════════════════
+async function loadReports() {
+  const tbody = document.getElementById('rptTbl');
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Loading…</td></tr>';
+  try {
+    const { data, error } = await sb.from('bb_reports').select('*').order('created_at',{ascending:false}).limit(100);
+    if (error) throw error;
+    if (!data||data.length===0) {
+      tbody.innerHTML='<tr class="empty-row"><td colspan="6">No reports yet. They appear once franchise owners run skin analyses.</td></tr>'; return;
+    }
+    tbody.innerHTML = data.map(r => {
+      const vals = Object.values(r.scores||{}).map(Number).filter(v=>!isNaN(v));
+      const avg  = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : '—';
+      return `<tr>
+        <td><code>${esc(r.report_code)}</code></td>
+        <td>${esc(r.skin_type||'—')}</td>
+        <td>${r.skin_age||'—'}</td>
+        <td><strong>${avg}/100</strong></td>
+        <td><span class="badge ${r.is_mock?'b-gray':'b-green'}">${r.is_mock?'Demo':'Live'}</span></td>
+        <td style="color:var(--gray-dk)">${new Date(r.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML=`<tr><td colspan="6" style="color:var(--red);padding:16px;font-size:12px">Error: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function updatePinPreview(val, prefix) {
+  for (let i=0;i<6;i++) {
+    const d=document.getElementById(prefix+i);
+    if (!d) continue;
+    if (i<val.length){d.classList.add('filled');d.textContent='•';}
+    else{d.classList.remove('filled');d.textContent='';}
+  }
+}
+
+function showA(id,msg){const el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
+function hideA(id){document.getElementById(id).style.display='none';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function logout(){sessionStorage.removeItem('bb_auth');window.location.href='login.html';}
+
+// Close modals on overlay click
+document.getElementById('editModal').addEventListener('click',e=>{if(e.target===document.getElementById('editModal'))closeModal();});
+document.getElementById('moProd').addEventListener('click',e=>{if(e.target===document.getElementById('moProd'))closeProdModal();});
+
+// Init
+loadUsers();
 </script>
 </body>
 </html>

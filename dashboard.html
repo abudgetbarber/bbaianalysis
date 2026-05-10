@@ -375,15 +375,580 @@ details[open] .accordion summary::after { content: '↑'; }
 </div>
 
 <!-- ══════════════════════════════
-     MODULE 2 — AI Skin Analysis (Coming Soon)
+     MODULE 2 — AI Skin Analysis
 ══════════════════════════════ -->
 <div class="tab-panel" id="panel-skin">
-  <div class="coming-panel">
-    <div class="coming-icon">🔬</div>
-    <h2>AI Skin Analysis</h2>
-    <p>Analyse skin tone, texture, and conditions to recommend the right treatments before a shave or facial service.</p>
-    <div class="coming-badge">⏳ Coming Soon</div>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<style>
+/* Skin Analysis scoped styles */
+#skinApp{font-family:'DM Sans',sans-serif;background:var(--off-white);min-height:calc(100vh - 116px)}
+#skinApp .sk-main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+#skinApp .hero{text-align:center;margin-bottom:32px}
+#skinApp .hero-tag{display:inline-block;background:#EAF2EB;color:#4A7150;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;border:1px solid #c5dcc8}
+#skinApp .hero h1{font-family:'DM Serif Display',serif;font-size:30px;font-weight:400;line-height:1.2;margin-bottom:10px}
+#skinApp .hero h1 span{color:#4A7150}
+#skinApp .hero p{font-size:15px;color:#5F5E5A;max-width:460px;margin:0 auto;line-height:1.65}
+#skinApp .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;flex-wrap:wrap;row-gap:8px}
+#skinApp .sk-step{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:#B4B2A9;transition:color .3s}
+#skinApp .sk-step.active{color:#2C2C2A}
+#skinApp .sk-step.done{color:#4A7150}
+#skinApp .step-n{width:26px;height:26px;border-radius:50%;border:1.5px solid #B4B2A9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#fff;transition:all .3s;flex-shrink:0}
+#skinApp .sk-step.active .step-n{border-color:#7A9E7E;background:#7A9E7E;color:#fff}
+#skinApp .sk-step.done .step-n{border-color:#4A7150;background:#EAF2EB;color:#4A7150}
+#skinApp .step-line{width:36px;height:1.5px;background:#E8E6E1;margin:0 4px;flex-shrink:0}
+#skinApp .sk-panel{background:#fff;border-radius:12px;border:1px solid #E8E6E1;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:28px;display:none}
+#skinApp .sk-panel.active{display:block}
+#skinApp .capture-tabs{display:flex;gap:0;border:1.5px solid #E8E6E1;border-radius:8px;overflow:hidden;margin-bottom:20px}
+#skinApp .ctab{flex:1;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#fff;color:#5F5E5A;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+#skinApp .ctab:not(:last-child){border-right:1.5px solid #E8E6E1}
+#skinApp .ctab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+#skinApp .ctab.active{background:#2C2C2A;color:#fff}
+#skinApp #skCameraSection{display:none}
+#skinApp .video-wrap{position:relative;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px}
+#skinApp #skLiveVideo{width:100%;height:100%;object-fit:cover;display:block}
+#skinApp .cam-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;aspect-ratio:3/4;border:2px solid rgba(255,255,255,.5);border-radius:50% 50% 45% 45%;pointer-events:none}
+#skinApp .cam-controls{display:flex;align-items:center;justify-content:center;gap:16px}
+#skinApp .cam-btn{width:56px;height:56px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(4px)}
+#skinApp .cam-btn.shutter{width:68px;height:68px;background:#fff}
+#skinApp .cam-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+#skinApp .cam-btn.shutter svg{stroke:#2C2C2A}
+#skinApp .cam-err{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:12px;display:none}
+#skinApp #skUploadSection{display:block}
+#skinApp .drop-zone{border:2px dashed #E8E6E1;border-radius:12px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#FAF8F5;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+#skinApp .drop-zone:hover{border-color:#7A9E7E;background:#EAF2EB}
+#skinApp .drop-zone.has-img{border-style:solid;border-color:#7A9E7E;padding:0;min-height:260px}
+#skinApp .drop-zone img{width:100%;height:260px;object-fit:cover;border-radius:10px;display:block}
+#skinApp .drop-icon{width:52px;height:52px;background:#EAF2EB;border-radius:50%;display:flex;align-items:center;justify-content:center}
+#skinApp .drop-icon svg{width:24px;height:24px;stroke:#4A7150;fill:none;stroke-width:1.5}
+#skinApp .drop-text h3{font-size:15px;font-weight:500;margin-bottom:4px;text-align:center}
+#skinApp .drop-text p{font-size:13px;color:#5F5E5A;text-align:center;line-height:1.5}
+#skinApp #skFileInput{display:none}
+#skinApp #skPreviewSection{display:none}
+#skinApp .preview-wrap{position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px}
+#skinApp #skPreviewImg{width:100%;max-height:300px;object-fit:cover;display:block;border-radius:8px}
+#skinApp .preview-retake{position:absolute;top:10px;right:10px}
+#skinApp .sk-tips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+#skinApp .sk-tip{background:#FAF8F5;border-radius:8px;padding:12px;border:1px solid #E8E6E1}
+#skinApp .sk-tip .ti{font-size:18px;margin-bottom:5px}
+#skinApp .sk-tip h4{font-size:12px;font-weight:500;margin-bottom:3px}
+#skinApp .sk-tip p{font-size:11px;color:#5F5E5A;line-height:1.5}
+#skinApp .sk-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+#skinApp .sk-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+#skinApp .sk-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+#skinApp .sk-btn-primary{background:#2C2C2A;color:#fff}
+#skinApp .sk-btn-primary:hover{background:#3a3a38}
+#skinApp .sk-btn-secondary{background:#fff;color:#2C2C2A;border:1.5px solid #E8E6E1}
+#skinApp .sk-btn-secondary:hover{border-color:#7A9E7E;color:#4A7150}
+#skinApp .sk-btn-sage{background:#7A9E7E;color:#fff}
+#skinApp .sk-btn-sage:hover{background:#4A7150}
+#skinApp .sk-btn-red{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb}
+#skinApp .sk-btn-lg{padding:12px 26px;font-size:14px}
+#skinApp .sk-btn-sm{padding:6px 12px;font-size:12px}
+#skinApp .cta-row{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+/* Analysing */
+#skinApp .analysing{text-align:center;padding:36px 0}
+#skinApp .sk-spin{width:64px;height:64px;border:3px solid #E8E6E1;border-top-color:#7A9E7E;border-radius:50%;animation:skSpin 1s linear infinite;margin:0 auto 20px}
+@keyframes skSpin{to{transform:rotate(360deg)}}
+#skinApp .analysing h3{font-size:18px;font-weight:500;margin-bottom:6px}
+#skinApp .analysing p{color:#5F5E5A;font-size:13px}
+#skinApp .prog-bg{height:4px;background:#E8E6E1;border-radius:2px;margin:24px auto 0;max-width:260px;overflow:hidden}
+#skinApp .prog-fill{height:100%;background:#7A9E7E;border-radius:2px;width:0;animation:skProg 8s ease forwards}
+@keyframes skProg{0%{width:0}40%{width:40%}70%{width:70%}90%{width:88%}100%{width:92%}}
+#skinApp #skStatusMsg{font-size:12px;color:#B4B2A9;margin-top:12px}
+/* Report */
+#skinApp .report-head{display:flex;align-items:flex-start;gap:16px;padding-bottom:20px;border-bottom:1px solid #E8E6E1;margin-bottom:24px}
+#skinApp .report-img{width:72px;height:72px;border-radius:10px;object-fit:cover;border:2px solid #E8E6E1;flex-shrink:0}
+#skinApp .report-meta h2{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:3px}
+#skinApp .report-meta p{font-size:13px;color:#5F5E5A;margin-bottom:7px}
+#skinApp .tag-row{display:flex;gap:7px;flex-wrap:wrap}
+#skinApp .sk-tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+#skinApp .tag-blue{background:#EEF4FB;color:#2471A3}
+#skinApp .tag-amber{background:#FDF3E3;color:#D4860B}
+#skinApp .tag-sage{background:#EAF2EB;color:#4A7150}
+#skinApp .tag-mock{background:#fff3cd;color:#856404;border:1px solid #ffc107}
+#skinApp .ov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+#skinApp .ov-card{background:#FAF8F5;border:1px solid #E8E6E1;border-radius:8px;padding:14px;text-align:center}
+#skinApp .ov-val{font-size:26px;font-weight:600;line-height:1;margin-bottom:3px}
+#skinApp .c-good{color:#4A7150}
+#skinApp .c-mid{color:#D4860B}
+#skinApp .c-low{color:#C0392B}
+#skinApp .sk-section-label{font-size:13px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:6px;color:#2C2C2A}
+#skinApp .sk-section-label svg{width:15px;height:15px;stroke:#4A7150;fill:none;stroke-width:2}
+#skinApp .params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:28px}
+#skinApp .p-card{background:#fff;border:1px solid #E8E6E1;border-radius:8px;padding:16px;transition:box-shadow .2s}
+#skinApp .p-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.08)}
+#skinApp .p-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+#skinApp .p-name{font-size:13px;font-weight:500;margin-bottom:2px}
+#skinApp .p-desc{font-size:11px;color:#5F5E5A;line-height:1.4}
+#skinApp .p-badge{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+#skinApp .bg-good{background:#EAF2EB;color:#4A7150}
+#skinApp .bg-mid{background:#FDF3E3;color:#D4860B}
+#skinApp .bg-low{background:#FDF0EE;color:#C0392B}
+#skinApp .bar-bg{height:5px;background:#E8E6E1;border-radius:3px;overflow:hidden;margin-bottom:10px}
+#skinApp .bar-fill{height:100%;border-radius:3px;width:0;transition:width 1s ease .2s}
+#skinApp .fill-good{background:#7A9E7E}
+#skinApp .fill-mid{background:#D4860B}
+#skinApp .fill-low{background:#C0392B}
+#skinApp .p-level-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#skinApp .p-level-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0}
+#skinApp .lbadge-good{background:#EAF2EB;color:#4A7150}
+#skinApp .lbadge-mid{background:#FDF3E3;color:#D4860B}
+#skinApp .lbadge-low{background:#FDF0EE;color:#C0392B}
+#skinApp .p-full-desc{font-size:12px;color:#5F5E5A;line-height:1.65;margin-bottom:2px}
+#skinApp .prods{margin-top:12px;border-top:1px solid #E8E6E1;padding-top:12px}
+#skinApp .prod-lbl{font-size:10px;font-weight:500;color:#B4B2A9;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+#skinApp .prod-row{display:flex;align-items:center;gap:8px;padding:7px 9px;background:#FAF8F5;border-radius:8px;margin-bottom:5px;border:1px solid #E8E6E1;text-decoration:none;transition:background .2s,border-color .2s;cursor:pointer}
+#skinApp .prod-row:hover{background:#EAF2EB;border-color:#c5dcc8}
+#skinApp .prod-emoji{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+#skinApp .prod-info{flex:1;min-width:0}
+#skinApp .prod-name{font-size:12px;font-weight:500;color:#2C2C2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#skinApp .prod-brand{font-size:10px;color:#5F5E5A}
+#skinApp .prod-arrow svg{width:12px;height:12px;stroke:#4A7150;fill:none;stroke-width:2.5}
+#skinApp .share-box{background:#FAF8F5;border:1px solid #E8E6E1;border-radius:12px;padding:24px;text-align:center;margin-top:8px}
+#skinApp .share-box h3{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;margin-bottom:5px}
+#skinApp .share-box>p{font-size:12px;color:#5F5E5A;margin-bottom:18px}
+#skinApp .qr-wrap{background:#fff;border:1px solid #E8E6E1;border-radius:8px;padding:14px;display:inline-block;margin-bottom:16px}
+#skinApp .link-row{display:flex;align-items:center;gap:8px;max-width:400px;margin:0 auto 16px}
+#skinApp .link-input{flex:1;padding:8px 12px;border:1.5px solid #E8E6E1;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:#2C2C2A;background:#fff;outline:none}
+#skinApp .share-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#skinApp .sk-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;padding:11px 22px;border-radius:40px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;pointer-events:none}
+#skinApp .sk-toast.show{transform:translateX(-50%) translateY(0)}
+#skinApp .err-banner{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:none}
+@media(max-width:580px){
+  #skinApp .sk-main{padding:16px 12px 60px}
+  #skinApp .hero h1{font-size:22px}
+  #skinApp .sk-panel{padding:18px}
+  #skinApp .sk-tips{grid-template-columns:1fr}
+  #skinApp .ov-grid{grid-template-columns:repeat(3,1fr)}
+  #skinApp .params-grid{grid-template-columns:1fr}
+  #skinApp .report-head{flex-direction:column}
+}
+</style>
+
+<div id="skinApp">
+<div class="sk-main">
+  <div class="hero">
+    <div class="hero-tag">Skin Intelligence</div>
+    <h1>Know Your <span>Skin</span>, Perfect Your Routine</h1>
+    <p>Take a photo or upload one to get a personalised skin report with product recommendations.</p>
   </div>
+
+  <div class="steps">
+    <div class="sk-step active" id="ski1"><div class="step-n">1</div><span>Capture</span></div>
+    <div class="step-line"></div>
+    <div class="sk-step" id="ski2"><div class="step-n">2</div><span>Analysing</span></div>
+    <div class="step-line"></div>
+    <div class="sk-step" id="ski3"><div class="step-n">3</div><span>Report</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="sk-panel active" id="skp1">
+    <div class="capture-tabs">
+      <button class="ctab active" id="skTabCamera" onclick="skSwitchTab('camera')">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Take Photo
+      </button>
+      <button class="ctab" id="skTabUpload" onclick="skSwitchTab('upload')">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>Upload Photo
+      </button>
+    </div>
+    <div id="skCameraSection">
+      <div class="cam-err" id="skCamErr"></div>
+      <div class="video-wrap">
+        <video id="skLiveVideo" autoplay playsinline muted></video>
+        <div class="cam-guide"></div>
+      </div>
+      <div class="cam-controls">
+        <button class="cam-btn" onclick="skFlipCamera()" title="Flip camera">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+        <button class="cam-btn shutter" onclick="skCapturePhoto()" title="Take photo">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="cam-btn" onclick="skStopCamera();skSwitchTab('upload')" title="Close camera">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="skPreviewSection">
+      <div class="preview-wrap">
+        <img id="skPreviewImg" src="" alt="Captured photo">
+        <div class="preview-retake">
+          <button class="sk-btn sk-btn-red sk-btn-sm" onclick="skRetakePhoto()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Retake
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="skUploadSection">
+      <div class="drop-zone" id="skDropZone" onclick="document.getElementById('skFileInput').click()">
+        <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+        <div class="drop-text"><h3>Click to browse or drag & drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
+        <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)">
+      </div>
+    </div>
+    <div class="sk-tips">
+      <div class="sk-tip"><div class="ti">💡</div><h4>Good lighting</h4><p>Natural or bright indoor light facing your face</p></div>
+      <div class="sk-tip"><div class="ti">🧴</div><h4>Clean face</h4><p>No heavy makeup for accurate results</p></div>
+      <div class="sk-tip"><div class="ti">📸</div><h4>Face forward</h4><p>Look straight ahead, neutral expression</p></div>
+    </div>
+    <div class="cta-row">
+      <button class="sk-btn sk-btn-primary sk-btn-lg" id="skAnalyseBtn" onclick="skStartAnalysis()" disabled>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Analyse Skin
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="sk-panel" id="skp2">
+    <div class="analysing">
+      <div class="sk-spin"></div>
+      <h3>Analysing your skin…</h3>
+      <p>AI is scanning 9 skin parameters. Takes ~10 seconds.</p>
+      <div class="prog-bg"><div class="prog-fill" id="skProgFill"></div></div>
+      <div id="skStatusMsg">Preparing…</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="sk-panel" id="skp3">
+    <div id="skErrBanner" class="err-banner"></div>
+    <div class="report-head">
+      <img id="skRptImg" src="" alt="Your photo" class="report-img">
+      <div class="report-meta">
+        <h2>Your Skin Report</h2>
+        <p id="skRptDate"></p>
+        <div class="tag-row">
+          <span class="sk-tag tag-blue" id="skTagType"></span>
+          <span class="sk-tag tag-amber" id="skTagAge"></span>
+          <span class="sk-tag tag-sage" id="skTagScore"></span>
+          <span class="sk-tag tag-mock" id="skTagMock" style="display:none">Demo mode</span>
+        </div>
+      </div>
+    </div>
+    <div class="ov-grid">
+      <div class="ov-card"><div class="ov-val c-good" id="skOvGood">—</div><div style="font-size:11px;color:#5F5E5A">Good</div></div>
+      <div class="ov-card"><div class="ov-val c-mid"  id="skOvMid">—</div><div style="font-size:11px;color:#5F5E5A">Needs Care</div></div>
+      <div class="ov-card"><div class="ov-val c-low"  id="skOvLow">—</div><div style="font-size:11px;color:#5F5E5A">Concern</div></div>
+    </div>
+    <div class="sk-section-label">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Detailed Analysis
+    </div>
+    <div class="params-grid" id="skParamsGrid"></div>
+    <div class="share-box">
+      <h3>Share This Report</h3>
+      <p>Save or share this personalised skin analysis</p>
+      <div class="qr-wrap"><div id="skQrcode"></div></div>
+      <div class="link-row">
+        <input class="link-input" id="skShareLink" type="text" readonly>
+        <button class="sk-btn sk-btn-secondary sk-btn-sm" onclick="skCopyLink()">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy
+        </button>
+      </div>
+      <div class="share-btns">
+        <button class="sk-btn sk-btn-secondary" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print
+        </button>
+        <button class="sk-btn sk-btn-sage" onclick="skRestart()">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>New Analysis
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sk-toast" id="skToast"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SKIN ANALYSIS MODULE — Configuration
+// ═══════════════════════════════════════════════════
+const SK_SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SK_SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const YOUCAM_API_KEY   = 'YOUR_YOUCAM_API_KEY';
+const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
+
+const skSb = supabase.createClient(SK_SUPABASE_URL, SK_SUPABASE_ANON);
+
+const SK_PARAMS = [
+  { id:'spots',       label:'Spots',       desc:'Pigmentation & dark marks',     youcam:'spot' },
+  { id:'wrinkles',    label:'Wrinkles',     desc:'Fine lines & expression lines',  youcam:'wrinkle' },
+  { id:'oiliness',    label:'Oiliness',     desc:'Sebum & shine levels',           youcam:'oily' },
+  { id:'moisture',    label:'Moisture',     desc:'Hydration & water content',      youcam:'moisture' },
+  { id:'acne',        label:'Acne',         desc:'Breakouts & blemishes',          youcam:'acne' },
+  { id:'firmness',    label:'Firmness',     desc:'Skin elasticity & tone',         youcam:'firmness' },
+  { id:'radiance',    label:'Radiance',     desc:'Overall glow & brightness',      youcam:'radiance' },
+  { id:'eyebag',      label:'Eye Bag',      desc:'Puffiness under eyes',           youcam:'eye_bag' },
+  { id:'dark_circle', label:'Dark Circles', desc:'Under-eye discolouration',       youcam:'dark_circle' },
+];
+
+const SK_PARAM_INFO = {
+  spots:       { icon:'🔵', good:{label:'Excellent',   desc:'Your skin is clear with very minimal pigmentation. Skin tone appears even and luminous.'},             mid:{label:'Fair',        desc:'Some uneven pigmentation or mild dark spots visible. Regular SPF and brightening serums can help.'}, low:{label:'Needs Care', desc:'Noticeable pigmentation detected. Consider Vitamin C, niacinamide, or kojic acid treatments.'} },
+  wrinkles:    { icon:'〰️', good:{label:'Excellent',   desc:'Skin appears smooth with minimal fine lines. Collagen levels look healthy.'},                          mid:{label:'Fair',        desc:'Mild fine lines visible, especially around eyes and forehead. Retinol or peptide moisturiser can help.'}, low:{label:'Needs Care', desc:'Visible wrinkles detected. Focus on retinoids, hyaluronic acid, and daily SPF.'} },
+  oiliness:    { icon:'💧', good:{label:'Balanced',    desc:'Healthy balanced sebum level. No excessive shine detected. Current routine is working well.'},          mid:{label:'Moderate',    desc:'Some oiliness in T-zone. Lightweight non-comedogenic moisturiser and gentle cleanser will help.'}, low:{label:'High',       desc:'Significant excess oil detected. Focus on oil-control products, clay masks, avoid heavy creams.'} },
+  moisture:    { icon:'🌊', good:{label:'Well Hydrated',desc:'Excellent hydration levels. Skin barrier appears intact. Continue current routine.'},                  mid:{label:'Mildly Dry',  desc:'Slight dehydration. Add hyaluronic acid serum and increase daily water intake.'}, low:{label:'Dehydrated',  desc:'Significant moisture deficiency. Prioritise rich moisturiser and hydrating serum immediately.'} },
+  acne:        { icon:'🔴', good:{label:'Clear',        desc:'No significant acne detected. Skin surface appears clean and healthy.'},                               mid:{label:'Mild',        desc:'A few minor blemishes present. Salicylic acid cleanser used consistently can help.'}, low:{label:'Active',      desc:'Active breakouts detected. Avoid picking. Consider salicylic acid or benzoyl peroxide treatment.'} },
+  firmness:    { icon:'💪', good:{label:'Firm',         desc:'Excellent firmness and elasticity. Strong collagen levels. Skin appears toned and youthful.'},         mid:{label:'Moderate',    desc:'Mild reduction in firmness. Retinol, peptides or Vitamin C can help.'}, low:{label:'Low',         desc:'Noticeable loss of firmness. Focus on firming serum, facial massage, collagen-supportive diet.'} },
+  radiance:    { icon:'✨', good:{label:'Glowing',      desc:'Beautiful healthy radiance. Even skin tone contributing to a natural glow.'},                          mid:{label:'Fair',        desc:'Moderate radiance, some areas slightly dull. Regular exfoliation and Vitamin C serum can help.'}, low:{label:'Dull',        desc:'Skin appears lacklustre. Exfoliate regularly and use a brightening serum.'} },
+  eyebag:      { icon:'👁️', good:{label:'None',         desc:'No significant puffiness detected. Under-eye area looks smooth and refreshed.'},                      mid:{label:'Mild',        desc:'Mild puffiness. Try cold compresses, elevate head while sleeping, reduce salt intake.'}, low:{label:'Noticeable',  desc:'Noticeable puffiness. Eye creams with caffeine or peptides can help. Ensure 7-8 hours sleep.'} },
+  dark_circle: { icon:'🌑', good:{label:'Bright',       desc:'Under-eye area appears bright and even-toned. No significant discolouration detected.'},               mid:{label:'Mild',        desc:'Slight discolouration visible. Vitamin K or caffeine-based eye creams can help over time.'}, low:{label:'Dark',        desc:'Visible dark circles detected. Targeted eye treatments and sufficient rest are advised.'} },
+};
+
+let skCapturedDataUrl = null;
+let skCapturedBlob    = null;
+let skStream          = null;
+let skFacingMode      = 'user';
+let skCurrentTab      = 'upload';
+
+// ── Step nav ──
+function skGoStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById(`skp${i}`).classList.toggle('active', i===n);
+    const si = document.getElementById(`ski${i}`);
+    si.classList.remove('active','done');
+    if (i===n) si.classList.add('active');
+    if (i<n)   si.classList.add('done');
+  });
+  document.getElementById('panel-skin').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── Tabs ──
+function skSwitchTab(tab) {
+  skCurrentTab = tab;
+  document.getElementById('skTabCamera').classList.toggle('active', tab==='camera');
+  document.getElementById('skTabUpload').classList.toggle('active', tab==='upload');
+  document.getElementById('skCameraSection').style.display  = tab==='camera' ? 'block' : 'none';
+  document.getElementById('skUploadSection').style.display  = tab==='upload' ? 'block' : 'none';
+  document.getElementById('skPreviewSection').style.display = 'none';
+  if (tab==='camera') skStartCamera(); else skStopCamera();
+}
+
+// ── Camera ──
+async function skStartCamera() {
+  skStopCamera();
+  const err = document.getElementById('skCamErr');
+  err.style.display='none';
+  document.getElementById('skLiveVideo').style.display='block';
+  try {
+    skStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:skFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio:false });
+    document.getElementById('skLiveVideo').srcObject = skStream;
+  } catch(e) {
+    err.textContent = e.name==='NotAllowedError' ? 'Camera access denied. Please allow permission.' : 'Camera error: '+e.message;
+    err.style.display='block';
+  }
+}
+function skStopCamera() { if (skStream){skStream.getTracks().forEach(t=>t.stop()); skStream=null;} }
+async function skFlipCamera() { skFacingMode=skFacingMode==='user'?'environment':'user'; await skStartCamera(); }
+
+function skCapturePhoto() {
+  const video=document.getElementById('skLiveVideo');
+  if (!video.srcObject){skShowToast('Camera not ready');return;}
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||960;
+  const ctx=canvas.getContext('2d');
+  if (skFacingMode==='user'){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  skCapturedDataUrl=canvas.toDataURL('image/jpeg',0.92);
+  canvas.toBlob(b=>{b._source='camera';skCapturedBlob=b;},'image/jpeg',0.92);
+  skStopCamera();
+  document.getElementById('skLiveVideo').style.display='none';
+  document.getElementById('skPreviewSection').style.display='block';
+  document.getElementById('skPreviewImg').src=skCapturedDataUrl;
+  document.getElementById('skAnalyseBtn').disabled=false;
+}
+
+function skRetakePhoto() {
+  skCapturedDataUrl=null; skCapturedBlob=null;
+  document.getElementById('skAnalyseBtn').disabled=true;
+  document.getElementById('skPreviewSection').style.display='none';
+  skStartCamera();
+}
+
+// ── Upload ──
+function skHandleUpload(e) { const f=e.target.files[0]; if(f) skProcessFile(f); }
+function skProcessFile(file) {
+  if (!file.type.startsWith('image/')){skShowToast('Please select an image file');return;}
+  if (file.size>10*1024*1024){skShowToast('Image too large — max 10 MB');return;}
+  skCapturedBlob=file;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    skCapturedDataUrl=ev.target.result;
+    const dz=document.getElementById('skDropZone');
+    dz.classList.add('has-img'); dz.innerHTML=`<img src="${skCapturedDataUrl}" alt="Uploaded">`;
+    document.getElementById('skAnalyseBtn').disabled=false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function skResetDropZone() {
+  const dz=document.getElementById('skDropZone');
+  dz.classList.remove('has-img');
+  dz.innerHTML=`<div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div><div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div><input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)">`;
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=document.getElementById('skDropZone');
+  if(!dz) return;
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#7A9E7E';});
+  dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)skProcessFile(f);});
+});
+
+// ── Analysis ──
+async function skStartAnalysis() {
+  if (!skCapturedDataUrl||!skCapturedBlob){skShowToast('Please capture or upload a photo first');return;}
+  skStopCamera(); skGoStep(2);
+  document.getElementById('skStatusMsg').textContent='Preparing image…';
+
+  let results; let isMock=false;
+  if (YOUCAM_API_KEY!=='YOUR_YOUCAM_API_KEY') {
+    try {
+      document.getElementById('skStatusMsg').textContent='Uploading to YouCam API…';
+      const fileId=await skApiUpload(skCapturedBlob);
+      document.getElementById('skStatusMsg').textContent='Running AI skin analysis…';
+      const taskId=await skApiRunTask(fileId);
+      document.getElementById('skStatusMsg').textContent='Processing results…';
+      results=await skApiPollResults(taskId);
+    } catch(err) {
+      document.getElementById('skErrBanner').textContent='API error — showing demo results. ('+err.message+')';
+      document.getElementById('skErrBanner').style.display='block';
+      results=skMockResults(); isMock=true;
+    }
+  } else {
+    document.getElementById('skStatusMsg').textContent='Demo mode…';
+    await skDelay(2500); results=skMockResults(); isMock=true;
+  }
+
+  document.getElementById('skStatusMsg').textContent='Saving report…';
+  const reportCode=await skSaveReport(results,isMock);
+  await skDelay(300);
+  await skRenderReport(results,reportCode,isMock);
+  skGoStep(3);
+}
+
+async function skApiUpload(blob) {
+  const initRes=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/file`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_ext:'jpg'})});
+  if(!initRes.ok) throw new Error(`File init failed: ${initRes.status}`);
+  const initData=await initRes.json();
+  const uploadRes=await fetch(initData.data.upload_url,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob});
+  if(!uploadRes.ok) throw new Error(`Image upload failed: ${uploadRes.status}`);
+  return initData.data.file_id;
+}
+async function skApiRunTask(fileId) {
+  const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_id:fileId,concerns:SK_PARAMS.map(p=>p.youcam),analysis_type:'SD'})});
+  if(!res.ok) throw new Error(`Run task failed: ${res.status}`);
+  const data=await res.json(); return data.data.task_id;
+}
+async function skApiPollResults(taskId) {
+  for(let i=0;i<25;i++){
+    await skDelay(1200);
+    const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/${taskId}`,{headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`}});
+    if(!res.ok) throw new Error(`Poll failed: ${res.status}`);
+    const data=await res.json();
+    const status=data.data?.status||data.status;
+    if(status==='completed'||status==='success') return skParseApiResults(data.data||data);
+    if(status==='failed'||status==='error') throw new Error('Analysis failed');
+  }
+  throw new Error('Timeout waiting for results');
+}
+function skParseApiResults(apiData) {
+  const scores={};
+  const raw=apiData.results||apiData.concerns||apiData.scores||{};
+  SK_PARAMS.forEach(p=>{
+    const rawScore=raw[p.youcam]?.score??raw[p.youcam]??raw[p.id]??null;
+    if(rawScore!==null){
+      const positive=['moisture','firmness','radiance'].includes(p.id);
+      scores[p.id]=positive?Math.round(rawScore):Math.round(100-rawScore);
+    } else { scores[p.id]=Math.floor(Math.random()*30)+55; }
+  });
+  return { scores, skin_type:apiData.skin_type||'Combination', skin_age:apiData.skin_age||null };
+}
+function skMockResults() {
+  const scores={};
+  SK_PARAMS.forEach(p=>{scores[p.id]=Math.floor(Math.random()*40)+45;});
+  return { scores, skin_type:['Normal','Oily','Dry','Combination'][Math.floor(Math.random()*4)], skin_age:Math.floor(Math.random()*15)+24 };
+}
+
+async function skSaveReport(results, isMock) {
+  const code='BB-'+Date.now().toString(36).toUpperCase();
+  const sess=JSON.parse(sessionStorage.getItem('bb_auth')||'{}');
+  try {
+    await skSb.from('bb_reports').insert({ report_code:code, customer_id:sess.id||null, skin_type:results.skin_type, skin_age:results.skin_age, scores:results.scores, is_mock:isMock });
+  } catch(e){ console.warn('Supabase save failed:',e.message); }
+  return code;
+}
+
+async function skLoadProducts() {
+  try {
+    const { data,error }=await skSb.from('bb_products').select('*').eq('active',true).order('sort_order');
+    if(error||!data) return {};
+    const map={};
+    data.forEach(p=>{ if(!map[p.param_id]) map[p.param_id]=[]; map[p.param_id].push(p); });
+    return map;
+  } catch(e){ return {}; }
+}
+
+async function skRenderReport(results, reportCode, isMock) {
+  const scores=results.scores;
+  const dateStr=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('skRptImg').src=skCapturedDataUrl;
+  document.getElementById('skRptDate').textContent='Analysed '+dateStr;
+  document.getElementById('skTagType').textContent=(results.skin_type||'Combination')+' Skin';
+  document.getElementById('skTagAge').textContent=results.skin_age?'Skin Age: '+results.skin_age:'Skin Age: N/A';
+  let good=0,mid=0,low=0;
+  SK_PARAMS.forEach(p=>{const s=scores[p.id]||0; if(s>=70)good++; else if(s>=45)mid++; else low++;});
+  document.getElementById('skOvGood').textContent=good;
+  document.getElementById('skOvMid').textContent=mid;
+  document.getElementById('skOvLow').textContent=low;
+  const avg=Math.round(SK_PARAMS.reduce((a,p)=>a+(scores[p.id]||0),0)/SK_PARAMS.length);
+  document.getElementById('skTagScore').textContent='Score: '+avg+'/100';
+  document.getElementById('skTagMock').style.display=isMock?'':'none';
+  const products=await skLoadProducts();
+  const grid=document.getElementById('skParamsGrid');
+  grid.innerHTML='';
+  SK_PARAMS.forEach(p=>{
+    const s=scores[p.id]||0;
+    const lv=s>=70?'good':s>=45?'mid':'low';
+    const info=SK_PARAM_INFO[p.id];
+    const lvInfo=info[lv];
+    const prods=products[p.id]||[];
+    const prodsHTML=prods.length?`<div class="prods"><div class="prod-lbl">Recommended Products</div>${prods.map(pr=>`<a href="${pr.url||'#'}" target="_blank" rel="noopener" class="prod-row"><div class="prod-emoji">${pr.emoji||'🧴'}</div><div class="prod-info"><div class="prod-name">${pr.name}${pr.price?' · '+pr.price:''}</div><div class="prod-brand">${pr.brand||''}</div></div><div class="prod-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></a>`).join('')}</div>`:'';
+    const card=document.createElement('div');
+    card.className='p-card';
+    card.innerHTML=`<div class="p-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${info.icon}</span><div><div class="p-name">${p.label}</div><div class="p-desc">${p.desc}</div></div></div><div class="p-badge bg-${lv}">${s}</div></div><div class="bar-bg"><div class="bar-fill fill-${lv}" style="width:0" data-w="${s}%"></div></div><div class="p-level-row"><span class="p-level-badge lbadge-${lv}">${lvInfo.label}</span></div><div class="p-full-desc">${lvInfo.desc}</div>${prodsHTML}`;
+    grid.appendChild(card);
+  });
+  setTimeout(()=>{ document.querySelectorAll('#skinApp .bar-fill').forEach(el=>{el.style.width=el.dataset.w;}); },120);
+
+  // Share link
+  const shareUrl=window.location.href.split('?')[0]+'?skinreport='+reportCode;
+  document.getElementById('skShareLink').value=shareUrl;
+  document.getElementById('skQrcode').innerHTML='';
+  if(typeof QRCode!=='undefined'){
+    new QRCode(document.getElementById('skQrcode'),{text:shareUrl,width:120,height:120,colorDark:'#2C2C2A',colorLight:'#FFFFFF'});
+  }
+}
+
+function skRestart() {
+  skCapturedDataUrl=null; skCapturedBlob=null;
+  document.getElementById('skAnalyseBtn').disabled=true;
+  document.getElementById('skErrBanner').style.display='none';
+  document.getElementById('skPreviewSection').style.display='none';
+  skResetDropZone(); skGoStep(1); skSwitchTab('upload');
+}
+function skCopyLink() {
+  const val=document.getElementById('skShareLink').value;
+  navigator.clipboard.writeText(val).then(()=>skShowToast('Link copied!')).catch(()=>{document.getElementById('skShareLink').select();document.execCommand('copy');skShowToast('Link copied!');});
+}
+function skShowToast(msg) {
+  const t=document.getElementById('skToast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
+<\/script>
 </div>
 
 <!-- ══════════════════════════════
@@ -414,7 +979,7 @@ details[open] .accordion summary::after { content: '↑'; }
 // ============================================================
 //  CONFIGURATION — update with your Cloudflare Worker URL
 // ============================================================
-const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/"; // e.g. https://budget-barber.yourname.workers.dev
+const WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL"; // e.g. https://budget-barber.yourname.workers.dev
 // ============================================================
 
 // ── Auth guard — no redirect loop, session persists until logout ──
