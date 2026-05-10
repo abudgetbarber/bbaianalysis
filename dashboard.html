@@ -990,7 +990,7 @@ const WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL";
 let _session = sessionStorage.getItem('bb_auth');
 if (!_session) {
   // Fallback: set a guest session so the page is usable when opened directly.
-  // In production, replace this with: window.location.href = 'login.html';
+  // In production, replace this with: window.location.href = 'index.html';
   _session = JSON.stringify({ name: 'Guest' });
   sessionStorage.setItem('bb_auth', _session);
 }
@@ -1006,7 +1006,7 @@ if (session.name) {
 
 function logout() {
   sessionStorage.removeItem('bb_auth');
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
 }
 
 // ── Module tab switching ──
