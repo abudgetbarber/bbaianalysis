@@ -275,7 +275,6 @@ details[open] .accordion summary::after { content: '↑'; }
   </button>
   <button class="tab-btn" id="tab-skin" onclick="switchModule('skin')">
     <span class="tab-icon">🔬</span> AI Skin Analysis
-    <span class="tab-soon">Soon</span>
   </button>
   <button class="tab-btn" id="tab-colour" onclick="switchModule('colour')">
     <span class="tab-icon">🎨</span> Hair Colour
@@ -658,295 +657,6 @@ details[open] .accordion summary::after { content: '↑'; }
 <div class="sk-toast" id="skToast"></div>
 </div>
 
-<script>
-// ═══════════════════════════════════════════════════
-// SKIN ANALYSIS MODULE — Configuration
-// ═══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
-const YOUCAM_API_KEY   = 'sk-_DqRLIN1iHacG-RHKf8RCjqTKx060p6bxz4QrAUal14AGW2Jg5F50ML_fh6TMr37';
-const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
-
-const skSb = supabase.createClient(SK_SUPABASE_URL, SK_SUPABASE_ANON);
-
-const SK_PARAMS = [
-  { id:'spots',       label:'Spots',       desc:'Pigmentation & dark marks',     youcam:'spot' },
-  { id:'wrinkles',    label:'Wrinkles',     desc:'Fine lines & expression lines',  youcam:'wrinkle' },
-  { id:'oiliness',    label:'Oiliness',     desc:'Sebum & shine levels',           youcam:'oily' },
-  { id:'moisture',    label:'Moisture',     desc:'Hydration & water content',      youcam:'moisture' },
-  { id:'acne',        label:'Acne',         desc:'Breakouts & blemishes',          youcam:'acne' },
-  { id:'firmness',    label:'Firmness',     desc:'Skin elasticity & tone',         youcam:'firmness' },
-  { id:'radiance',    label:'Radiance',     desc:'Overall glow & brightness',      youcam:'radiance' },
-  { id:'eyebag',      label:'Eye Bag',      desc:'Puffiness under eyes',           youcam:'eye_bag' },
-  { id:'dark_circle', label:'Dark Circles', desc:'Under-eye discolouration',       youcam:'dark_circle' },
-];
-
-const SK_PARAM_INFO = {
-  spots:       { icon:'🔵', good:{label:'Excellent',   desc:'Your skin is clear with very minimal pigmentation. Skin tone appears even and luminous.'},             mid:{label:'Fair',        desc:'Some uneven pigmentation or mild dark spots visible. Regular SPF and brightening serums can help.'}, low:{label:'Needs Care', desc:'Noticeable pigmentation detected. Consider Vitamin C, niacinamide, or kojic acid treatments.'} },
-  wrinkles:    { icon:'〰️', good:{label:'Excellent',   desc:'Skin appears smooth with minimal fine lines. Collagen levels look healthy.'},                          mid:{label:'Fair',        desc:'Mild fine lines visible, especially around eyes and forehead. Retinol or peptide moisturiser can help.'}, low:{label:'Needs Care', desc:'Visible wrinkles detected. Focus on retinoids, hyaluronic acid, and daily SPF.'} },
-  oiliness:    { icon:'💧', good:{label:'Balanced',    desc:'Healthy balanced sebum level. No excessive shine detected. Current routine is working well.'},          mid:{label:'Moderate',    desc:'Some oiliness in T-zone. Lightweight non-comedogenic moisturiser and gentle cleanser will help.'}, low:{label:'High',       desc:'Significant excess oil detected. Focus on oil-control products, clay masks, avoid heavy creams.'} },
-  moisture:    { icon:'🌊', good:{label:'Well Hydrated',desc:'Excellent hydration levels. Skin barrier appears intact. Continue current routine.'},                  mid:{label:'Mildly Dry',  desc:'Slight dehydration. Add hyaluronic acid serum and increase daily water intake.'}, low:{label:'Dehydrated',  desc:'Significant moisture deficiency. Prioritise rich moisturiser and hydrating serum immediately.'} },
-  acne:        { icon:'🔴', good:{label:'Clear',        desc:'No significant acne detected. Skin surface appears clean and healthy.'},                               mid:{label:'Mild',        desc:'A few minor blemishes present. Salicylic acid cleanser used consistently can help.'}, low:{label:'Active',      desc:'Active breakouts detected. Avoid picking. Consider salicylic acid or benzoyl peroxide treatment.'} },
-  firmness:    { icon:'💪', good:{label:'Firm',         desc:'Excellent firmness and elasticity. Strong collagen levels. Skin appears toned and youthful.'},         mid:{label:'Moderate',    desc:'Mild reduction in firmness. Retinol, peptides or Vitamin C can help.'}, low:{label:'Low',         desc:'Noticeable loss of firmness. Focus on firming serum, facial massage, collagen-supportive diet.'} },
-  radiance:    { icon:'✨', good:{label:'Glowing',      desc:'Beautiful healthy radiance. Even skin tone contributing to a natural glow.'},                          mid:{label:'Fair',        desc:'Moderate radiance, some areas slightly dull. Regular exfoliation and Vitamin C serum can help.'}, low:{label:'Dull',        desc:'Skin appears lacklustre. Exfoliate regularly and use a brightening serum.'} },
-  eyebag:      { icon:'👁️', good:{label:'None',         desc:'No significant puffiness detected. Under-eye area looks smooth and refreshed.'},                      mid:{label:'Mild',        desc:'Mild puffiness. Try cold compresses, elevate head while sleeping, reduce salt intake.'}, low:{label:'Noticeable',  desc:'Noticeable puffiness. Eye creams with caffeine or peptides can help. Ensure 7-8 hours sleep.'} },
-  dark_circle: { icon:'🌑', good:{label:'Bright',       desc:'Under-eye area appears bright and even-toned. No significant discolouration detected.'},               mid:{label:'Mild',        desc:'Slight discolouration visible. Vitamin K or caffeine-based eye creams can help over time.'}, low:{label:'Dark',        desc:'Visible dark circles detected. Targeted eye treatments and sufficient rest are advised.'} },
-};
-
-let skCapturedDataUrl = null;
-let skCapturedBlob    = null;
-let skStream          = null;
-let skFacingMode      = 'user';
-let skCurrentTab      = 'upload';
-
-// ── Step nav ──
-function skGoStep(n) {
-  [1,2,3].forEach(i => {
-    document.getElementById(`skp${i}`).classList.toggle('active', i===n);
-    const si = document.getElementById(`ski${i}`);
-    si.classList.remove('active','done');
-    if (i===n) si.classList.add('active');
-    if (i<n)   si.classList.add('done');
-  });
-  document.getElementById('panel-skin').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-// ── Tabs ──
-function skSwitchTab(tab) {
-  skCurrentTab = tab;
-  document.getElementById('skTabCamera').classList.toggle('active', tab==='camera');
-  document.getElementById('skTabUpload').classList.toggle('active', tab==='upload');
-  document.getElementById('skCameraSection').style.display  = tab==='camera' ? 'block' : 'none';
-  document.getElementById('skUploadSection').style.display  = tab==='upload' ? 'block' : 'none';
-  document.getElementById('skPreviewSection').style.display = 'none';
-  if (tab==='camera') skStartCamera(); else skStopCamera();
-}
-
-// ── Camera ──
-async function skStartCamera() {
-  skStopCamera();
-  const err = document.getElementById('skCamErr');
-  err.style.display='none';
-  document.getElementById('skLiveVideo').style.display='block';
-  try {
-    skStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:skFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio:false });
-    document.getElementById('skLiveVideo').srcObject = skStream;
-  } catch(e) {
-    err.textContent = e.name==='NotAllowedError' ? 'Camera access denied. Please allow permission.' : 'Camera error: '+e.message;
-    err.style.display='block';
-  }
-}
-function skStopCamera() { if (skStream){skStream.getTracks().forEach(t=>t.stop()); skStream=null;} }
-async function skFlipCamera() { skFacingMode=skFacingMode==='user'?'environment':'user'; await skStartCamera(); }
-
-function skCapturePhoto() {
-  const video=document.getElementById('skLiveVideo');
-  if (!video.srcObject){skShowToast('Camera not ready');return;}
-  const canvas=document.createElement('canvas');
-  canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||960;
-  const ctx=canvas.getContext('2d');
-  if (skFacingMode==='user'){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
-  ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  skCapturedDataUrl=canvas.toDataURL('image/jpeg',0.92);
-  canvas.toBlob(b=>{b._source='camera';skCapturedBlob=b;},'image/jpeg',0.92);
-  skStopCamera();
-  document.getElementById('skLiveVideo').style.display='none';
-  document.getElementById('skPreviewSection').style.display='block';
-  document.getElementById('skPreviewImg').src=skCapturedDataUrl;
-  document.getElementById('skAnalyseBtn').disabled=false;
-}
-
-function skRetakePhoto() {
-  skCapturedDataUrl=null; skCapturedBlob=null;
-  document.getElementById('skAnalyseBtn').disabled=true;
-  document.getElementById('skPreviewSection').style.display='none';
-  skStartCamera();
-}
-
-// ── Upload ──
-function skHandleUpload(e) { const f=e.target.files[0]; if(f) skProcessFile(f); }
-function skProcessFile(file) {
-  if (!file.type.startsWith('image/')){skShowToast('Please select an image file');return;}
-  if (file.size>10*1024*1024){skShowToast('Image too large — max 10 MB');return;}
-  skCapturedBlob=file;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    skCapturedDataUrl=ev.target.result;
-    const dz=document.getElementById('skDropZone');
-    dz.classList.add('has-img'); dz.innerHTML=`<img src="${skCapturedDataUrl}" alt="Uploaded">`;
-    document.getElementById('skAnalyseBtn').disabled=false;
-  };
-  reader.readAsDataURL(file);
-}
-
-function skResetDropZone() {
-  const dz=document.getElementById('skDropZone');
-  dz.classList.remove('has-img');
-  dz.innerHTML=`<div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div><div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div><input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)">`;
-}
-
-// Drag and drop
-document.addEventListener('DOMContentLoaded',()=>{
-  const dz=document.getElementById('skDropZone');
-  if(!dz) return;
-  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#7A9E7E';});
-  dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
-  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)skProcessFile(f);});
-});
-
-// ── Analysis ──
-async function skStartAnalysis() {
-  if (!skCapturedDataUrl||!skCapturedBlob){skShowToast('Please capture or upload a photo first');return;}
-  skStopCamera(); skGoStep(2);
-  document.getElementById('skStatusMsg').textContent='Preparing image…';
-
-  let results; let isMock=false;
-  if (YOUCAM_API_KEY!=='YOUR_YOUCAM_API_KEY') {
-    try {
-      document.getElementById('skStatusMsg').textContent='Uploading to YouCam API…';
-      const fileId=await skApiUpload(skCapturedBlob);
-      document.getElementById('skStatusMsg').textContent='Running AI skin analysis…';
-      const taskId=await skApiRunTask(fileId);
-      document.getElementById('skStatusMsg').textContent='Processing results…';
-      results=await skApiPollResults(taskId);
-    } catch(err) {
-      document.getElementById('skErrBanner').textContent='API error — showing demo results. ('+err.message+')';
-      document.getElementById('skErrBanner').style.display='block';
-      results=skMockResults(); isMock=true;
-    }
-  } else {
-    document.getElementById('skStatusMsg').textContent='Demo mode…';
-    await skDelay(2500); results=skMockResults(); isMock=true;
-  }
-
-  document.getElementById('skStatusMsg').textContent='Saving report…';
-  const reportCode=await skSaveReport(results,isMock);
-  await skDelay(300);
-  await skRenderReport(results,reportCode,isMock);
-  skGoStep(3);
-}
-
-async function skApiUpload(blob) {
-  const initRes=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/file`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_ext:'jpg'})});
-  if(!initRes.ok) throw new Error(`File init failed: ${initRes.status}`);
-  const initData=await initRes.json();
-  const uploadRes=await fetch(initData.data.upload_url,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob});
-  if(!uploadRes.ok) throw new Error(`Image upload failed: ${uploadRes.status}`);
-  return initData.data.file_id;
-}
-async function skApiRunTask(fileId) {
-  const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_id:fileId,concerns:SK_PARAMS.map(p=>p.youcam),analysis_type:'SD'})});
-  if(!res.ok) throw new Error(`Run task failed: ${res.status}`);
-  const data=await res.json(); return data.data.task_id;
-}
-async function skApiPollResults(taskId) {
-  for(let i=0;i<25;i++){
-    await skDelay(1200);
-    const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/${taskId}`,{headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`}});
-    if(!res.ok) throw new Error(`Poll failed: ${res.status}`);
-    const data=await res.json();
-    const status=data.data?.status||data.status;
-    if(status==='completed'||status==='success') return skParseApiResults(data.data||data);
-    if(status==='failed'||status==='error') throw new Error('Analysis failed');
-  }
-  throw new Error('Timeout waiting for results');
-}
-function skParseApiResults(apiData) {
-  const scores={};
-  const raw=apiData.results||apiData.concerns||apiData.scores||{};
-  SK_PARAMS.forEach(p=>{
-    const rawScore=raw[p.youcam]?.score??raw[p.youcam]??raw[p.id]??null;
-    if(rawScore!==null){
-      const positive=['moisture','firmness','radiance'].includes(p.id);
-      scores[p.id]=positive?Math.round(rawScore):Math.round(100-rawScore);
-    } else { scores[p.id]=Math.floor(Math.random()*30)+55; }
-  });
-  return { scores, skin_type:apiData.skin_type||'Combination', skin_age:apiData.skin_age||null };
-}
-function skMockResults() {
-  const scores={};
-  SK_PARAMS.forEach(p=>{scores[p.id]=Math.floor(Math.random()*40)+45;});
-  return { scores, skin_type:['Normal','Oily','Dry','Combination'][Math.floor(Math.random()*4)], skin_age:Math.floor(Math.random()*15)+24 };
-}
-
-async function skSaveReport(results, isMock) {
-  const code='BB-'+Date.now().toString(36).toUpperCase();
-  const sess=JSON.parse(sessionStorage.getItem('bb_auth')||'{}');
-  try {
-    await skSb.from('bb_reports').insert({ report_code:code, customer_id:sess.id||null, skin_type:results.skin_type, skin_age:results.skin_age, scores:results.scores, is_mock:isMock });
-  } catch(e){ console.warn('Supabase save failed:',e.message); }
-  return code;
-}
-
-async function skLoadProducts() {
-  try {
-    const { data,error }=await skSb.from('bb_products').select('*').eq('active',true).order('sort_order');
-    if(error||!data) return {};
-    const map={};
-    data.forEach(p=>{ if(!map[p.param_id]) map[p.param_id]=[]; map[p.param_id].push(p); });
-    return map;
-  } catch(e){ return {}; }
-}
-
-async function skRenderReport(results, reportCode, isMock) {
-  const scores=results.scores;
-  const dateStr=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('skRptImg').src=skCapturedDataUrl;
-  document.getElementById('skRptDate').textContent='Analysed '+dateStr;
-  document.getElementById('skTagType').textContent=(results.skin_type||'Combination')+' Skin';
-  document.getElementById('skTagAge').textContent=results.skin_age?'Skin Age: '+results.skin_age:'Skin Age: N/A';
-  let good=0,mid=0,low=0;
-  SK_PARAMS.forEach(p=>{const s=scores[p.id]||0; if(s>=70)good++; else if(s>=45)mid++; else low++;});
-  document.getElementById('skOvGood').textContent=good;
-  document.getElementById('skOvMid').textContent=mid;
-  document.getElementById('skOvLow').textContent=low;
-  const avg=Math.round(SK_PARAMS.reduce((a,p)=>a+(scores[p.id]||0),0)/SK_PARAMS.length);
-  document.getElementById('skTagScore').textContent='Score: '+avg+'/100';
-  document.getElementById('skTagMock').style.display=isMock?'':'none';
-  const products=await skLoadProducts();
-  const grid=document.getElementById('skParamsGrid');
-  grid.innerHTML='';
-  SK_PARAMS.forEach(p=>{
-    const s=scores[p.id]||0;
-    const lv=s>=70?'good':s>=45?'mid':'low';
-    const info=SK_PARAM_INFO[p.id];
-    const lvInfo=info[lv];
-    const prods=products[p.id]||[];
-    const prodsHTML=prods.length?`<div class="prods"><div class="prod-lbl">Recommended Products</div>${prods.map(pr=>`<a href="${pr.url||'#'}" target="_blank" rel="noopener" class="prod-row"><div class="prod-emoji">${pr.emoji||'🧴'}</div><div class="prod-info"><div class="prod-name">${pr.name}${pr.price?' · '+pr.price:''}</div><div class="prod-brand">${pr.brand||''}</div></div><div class="prod-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></a>`).join('')}</div>`:'';
-    const card=document.createElement('div');
-    card.className='p-card';
-    card.innerHTML=`<div class="p-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${info.icon}</span><div><div class="p-name">${p.label}</div><div class="p-desc">${p.desc}</div></div></div><div class="p-badge bg-${lv}">${s}</div></div><div class="bar-bg"><div class="bar-fill fill-${lv}" style="width:0" data-w="${s}%"></div></div><div class="p-level-row"><span class="p-level-badge lbadge-${lv}">${lvInfo.label}</span></div><div class="p-full-desc">${lvInfo.desc}</div>${prodsHTML}`;
-    grid.appendChild(card);
-  });
-  setTimeout(()=>{ document.querySelectorAll('#skinApp .bar-fill').forEach(el=>{el.style.width=el.dataset.w;}); },120);
-
-  // Share link
-  const shareUrl=window.location.href.split('?')[0]+'?skinreport='+reportCode;
-  document.getElementById('skShareLink').value=shareUrl;
-  document.getElementById('skQrcode').innerHTML='';
-  if(typeof QRCode!=='undefined'){
-    new QRCode(document.getElementById('skQrcode'),{text:shareUrl,width:120,height:120,colorDark:'#2C2C2A',colorLight:'#FFFFFF'});
-  }
-}
-
-function skRestart() {
-  skCapturedDataUrl=null; skCapturedBlob=null;
-  document.getElementById('skAnalyseBtn').disabled=true;
-  document.getElementById('skErrBanner').style.display='none';
-  document.getElementById('skPreviewSection').style.display='none';
-  skResetDropZone(); skGoStep(1); skSwitchTab('upload');
-}
-function skCopyLink() {
-  const val=document.getElementById('skShareLink').value;
-  navigator.clipboard.writeText(val).then(()=>skShowToast('Link copied!')).catch(()=>{document.getElementById('skShareLink').select();document.execCommand('copy');skShowToast('Link copied!');});
-}
-function skShowToast(msg) {
-  const t=document.getElementById('skToast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
-function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
-<\/script>
 </div>
 
 <!-- ══════════════════════════════
@@ -980,7 +690,7 @@ function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 // ⚠️ REQUIRED: Replace with your actual Cloudflare Worker URL before deploying.
 // e.g. https://budget-barber.yourname.workers.dev
 // The "Generate My AI Hairstyle" button will not work until this is set.
-const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
+const WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL";
 // ============================================================
 
 // ── Auth guard — redirect to login if no session exists ──
@@ -990,7 +700,7 @@ const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
 let _session = sessionStorage.getItem('bb_auth');
 if (!_session) {
   // Fallback: set a guest session so the page is usable when opened directly.
-  // In production, replace this with: window.location.href = 'index.html';
+  // In production, replace this with: window.location.href = 'login.html';
   _session = JSON.stringify({ name: 'Guest' });
   sessionStorage.setItem('bb_auth', _session);
 }
@@ -1006,7 +716,7 @@ if (session.name) {
 
 function logout() {
   sessionStorage.removeItem('bb_auth');
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 }
 
 // ── Module tab switching ──
@@ -1275,6 +985,302 @@ function downloadImg() {
   a.download = 'budget-barber-haircut-grid.png';
   a.click();
 }
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SKIN ANALYSIS MODULE — Configuration
+// ═══════════════════════════════════════════════════
+const SK_SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SK_SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+const YOUCAM_API_KEY   = 'YOUR_YOUCAM_API_KEY';
+const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
+
+let skSb = null;
+try {
+  skSb = supabase.createClient(SK_SUPABASE_URL, SK_SUPABASE_ANON);
+} catch(e) {
+  console.warn('Supabase not available for skin module:', e.message);
+}
+
+const SK_PARAMS = [
+  { id:'spots',       label:'Spots',       desc:'Pigmentation & dark marks',     youcam:'spot' },
+  { id:'wrinkles',    label:'Wrinkles',     desc:'Fine lines & expression lines',  youcam:'wrinkle' },
+  { id:'oiliness',    label:'Oiliness',     desc:'Sebum & shine levels',           youcam:'oily' },
+  { id:'moisture',    label:'Moisture',     desc:'Hydration & water content',      youcam:'moisture' },
+  { id:'acne',        label:'Acne',         desc:'Breakouts & blemishes',          youcam:'acne' },
+  { id:'firmness',    label:'Firmness',     desc:'Skin elasticity & tone',         youcam:'firmness' },
+  { id:'radiance',    label:'Radiance',     desc:'Overall glow & brightness',      youcam:'radiance' },
+  { id:'eyebag',      label:'Eye Bag',      desc:'Puffiness under eyes',           youcam:'eye_bag' },
+  { id:'dark_circle', label:'Dark Circles', desc:'Under-eye discolouration',       youcam:'dark_circle' },
+];
+
+const SK_PARAM_INFO = {
+  spots:       { icon:'🔵', good:{label:'Excellent',   desc:'Your skin is clear with very minimal pigmentation. Skin tone appears even and luminous.'},             mid:{label:'Fair',        desc:'Some uneven pigmentation or mild dark spots visible. Regular SPF and brightening serums can help.'}, low:{label:'Needs Care', desc:'Noticeable pigmentation detected. Consider Vitamin C, niacinamide, or kojic acid treatments.'} },
+  wrinkles:    { icon:'〰️', good:{label:'Excellent',   desc:'Skin appears smooth with minimal fine lines. Collagen levels look healthy.'},                          mid:{label:'Fair',        desc:'Mild fine lines visible, especially around eyes and forehead. Retinol or peptide moisturiser can help.'}, low:{label:'Needs Care', desc:'Visible wrinkles detected. Focus on retinoids, hyaluronic acid, and daily SPF.'} },
+  oiliness:    { icon:'💧', good:{label:'Balanced',    desc:'Healthy balanced sebum level. No excessive shine detected. Current routine is working well.'},          mid:{label:'Moderate',    desc:'Some oiliness in T-zone. Lightweight non-comedogenic moisturiser and gentle cleanser will help.'}, low:{label:'High',       desc:'Significant excess oil detected. Focus on oil-control products, clay masks, avoid heavy creams.'} },
+  moisture:    { icon:'🌊', good:{label:'Well Hydrated',desc:'Excellent hydration levels. Skin barrier appears intact. Continue current routine.'},                  mid:{label:'Mildly Dry',  desc:'Slight dehydration. Add hyaluronic acid serum and increase daily water intake.'}, low:{label:'Dehydrated',  desc:'Significant moisture deficiency. Prioritise rich moisturiser and hydrating serum immediately.'} },
+  acne:        { icon:'🔴', good:{label:'Clear',        desc:'No significant acne detected. Skin surface appears clean and healthy.'},                               mid:{label:'Mild',        desc:'A few minor blemishes present. Salicylic acid cleanser used consistently can help.'}, low:{label:'Active',      desc:'Active breakouts detected. Avoid picking. Consider salicylic acid or benzoyl peroxide treatment.'} },
+  firmness:    { icon:'💪', good:{label:'Firm',         desc:'Excellent firmness and elasticity. Strong collagen levels. Skin appears toned and youthful.'},         mid:{label:'Moderate',    desc:'Mild reduction in firmness. Retinol, peptides or Vitamin C can help.'}, low:{label:'Low',         desc:'Noticeable loss of firmness. Focus on firming serum, facial massage, collagen-supportive diet.'} },
+  radiance:    { icon:'✨', good:{label:'Glowing',      desc:'Beautiful healthy radiance. Even skin tone contributing to a natural glow.'},                          mid:{label:'Fair',        desc:'Moderate radiance, some areas slightly dull. Regular exfoliation and Vitamin C serum can help.'}, low:{label:'Dull',        desc:'Skin appears lacklustre. Exfoliate regularly and use a brightening serum.'} },
+  eyebag:      { icon:'👁️', good:{label:'None',         desc:'No significant puffiness detected. Under-eye area looks smooth and refreshed.'},                      mid:{label:'Mild',        desc:'Mild puffiness. Try cold compresses, elevate head while sleeping, reduce salt intake.'}, low:{label:'Noticeable',  desc:'Noticeable puffiness. Eye creams with caffeine or peptides can help. Ensure 7-8 hours sleep.'} },
+  dark_circle: { icon:'🌑', good:{label:'Bright',       desc:'Under-eye area appears bright and even-toned. No significant discolouration detected.'},               mid:{label:'Mild',        desc:'Slight discolouration visible. Vitamin K or caffeine-based eye creams can help over time.'}, low:{label:'Dark',        desc:'Visible dark circles detected. Targeted eye treatments and sufficient rest are advised.'} },
+};
+
+let skCapturedDataUrl = null;
+let skCapturedBlob    = null;
+let skStream          = null;
+let skFacingMode      = 'user';
+let skCurrentTab      = 'upload';
+
+// ── Step nav ──
+function skGoStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById(`skp${i}`).classList.toggle('active', i===n);
+    const si = document.getElementById(`ski${i}`);
+    si.classList.remove('active','done');
+    if (i===n) si.classList.add('active');
+    if (i<n)   si.classList.add('done');
+  });
+  document.getElementById('panel-skin').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── Tabs ──
+function skSwitchTab(tab) {
+  skCurrentTab = tab;
+  document.getElementById('skTabCamera').classList.toggle('active', tab==='camera');
+  document.getElementById('skTabUpload').classList.toggle('active', tab==='upload');
+  document.getElementById('skCameraSection').style.display  = tab==='camera' ? 'block' : 'none';
+  document.getElementById('skUploadSection').style.display  = tab==='upload' ? 'block' : 'none';
+  document.getElementById('skPreviewSection').style.display = 'none';
+  if (tab==='camera') skStartCamera(); else skStopCamera();
+}
+
+// ── Camera ──
+async function skStartCamera() {
+  skStopCamera();
+  const err = document.getElementById('skCamErr');
+  err.style.display='none';
+  document.getElementById('skLiveVideo').style.display='block';
+  try {
+    skStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:skFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio:false });
+    document.getElementById('skLiveVideo').srcObject = skStream;
+  } catch(e) {
+    err.textContent = e.name==='NotAllowedError' ? 'Camera access denied. Please allow permission.' : 'Camera error: '+e.message;
+    err.style.display='block';
+  }
+}
+function skStopCamera() { if (skStream){skStream.getTracks().forEach(t=>t.stop()); skStream=null;} }
+async function skFlipCamera() { skFacingMode=skFacingMode==='user'?'environment':'user'; await skStartCamera(); }
+
+function skCapturePhoto() {
+  const video=document.getElementById('skLiveVideo');
+  if (!video.srcObject){skShowToast('Camera not ready');return;}
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||960;
+  const ctx=canvas.getContext('2d');
+  if (skFacingMode==='user'){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  skCapturedDataUrl=canvas.toDataURL('image/jpeg',0.92);
+  canvas.toBlob(b=>{b._source='camera';skCapturedBlob=b;},'image/jpeg',0.92);
+  skStopCamera();
+  document.getElementById('skLiveVideo').style.display='none';
+  document.getElementById('skPreviewSection').style.display='block';
+  document.getElementById('skPreviewImg').src=skCapturedDataUrl;
+  document.getElementById('skAnalyseBtn').disabled=false;
+}
+
+function skRetakePhoto() {
+  skCapturedDataUrl=null; skCapturedBlob=null;
+  document.getElementById('skAnalyseBtn').disabled=true;
+  document.getElementById('skPreviewSection').style.display='none';
+  skStartCamera();
+}
+
+// ── Upload ──
+function skHandleUpload(e) { const f=e.target.files[0]; if(f) skProcessFile(f); }
+function skProcessFile(file) {
+  if (!file.type.startsWith('image/')){skShowToast('Please select an image file');return;}
+  if (file.size>10*1024*1024){skShowToast('Image too large — max 10 MB');return;}
+  skCapturedBlob=file;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    skCapturedDataUrl=ev.target.result;
+    const dz=document.getElementById('skDropZone');
+    dz.classList.add('has-img'); dz.innerHTML=`<img src="${skCapturedDataUrl}" alt="Uploaded">`;
+    document.getElementById('skAnalyseBtn').disabled=false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function skResetDropZone() {
+  const dz=document.getElementById('skDropZone');
+  dz.classList.remove('has-img');
+  dz.innerHTML=`<div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div><div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div><input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)">`;
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=document.getElementById('skDropZone');
+  if(!dz) return;
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#7A9E7E';});
+  dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)skProcessFile(f);});
+});
+
+// ── Analysis ──
+async function skStartAnalysis() {
+  if (!skCapturedDataUrl||!skCapturedBlob){skShowToast('Please capture or upload a photo first');return;}
+  skStopCamera(); skGoStep(2);
+  document.getElementById('skStatusMsg').textContent='Preparing image…';
+
+  let results; let isMock=false;
+  if (YOUCAM_API_KEY!=='YOUR_YOUCAM_API_KEY') {
+    try {
+      document.getElementById('skStatusMsg').textContent='Uploading to YouCam API…';
+      const fileId=await skApiUpload(skCapturedBlob);
+      document.getElementById('skStatusMsg').textContent='Running AI skin analysis…';
+      const taskId=await skApiRunTask(fileId);
+      document.getElementById('skStatusMsg').textContent='Processing results…';
+      results=await skApiPollResults(taskId);
+    } catch(err) {
+      document.getElementById('skErrBanner').textContent='API error — showing demo results. ('+err.message+')';
+      document.getElementById('skErrBanner').style.display='block';
+      results=skMockResults(); isMock=true;
+    }
+  } else {
+    document.getElementById('skStatusMsg').textContent='Demo mode…';
+    await skDelay(2500); results=skMockResults(); isMock=true;
+  }
+
+  document.getElementById('skStatusMsg').textContent='Saving report…';
+  const reportCode=await skSaveReport(results,isMock);
+  await skDelay(300);
+  await skRenderReport(results,reportCode,isMock);
+  skGoStep(3);
+}
+
+async function skApiUpload(blob) {
+  const initRes=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/file`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_ext:'jpg'})});
+  if(!initRes.ok) throw new Error(`File init failed: ${initRes.status}`);
+  const initData=await initRes.json();
+  const uploadRes=await fetch(initData.data.upload_url,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob});
+  if(!uploadRes.ok) throw new Error(`Image upload failed: ${uploadRes.status}`);
+  return initData.data.file_id;
+}
+async function skApiRunTask(fileId) {
+  const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis`,{method:'POST',headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({file_id:fileId,concerns:SK_PARAMS.map(p=>p.youcam),analysis_type:'SD'})});
+  if(!res.ok) throw new Error(`Run task failed: ${res.status}`);
+  const data=await res.json(); return data.data.task_id;
+}
+async function skApiPollResults(taskId) {
+  for(let i=0;i<25;i++){
+    await skDelay(1200);
+    const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/${taskId}`,{headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`}});
+    if(!res.ok) throw new Error(`Poll failed: ${res.status}`);
+    const data=await res.json();
+    const status=data.data?.status||data.status;
+    if(status==='completed'||status==='success') return skParseApiResults(data.data||data);
+    if(status==='failed'||status==='error') throw new Error('Analysis failed');
+  }
+  throw new Error('Timeout waiting for results');
+}
+function skParseApiResults(apiData) {
+  const scores={};
+  const raw=apiData.results||apiData.concerns||apiData.scores||{};
+  SK_PARAMS.forEach(p=>{
+    const rawScore=raw[p.youcam]?.score??raw[p.youcam]??raw[p.id]??null;
+    if(rawScore!==null){
+      const positive=['moisture','firmness','radiance'].includes(p.id);
+      scores[p.id]=positive?Math.round(rawScore):Math.round(100-rawScore);
+    } else { scores[p.id]=Math.floor(Math.random()*30)+55; }
+  });
+  return { scores, skin_type:apiData.skin_type||'Combination', skin_age:apiData.skin_age||null };
+}
+function skMockResults() {
+  const scores={};
+  SK_PARAMS.forEach(p=>{scores[p.id]=Math.floor(Math.random()*40)+45;});
+  return { scores, skin_type:['Normal','Oily','Dry','Combination'][Math.floor(Math.random()*4)], skin_age:Math.floor(Math.random()*15)+24 };
+}
+
+async function skSaveReport(results, isMock) {
+  const code='BB-'+Date.now().toString(36).toUpperCase();
+  const sess=JSON.parse(sessionStorage.getItem('bb_auth')||'{}');
+  try {
+    if (skSb) await skSb.from('bb_reports').insert({ report_code:code, customer_id:sess.id||null, skin_type:results.skin_type, skin_age:results.skin_age, scores:results.scores, is_mock:isMock });
+  } catch(e){ console.warn('Supabase save failed:',e.message); }
+  return code;
+}
+
+async function skLoadProducts() {
+  try {
+    if (!skSb) return {};
+    const { data,error }=await skSb.from('bb_products').select('*').eq('active',true).order('sort_order');
+    if(error||!data) return {};
+    const map={};
+    data.forEach(p=>{ if(!map[p.param_id]) map[p.param_id]=[]; map[p.param_id].push(p); });
+    return map;
+  } catch(e){ return {}; }
+}
+
+async function skRenderReport(results, reportCode, isMock) {
+  const scores=results.scores;
+  const dateStr=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('skRptImg').src=skCapturedDataUrl;
+  document.getElementById('skRptDate').textContent='Analysed '+dateStr;
+  document.getElementById('skTagType').textContent=(results.skin_type||'Combination')+' Skin';
+  document.getElementById('skTagAge').textContent=results.skin_age?'Skin Age: '+results.skin_age:'Skin Age: N/A';
+  let good=0,mid=0,low=0;
+  SK_PARAMS.forEach(p=>{const s=scores[p.id]||0; if(s>=70)good++; else if(s>=45)mid++; else low++;});
+  document.getElementById('skOvGood').textContent=good;
+  document.getElementById('skOvMid').textContent=mid;
+  document.getElementById('skOvLow').textContent=low;
+  const avg=Math.round(SK_PARAMS.reduce((a,p)=>a+(scores[p.id]||0),0)/SK_PARAMS.length);
+  document.getElementById('skTagScore').textContent='Score: '+avg+'/100';
+  document.getElementById('skTagMock').style.display=isMock?'':'none';
+  const products=await skLoadProducts();
+  const grid=document.getElementById('skParamsGrid');
+  grid.innerHTML='';
+  SK_PARAMS.forEach(p=>{
+    const s=scores[p.id]||0;
+    const lv=s>=70?'good':s>=45?'mid':'low';
+    const info=SK_PARAM_INFO[p.id];
+    const lvInfo=info[lv];
+    const prods=products[p.id]||[];
+    const prodsHTML=prods.length?`<div class="prods"><div class="prod-lbl">Recommended Products</div>${prods.map(pr=>`<a href="${pr.url||'#'}" target="_blank" rel="noopener" class="prod-row"><div class="prod-emoji">${pr.emoji||'🧴'}</div><div class="prod-info"><div class="prod-name">${pr.name}${pr.price?' · '+pr.price:''}</div><div class="prod-brand">${pr.brand||''}</div></div><div class="prod-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></a>`).join('')}</div>`:'';
+    const card=document.createElement('div');
+    card.className='p-card';
+    card.innerHTML=`<div class="p-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${info.icon}</span><div><div class="p-name">${p.label}</div><div class="p-desc">${p.desc}</div></div></div><div class="p-badge bg-${lv}">${s}</div></div><div class="bar-bg"><div class="bar-fill fill-${lv}" style="width:0" data-w="${s}%"></div></div><div class="p-level-row"><span class="p-level-badge lbadge-${lv}">${lvInfo.label}</span></div><div class="p-full-desc">${lvInfo.desc}</div>${prodsHTML}`;
+    grid.appendChild(card);
+  });
+  setTimeout(()=>{ document.querySelectorAll('#skinApp .bar-fill').forEach(el=>{el.style.width=el.dataset.w;}); },120);
+
+  // Share link
+  const shareUrl=window.location.href.split('?')[0]+'?skinreport='+reportCode;
+  document.getElementById('skShareLink').value=shareUrl;
+  document.getElementById('skQrcode').innerHTML='';
+  if(typeof QRCode!=='undefined'){
+    new QRCode(document.getElementById('skQrcode'),{text:shareUrl,width:120,height:120,colorDark:'#2C2C2A',colorLight:'#FFFFFF'});
+  }
+}
+
+function skRestart() {
+  skCapturedDataUrl=null; skCapturedBlob=null;
+  document.getElementById('skAnalyseBtn').disabled=true;
+  document.getElementById('skErrBanner').style.display='none';
+  document.getElementById('skPreviewSection').style.display='none';
+  skResetDropZone(); skGoStep(1); skSwitchTab('upload');
+}
+function skCopyLink() {
+  const val=document.getElementById('skShareLink').value;
+  navigator.clipboard.writeText(val).then(()=>skShowToast('Link copied!')).catch(()=>{document.getElementById('skShareLink').select();document.execCommand('copy');skShowToast('Link copied!');});
+}
+function skShowToast(msg) {
+  const t=document.getElementById('skToast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 </script>
 </body>
 </html>
