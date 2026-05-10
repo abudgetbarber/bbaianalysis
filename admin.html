@@ -371,7 +371,7 @@ const sb = db; // alias used by skin functions
 // Auth guard — admin only
 const _sess = sessionStorage.getItem('bb_auth');
 if (!_sess) {
-  window.location.href = 'login.html';
+  window.location.href = 'index.html';
   throw new Error('No session — redirecting to login.');
 }
 const _s = JSON.parse(_sess);
@@ -620,7 +620,7 @@ function showA(id,msg){const el=document.getElementById(id);el.textContent=msg;e
 function hideA(id){document.getElementById(id).style.display='none';}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function logout(){sessionStorage.removeItem('bb_auth');window.location.href='login.html';}
+function logout(){sessionStorage.removeItem('bb_auth');window.location.href='index.html';}
 
 // Close modals on overlay click
 document.getElementById('editModal').addEventListener('click',e=>{if(e.target===document.getElementById('editModal'))closeModal();});
