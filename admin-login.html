@@ -444,6 +444,8 @@
       }));
 
       setTimeout(() => { window.location.href = 'admin.html'; }, 1200);
+      const saved = sessionStorage.getItem('bb_user');
+      alert('SAVED SESSION: ' + saved);
 
     } catch (err) {
       showMsg('error', err.message || 'Something went wrong. Please try again.');
