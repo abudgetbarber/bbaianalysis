@@ -387,8 +387,8 @@
 
       const res = await fetch(`${SUPABASE_URL}/rest/v1/users?phone=eq.91${phone}&select=id,name,phone,role,is_active`, {
         headers: {
-          'apikey': SUPABASE_ANON,
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         }
       });
 
@@ -420,8 +420,8 @@
       // ── Verify PIN hash ───────────────────────────────────────────────────
       const pinRes = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${user.id}&pin_hash=eq.${pinHash}&select=id`, {
         headers: {
-          'apikey': SUPABASE_ANON,
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         }
       });
 
