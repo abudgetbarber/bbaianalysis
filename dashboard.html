@@ -1004,15 +1004,15 @@ try {
 }
 
 const SK_PARAMS = [
-  { id:'spots',       label:'Spots',       desc:'Pigmentation & dark marks',     youcam:'spot' },
-  { id:'wrinkles',    label:'Wrinkles',     desc:'Fine lines & expression lines',  youcam:'wrinkle' },
-  { id:'oiliness',    label:'Oiliness',     desc:'Sebum & shine levels',           youcam:'oily' },
-  { id:'moisture',    label:'Moisture',     desc:'Hydration & water content',      youcam:'moisture' },
-  { id:'acne',        label:'Acne',         desc:'Breakouts & blemishes',          youcam:'acne' },
-  { id:'firmness',    label:'Firmness',     desc:'Skin elasticity & tone',         youcam:'firmness' },
-  { id:'radiance',    label:'Radiance',     desc:'Overall glow & brightness',      youcam:'radiance' },
-  { id:'eyebag',      label:'Eye Bag',      desc:'Puffiness under eyes',           youcam:'eye_bag' },
-  { id:'dark_circle', label:'Dark Circles', desc:'Under-eye discolouration',       youcam:'dark_circle' },
+  { id:'spots',        label:'Spots',        desc:'Pigmentation & dark marks',      youcam:'spot' },
+  { id:'wrinkles',     label:'Wrinkles',      desc:'Fine lines & expression lines',  youcam:'wrinkle' },
+  { id:'oiliness',     label:'Oiliness',      desc:'Sebum & shine levels',           youcam:'oily' },
+  { id:'moisture',     label:'Moisture',      desc:'Hydration & water content',      youcam:'moisture' },
+  { id:'acne',         label:'Acne',          desc:'Breakouts & blemishes',          youcam:'acne' },
+  { id:'firmness',     label:'Firmness',      desc:'Skin elasticity & tone',         youcam:'firmness' },
+  { id:'radiance',     label:'Radiance',      desc:'Overall glow & brightness',      youcam:'radiance' },
+  { id:'eye_bag',      label:'Eye Bag',       desc:'Puffiness under eyes',           youcam:'eye_bag' },      // ✅ was 'eyebag'
+  { id:'dark_circles', label:'Dark Circles',  desc:'Under-eye discolouration',       youcam:'dark_circle' }, // ✅ was 'dark_circle'
 ];
 
 const SK_PARAM_INFO = {
@@ -1023,8 +1023,8 @@ const SK_PARAM_INFO = {
   acne:        { icon:'🔴', good:{label:'Clear',        desc:'No significant acne detected. Skin surface appears clean and healthy.'},                               mid:{label:'Mild',        desc:'A few minor blemishes present. Salicylic acid cleanser used consistently can help.'}, low:{label:'Active',      desc:'Active breakouts detected. Avoid picking. Consider salicylic acid or benzoyl peroxide treatment.'} },
   firmness:    { icon:'💪', good:{label:'Firm',         desc:'Excellent firmness and elasticity. Strong collagen levels. Skin appears toned and youthful.'},         mid:{label:'Moderate',    desc:'Mild reduction in firmness. Retinol, peptides or Vitamin C can help.'}, low:{label:'Low',         desc:'Noticeable loss of firmness. Focus on firming serum, facial massage, collagen-supportive diet.'} },
   radiance:    { icon:'✨', good:{label:'Glowing',      desc:'Beautiful healthy radiance. Even skin tone contributing to a natural glow.'},                          mid:{label:'Fair',        desc:'Moderate radiance, some areas slightly dull. Regular exfoliation and Vitamin C serum can help.'}, low:{label:'Dull',        desc:'Skin appears lacklustre. Exfoliate regularly and use a brightening serum.'} },
-  eyebag:      { icon:'👁️', good:{label:'None',         desc:'No significant puffiness detected. Under-eye area looks smooth and refreshed.'},                      mid:{label:'Mild',        desc:'Mild puffiness. Try cold compresses, elevate head while sleeping, reduce salt intake.'}, low:{label:'Noticeable',  desc:'Noticeable puffiness. Eye creams with caffeine or peptides can help. Ensure 7-8 hours sleep.'} },
-  dark_circle: { icon:'🌑', good:{label:'Bright',       desc:'Under-eye area appears bright and even-toned. No significant discolouration detected.'},               mid:{label:'Mild',        desc:'Slight discolouration visible. Vitamin K or caffeine-based eye creams can help over time.'}, low:{label:'Dark',        desc:'Visible dark circles detected. Targeted eye treatments and sufficient rest are advised.'} },
+  eye_bag:      { icon:'👁️', good:{label:'None',         desc:'No significant puffiness detected. Under-eye area looks smooth and refreshed.'},                      mid:{label:'Mild',        desc:'Mild puffiness. Try cold compresses, elevate head while sleeping, reduce salt intake.'}, low:{label:'Noticeable',  desc:'Noticeable puffiness. Eye creams with caffeine or peptides can help. Ensure 7-8 hours sleep.'} },
+  dark_circles: { icon:'🌑', good:{label:'Bright',       desc:'Under-eye area appears bright and even-toned. No significant discolouration detected.'},               mid:{label:'Mild',        desc:'Slight discolouration visible. Vitamin K or caffeine-based eye creams can help over time.'}, low:{label:'Dark',        desc:'Visible dark circles detected. Targeted eye treatments and sufficient rest are advised.'} },
 };
 
 let skCapturedDataUrl = null;
