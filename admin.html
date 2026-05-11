@@ -394,17 +394,6 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const sb = db; // alias used by skin functions
 
-// Auth guard — admin only
-const _sess = sessionStorage.getItem('bb_auth');
-if (!_sess) {
-  window.location.href = 'admin-login.html';
-  throw new Error('No session — redirecting to login.');
-}
-const _s = JSON.parse(_sess);
-if (_s.role !== 'admin') {
-  window.location.href = 'dashboard.html';
-  throw new Error('Not an admin — redirecting to dashboard.');
-}
 
 // Skin parameters
 const PARAMS = [
