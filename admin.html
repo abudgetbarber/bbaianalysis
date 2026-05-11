@@ -620,7 +620,7 @@ function showA(id,msg){const el=document.getElementById(id);el.textContent=msg;e
 function hideA(id){document.getElementById(id).style.display='none';}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function logout(){sessionStorage.removeItem('bb_auth');window.location.href='index.html';}
+function logout(){sessionStorage.removeItem('bb_auth');window.location.href='admin-login.html';}
 
 // Close modals on overlay click
 document.getElementById('editModal').addEventListener('click',e=>{if(e.target===document.getElementById('editModal'))closeModal();});
