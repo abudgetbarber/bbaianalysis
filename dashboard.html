@@ -1099,26 +1099,39 @@ function skRetakePhoto() {
 
 // ── Upload ──
 function skHandleUpload(e) { const f=e.target.files[0]; if(f) skProcessFile(f); }
+
 function skProcessFile(file) {
-  if (!file.type.startsWith('image/')){skShowToast('Please select an image file');return;}
-  if (file.size>10*1024*1024){skShowToast('Image too large — max 10 MB');return;}
-  skCapturedBlob=file;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    skCapturedDataUrl=ev.target.result;
-    const dz=document.getElementById('skDropZone');
-    dz.classList.add('has-img'); dz.innerHTML=`<img src="${skCapturedDataUrl}" alt="Uploaded">`;
-    document.getElementById('skAnalyseBtn').disabled=false;
+  if (!file.type.startsWith('image/')) { skShowToast('Please select an image file'); return; }
+  if (file.size > 10*1024*1024) { skShowToast('Image too large — max 10 MB'); return; }
+  skCapturedBlob = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    skCapturedDataUrl = ev.target.result;
+    const dz = document.getElementById('skDropZone');
+    dz.classList.add('has-img');
+    // ✅ Keep the input inside — just add the image on top, don't wipe everything
+    dz.innerHTML = `
+      <img src="${skCapturedDataUrl}" alt="Uploaded" style="width:100%;height:260px;object-fit:cover;border-radius:10px;display:block;">
+      <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">`;
+    // ✅ Restore onclick so clicking the image lets them re-pick
+    dz.onclick = () => document.getElementById('skFileInput').click();
+    document.getElementById('skAnalyseBtn').disabled = false;
   };
   reader.readAsDataURL(file);
 }
 
 function skResetDropZone() {
-  const dz=document.getElementById('skDropZone');
+  const dz = document.getElementById('skDropZone');
   dz.classList.remove('has-img');
-  dz.innerHTML=`<div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div><div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div><input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)">`;
+  dz.innerHTML = `
+    <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+    <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
+    <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">`;
+  // ✅ Restore onclick after innerHTML wipe
+  dz.onclick = () => document.getElementById('skFileInput').click();
+  document.getElementById('skAnalyseBtn').disabled = true;
 }
-
+  
 // Drag and drop
 document.addEventListener('DOMContentLoaded',()=>{
   const dz=document.getElementById('skDropZone');
