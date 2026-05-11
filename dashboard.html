@@ -1272,12 +1272,18 @@ async function skSaveReport(results, isMock) {
 async function skLoadProducts() {
   try {
     if (!skSb) return {};
-    const { data,error }=await skSb.from('bb_products').select('*').eq('active',true).order('sort_order');
-    if(error||!data) return {};
-    const map={};
-    data.forEach(p=>{ if(!map[p.param_id]) map[p.param_id]=[]; map[p.param_id].push(p); });
+    const { data, error } = await skSb.from('bb_products')
+      .select('*')
+      .eq('is_active', true)        // ✅ was 'active'
+      .order('created_at');         // ✅ was 'sort_order' (doesn't exist)
+    if (error || !data) return {};
+    const map = {};
+    data.forEach(p => {
+      if (!map[p.parameter_key]) map[p.parameter_key] = [];  // ✅ was p.param_id
+      map[p.parameter_key].push(p);
+    });
     return map;
-  } catch(e){ return {}; }
+  } catch(e) { return {}; }
 }
 
 async function skRenderReport(results, reportCode, isMock) {
@@ -1304,7 +1310,7 @@ async function skRenderReport(results, reportCode, isMock) {
     const info=SK_PARAM_INFO[p.id];
     const lvInfo=info[lv];
     const prods=products[p.id]||[];
-    const prodsHTML=prods.length?`<div class="prods"><div class="prod-lbl">Recommended Products</div>${prods.map(pr=>`<a href="${pr.url||'#'}" target="_blank" rel="noopener" class="prod-row"><div class="prod-emoji">${pr.emoji||'🧴'}</div><div class="prod-info"><div class="prod-name">${pr.name}${pr.price?' · '+pr.price:''}</div><div class="prod-brand">${pr.brand||''}</div></div><div class="prod-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></a>`).join('')}</div>`:'';
+    const prodsHTML=prods.length?`<div class="prods"><div class="prod-lbl">Recommended Products</div>${prods.map(pr=>`<a href="${pr.buy_link||'#'}" target="_blank" rel="noopener" class="prod-row"><div class="prod-emoji">${pr.emoji||'🧴'}</div><div class="prod-info"><div class="prod-name">${pr.name}${pr.price?' · '+pr.price:''}</div><div class="prod-brand">${pr.brand||''}</div></div><div class="prod-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></a>`).join('')}</div>`:'';
     const card=document.createElement('div');
     card.className='p-card';
     card.innerHTML=`<div class="p-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${info.icon}</span><div><div class="p-name">${p.label}</div><div class="p-desc">${p.desc}</div></div></div><div class="p-badge bg-${lv}">${s}</div></div><div class="bar-bg"><div class="bar-fill fill-${lv}" style="width:0" data-w="${s}%"></div></div><div class="p-level-row"><span class="p-level-badge lbadge-${lv}">${lvInfo.label}</span></div><div class="p-full-desc">${lvInfo.desc}</div>${prodsHTML}`;
