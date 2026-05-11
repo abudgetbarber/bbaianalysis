@@ -515,12 +515,20 @@ async function loadParameters() {
   const grid = document.getElementById('pgGrid');
   grid.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray-dk)">Loading…</div>';
   try {
-    const { data, error } = await sb.from('bb_products').select('*').eq('active',true).order('sort_order');
+    const { data, error } = await sb.from('bb_products')
+      .select('*')
+      .eq('is_active', true)          // ✅ was 'active'
+      .order('created_at');           // ✅ was 'sort_order' (doesn't exist)
+
     if (error) throw error;
+
     const byParam = {};
-    (data||[]).forEach(p => { (byParam[p.param_id]=byParam[p.param_id]||[]).push(p); });
+    (data||[]).forEach(p => {
+      (byParam[p.parameter_key] = byParam[p.parameter_key] || []).push(p);  // ✅ was p.param_id
+    });
+
     grid.innerHTML = PARAMS.map(p => {
-      const prods = byParam[p.id]||[];
+      const prods = byParam[p.id] || [];
       return `<div class="pc">
         <div class="pc-head">
           <div><div class="pc-name">${p.label}</div><div class="pc-desc">${p.desc}</div></div>
@@ -531,8 +539,8 @@ async function loadParameters() {
             <div class="pp-row">
               <div class="pp-emoji">${pr.emoji||'🧴'}</div>
               <div class="pp-info">
-                <div class="pp-name">${esc(pr.name)}${pr.price?' · '+esc(pr.price):''}</div>
-                <div class="pp-url">${esc(pr.url||pr.brand||'No link')}</div>
+                <div class="pp-name">${esc(pr.name)}${pr.price?' · ₹'+esc(pr.price):''}</div>
+                <div class="pp-url">${esc(pr.buy_link||pr.brand||'No link')}</div>  
               </div>
               <button class="pp-del" onclick="deleteProduct('${pr.id}')" title="Remove">
                 <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
