@@ -4,6 +4,32 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Budget Barber · Admin</title>
+<script>
+  // ── Session Guard ──────────────────────────────────────────────
+  (function () {
+    const session = sessionStorage.getItem('bb_user');
+
+    if (!session) {
+      // No session at all → back to admin login
+      window.location.replace('admin-login.html');
+      return;
+    }
+
+    try {
+      const user = JSON.parse(session);
+
+      if (user.role !== 'admin') {
+        // Logged in but not admin (franchise owner) → back to admin login
+        sessionStorage.removeItem('bb_user');
+        window.location.replace('admin-login.html');
+      }
+    } catch (e) {
+      // Corrupted session → clear and redirect
+      sessionStorage.clear();
+      window.location.replace('admin-login.html');
+    }
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
