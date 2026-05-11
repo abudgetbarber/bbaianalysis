@@ -397,7 +397,7 @@ const sb = db; // alias used by skin functions
 // Auth guard — admin only
 const _sess = sessionStorage.getItem('bb_auth');
 if (!_sess) {
-  window.location.href = 'index.html';
+  window.location.href = 'admin-login.html';
   throw new Error('No session — redirecting to login.');
 }
 const _s = JSON.parse(_sess);
