@@ -566,18 +566,19 @@ function openProdModal(paramId, paramLabel) {
 }
 function closeProdModal() { document.getElementById('moProd').classList.remove('open'); }
 
-async function saveProduct() {
+ async function saveProduct() {
   document.getElementById('prodSaveErr').style.display='none';
   const paramId = document.getElementById('pParamId').value;
   const name    = document.getElementById('pName').value.trim();
   if (!name) { showProdErr('Product name is required'); return; }
   const payload = {
-    param_id: paramId, name,
-    brand: document.getElementById('pBrand').value.trim()||null,
-    url:   document.getElementById('pUrl').value.trim()||null,
-    price: document.getElementById('pPrice').value.trim()||null,
-    emoji: document.getElementById('pEmoji').value.trim()||'🧴',
-    active: true,
+    parameter_key: paramId,                                        // ✅ was param_id
+    name,
+    brand:     document.getElementById('pBrand').value.trim()||null,
+    buy_link:  document.getElementById('pUrl').value.trim()||null, // ✅ was url
+    price:     document.getElementById('pPrice').value.trim()||null,
+    emoji:     document.getElementById('pEmoji').value.trim()||'🧴',
+    is_active: true,                                               // ✅ was active
   };
   const btn=document.getElementById('prodSaveBtn'), lbl=document.getElementById('prodSaveLbl');
   btn.disabled=true; lbl.innerHTML='<div class="spinner"></div>';
@@ -587,7 +588,8 @@ async function saveProduct() {
     closeProdModal(); await loadParameters(); showToast('Product added');
   } catch(e) { showProdErr(e.message); }
   finally { btn.disabled=false; lbl.textContent='Add Product'; }
-}
+} 
+
 
 async function deleteProduct(prodId) {
   if (!confirm('Remove this product?')) return;
