@@ -1261,11 +1261,18 @@ function skMockResults() {
 }
 
 async function skSaveReport(results, isMock) {
-  const code='BB-'+Date.now().toString(36).toUpperCase();
-  const sess=JSON.parse(sessionStorage.getItem('bb_auth')||'{}');
+  const code = 'BB-' + Date.now().toString(36).toUpperCase();
+  const sess = JSON.parse(sessionStorage.getItem('bb_user') || '{}'); // ✅ was bb_auth
   try {
-    if (skSb) await skSb.from('bb_reports').insert({ report_code:code, customer_id:sess.id||null, skin_type:results.skin_type, skin_age:results.skin_age, scores:results.scores, is_mock:isMock });
-  } catch(e){ console.warn('Supabase save failed:',e.message); }
+    if (skSb) await skSb.from('bb_reports').insert({
+      share_token:   code,          // ✅ was report_code
+      user_id:       sess.id || null, // ✅ was customer_id
+      skin_type:     results.skin_type,
+      skin_age:      results.skin_age,
+      scores:        results.scores,
+      summary:       results.skin_type + ' skin, age ' + (results.skin_age || 'N/A'),
+    });
+  } catch(e) { console.warn('Supabase save failed:', e.message); }
   return code;
 }
 
@@ -1319,7 +1326,7 @@ async function skRenderReport(results, reportCode, isMock) {
   setTimeout(()=>{ document.querySelectorAll('#skinApp .bar-fill').forEach(el=>{el.style.width=el.dataset.w;}); },120);
 
   // Share link
-  const shareUrl=window.location.href.split('?')[0]+'?skinreport='+reportCode;
+  cconst shareUrl = window.location.href.split('/').slice(0,-1).join('/') + '/report.html?token=' + reportCode;
   document.getElementById('skShareLink').value=shareUrl;
   document.getElementById('skQrcode').innerHTML='';
   if(typeof QRCode!=='undefined'){
