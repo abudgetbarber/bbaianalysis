@@ -271,11 +271,20 @@ function copyLink(){
 
 // ── Fetch from Supabase REST ───────────────────────────────────────
 async function sbGet(table, params){
-  const qs = Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
+  // Use URLSearchParams — it encodes correctly for PostgREST
+  // (e.g. select=* stays as select=*, not select=%2A)
+  const qs = new URLSearchParams(params).toString();
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${qs}`, {
-    headers:{ 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    headers:{
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Accept': 'application/json'
+    }
   });
-  if (!res.ok) throw new Error('Supabase error: ' + res.status);
+  if (!res.ok) {
+    const body = await res.text().catch(()=>'');
+    throw new Error(`Supabase error ${res.status}: ${body.slice(0,120)}`);
+  }
   return res.json();
 }
 
@@ -320,6 +329,7 @@ async function loadReport(){
     renderReport(report, prodMap);
 
   } catch(e) {
+    console.error('loadReport error:', e);
     showError('Failed to load report: ' + e.message);
   }
 }
@@ -335,7 +345,8 @@ function renderReport(report, prodMap){
   document.getElementById('rptState').style.display   = 'block';
 
   const scores   = report.scores || {};
-  const dateStr  = new Date(report.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  const rawDate  = report.created_at ? new Date(report.created_at) : null;
+  const dateStr  = (rawDate && !isNaN(rawDate)) ? rawDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) : 'Date unavailable';
 
   document.title = 'Skin Report — Budget Barber';
   document.getElementById('rptDate').textContent     = 'Analysed ' + dateStr;
