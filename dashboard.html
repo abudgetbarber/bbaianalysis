@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Budget Barber · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green:#0b3d2e; --green-mid:#1a5c42; --green-lt:#e8f2ed;
+  --yellow:#f5d800; --yellow-lt:#fdf9d6; --yellow-md:#f0c800;
+  --white:#ffffff; --off-white:#f7f6f2; --gray-lt:#efefeb;
+  --gray:#c8c5bc; --gray-dk:#7a776e; --ink:#1a1a14;
+  --radius:8px; --radius-lg:14px;
+  --shadow:0 2px 12px rgba(11,61,46,0.10);
+  --shadow-lg:0 6px 32px rgba(11,61,46,0.14);
+  --header-h: 64px;
+  --tabs-h: 52px;
+}
+html { font-size: 16px; height: 100%; }
+body { font-family: 'Barlow', 'Segoe UI', Arial, sans-serif; background: var(--off-white); color: var(--ink); min-height: 100vh; height: 100vh; display: flex; flex-direction: column; }
+
+/* ══════════════════════════════
+   HEADER
+══════════════════════════════ */
+header {
+  background: var(--white);
+  border-bottom: 3px solid var(--yellow);
+  padding: 0 1.75rem;
+  height: var(--header-h);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 200;
+  box-shadow: 0 2px 16px rgba(11,61,46,0.08);
+}
+.logo-wrap { display: flex; align-items: center; gap: 12px; }
+.logo-badge { background: var(--yellow); border-radius: 7px; padding: 5px 8px; display: flex; flex-direction: column; gap: 3px; border: 2px solid var(--yellow-md); box-shadow: 0 2px 6px rgba(11,61,46,0.18); }
+.logo-badge-top { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--green); letter-spacing: 0.08em; line-height: 1; text-align: center; }
+.logo-badge-divider { height: 2px; background: var(--green); border-radius: 2px; margin: 0 -2px; }
+.logo-badge-bottom span { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--green); letter-spacing: 0.14em; line-height: 1; display: block; text-align: center; }
+.logo-text { display: flex; flex-direction: column; gap: 1px; }
+.logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--green); }
+.logo-desc { font-size: 11px; color: var(--gray-dk); font-weight: 300; }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--green-lt); border: 1px solid #b8d8c8;
+  border-radius: 24px; padding: 5px 12px 5px 8px;
+}
+.user-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--green); color: var(--yellow);
+  font-family: 'Bebas Neue', sans-serif; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-name { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--green); }
+.logout-btn {
+  height: 32px; padding: 0 14px;
+  background: none; border: 1.5px solid var(--gray);
+  border-radius: 20px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-dk);
+  transition: all 0.15s;
+}
+.logout-btn:hover { border-color: #c0392b; color: #c0392b; background: #fbeae8; }
+
+/* ══════════════════════════════
+   MODULE TABS
+══════════════════════════════ */
+.tabs-bar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-lt);
+  padding: 0 1.75rem;
+  height: var(--tabs-h);
+  display: flex; align-items: flex-end;
+  gap: 2px;
+  position: sticky; top: var(--header-h); z-index: 150;
+  box-shadow: 0 1px 8px rgba(11,61,46,0.04);
+  overflow-x: auto;
+}
+.tabs-bar::-webkit-scrollbar { height: 0; }
+
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  height: 44px; padding: 0 18px;
+  border: none; border-bottom: 3px solid transparent;
+  background: none; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--gray-dk);
+  white-space: nowrap;
+  transition: all 0.15s;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+}
+.tab-btn:hover { color: var(--green); background: var(--green-lt); }
+.tab-btn.active { color: var(--green); border-bottom-color: var(--yellow); background: var(--yellow-lt); }
+.tab-btn .tab-icon { font-size: 16px; line-height: 1; }
+.tab-soon {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: var(--gray-lt); color: var(--gray-dk);
+  border-radius: 10px; padding: 1px 6px;
+  margin-left: 2px;
+}
+
+/* ══════════════════════════════
+   TAB PANELS
+══════════════════════════════ */
+.tab-panel { display: none; }
+.tab-panel.active { display: flex; flex-direction: column; min-height: calc(100vh - var(--header-h) - var(--tabs-h)); }
+
+/* ══════════════════════════════
+   HAIRSTYLE TOOL (Panel 1) — exact copy from index.html
+══════════════════════════════ */
+.page { display: grid; grid-template-columns: 400px 1fr; flex: 1; min-height: calc(100vh - var(--header-h) - var(--tabs-h)); }
+
+.panel { background: var(--white); border-right: 1px solid var(--gray-lt); padding: 2rem 1.75rem; display: flex; flex-direction: column; gap: 1.75rem; overflow-y: auto; }
+.section-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.section-label::before { content: ''; display: inline-block; width: 3px; height: 12px; background: var(--yellow); border-radius: 2px; }
+
+.img-source-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px solid var(--gray); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
+.img-tab { padding: 9px 12px; background: var(--gray-lt); border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gray-dk); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.img-tab:first-child { border-right: 1px solid var(--gray); }
+.img-tab.active { background: var(--green); color: var(--yellow); }
+.img-tab svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.75; flex-shrink: 0; }
+
+.upload-zone { border: 2px dashed var(--gray); border-radius: var(--radius-lg); padding: 2rem 1rem; text-align: center; cursor: pointer; position: relative; transition: all 0.18s; background: var(--gray-lt); }
+.upload-zone:hover { border-color: var(--green-mid); background: var(--green-lt); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-icon { width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 50%; background: var(--white); border: 1.5px solid var(--gray); display: flex; align-items: center; justify-content: center; }
+.upload-icon svg { width: 22px; height: 22px; stroke: var(--green-mid); fill: none; stroke-width: 1.75; }
+.upload-zone h4 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.upload-zone p { font-size: 12px; color: var(--gray-dk); }
+
+.camera-zone { border: 2px solid var(--gray); border-radius: var(--radius-lg); overflow: hidden; background: var(--ink); position: relative; display: flex; flex-direction: column; align-items: center; }
+.camera-zone video { width: 100%; max-height: 220px; object-fit: cover; display: block; }
+.camera-controls { display: flex; gap: 8px; padding: 10px; width: 100%; background: rgba(11,61,46,0.85); justify-content: center; }
+.cam-btn { height: 38px; padding: 0 16px; border: none; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.cam-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.cam-btn-snap { background: var(--yellow); color: var(--green); }
+.cam-btn-snap:hover { background: var(--yellow-md); }
+.cam-btn-flip { background: rgba(255,255,255,0.12); color: var(--white); }
+.cam-btn-flip:hover { background: rgba(255,255,255,0.22); }
+.camera-placeholder { padding: 2.5rem 1rem; text-align: center; width: 100%; }
+.camera-placeholder svg { width: 44px; height: 44px; stroke: var(--gray); fill: none; stroke-width: 1.5; margin-bottom: 10px; }
+.camera-placeholder p { font-size: 12px; color: var(--gray); }
+.cam-start-btn { margin-top: 10px; height: 36px; padding: 0 18px; background: var(--green-mid); color: var(--yellow); border: none; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; }
+.cam-start-btn:hover { background: var(--green); }
+.cam-err { font-size: 12px; color: #c0392b; text-align: center; padding: 8px 12px; background: #fbeae8; border-radius: var(--radius); margin-top: 8px; }
+
+.preview-card { display: flex; align-items: center; gap: 12px; background: var(--green-lt); border: 1.5px solid #b8d8c8; border-radius: var(--radius-lg); padding: 10px 12px; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+.preview-card img { width: 58px; height: 58px; border-radius: var(--radius); object-fit: cover; flex-shrink: 0; border: 2px solid var(--white); }
+.preview-info { flex: 1; min-width: 0; }
+.preview-info p { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preview-info span { font-size: 11px; color: var(--green-mid); font-weight: 500; }
+.rm-btn { background: none; border: none; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray-dk); font-size: 20px; transition: background 0.15s; flex-shrink: 0; }
+.rm-btn:hover { background: var(--gray-lt); color: var(--ink); }
+
+.accordion { border: 1px solid var(--gray); border-radius: var(--radius); overflow: hidden; }
+.accordion summary { padding: 10px 14px; font-size: 12px; font-weight: 600; cursor: pointer; background: var(--gray-lt); color: var(--gray-dk); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.accordion summary::-webkit-details-marker { display: none; }
+.accordion summary::after { content: '↓'; font-size: 11px; }
+details[open] .accordion summary::after { content: '↑'; }
+.accordion pre { padding: 12px 14px; font-size: 10.5px; line-height: 1.65; color: var(--gray-dk); white-space: pre-wrap; background: var(--white); border-top: 1px solid var(--gray-lt); max-height: 200px; overflow-y: auto; font-family: 'Courier New', monospace; }
+
+.gen-btn { width: 100%; height: 52px; background: var(--yellow); color: var(--green); border: none; border-radius: var(--radius); font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 3px 0 var(--yellow-md), var(--shadow); }
+.gen-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 5px 0 var(--yellow-md), var(--shadow-lg); }
+.gen-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 0 var(--yellow-md); }
+.gen-btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
+.gen-btn .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(11,61,46,0.2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.output { background: var(--off-white); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem; min-height: calc(100vh - var(--header-h) - var(--tabs-h)); }
+.empty-state { text-align: center; max-width: 340px; }
+.empty-grid { width: 110px; height: 140px; margin: 0 auto 1.5rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+.eg-cell { background: var(--white); border-radius: 4px; border: 1px solid var(--gray); }
+.eg-cell:nth-child(2) { background: var(--yellow-lt); }
+.eg-cell:nth-child(5) { background: var(--green-lt); }
+.empty-state h3 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 0.04em; color: var(--green); margin-bottom: 6px; }
+.empty-state p { font-size: 14px; color: var(--gray-dk); line-height: 1.6; }
+
+.status-bar { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--radius); font-size: 13px; line-height: 1.5; width: 100%; max-width: 540px; margin-bottom: 1.5rem; }
+.status-bar .spin2 { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.status-bar.info    { background: #e8f0fb; color: #1a4f8a; border: 1px solid #b8d0f0; }
+.status-bar.error   { background: #fbeae8; color: #8b2a1e; border: 1px solid #f0b8b0; }
+.status-bar.success { background: var(--green-lt); color: var(--green); border: 1px solid #b8d8c8; font-weight: 500; }
+
+.result-wrap { width: 100%; max-width: 480px; animation: fadeIn 0.3s ease; }
+.result-label { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 10px; text-align: center; }
+.result-img-box { border-radius: var(--radius-lg); overflow: hidden; border: 2px solid var(--yellow); box-shadow: var(--shadow-lg); margin-bottom: 12px; }
+.result-img-box img { width: 100%; display: block; }
+.result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-dl { height: 44px; background: var(--green); color: var(--yellow); border: none; border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; }
+.btn-dl:hover { opacity: 0.85; }
+.btn-retry { height: 44px; background: var(--white); color: var(--green); border: 1.5px solid var(--green); border-radius: var(--radius); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background 0.15s; }
+.btn-retry:hover { background: var(--green-lt); }
+
+/* ══════════════════════════════
+   COMING SOON PANELS
+══════════════════════════════ */
+.coming-panel {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3rem 2rem; text-align: center;
+  min-height: calc(100vh - var(--header-h) - var(--tabs-h));
+}
+.coming-icon {
+  width: 80px; height: 80px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 1.5rem;
+  border: 2px solid var(--gray-lt);
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+.coming-panel h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 30px;
+  letter-spacing: 0.04em; color: var(--green); margin-bottom: 8px;
+}
+.coming-panel p { font-size: 14px; color: var(--gray-dk); max-width: 300px; line-height: 1.6; margin-bottom: 1.5rem; }
+.coming-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--yellow-lt); border: 1.5px solid var(--yellow-md);
+  border-radius: 20px; padding: 6px 16px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.10em; text-transform: uppercase; color: var(--green);
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--gray); border-radius: 10px; }
+
+@media (max-width: 800px) {
+  .page { grid-template-columns: 1fr; }
+  .panel { border-right: none; border-bottom: 1px solid var(--gray-lt); }
+  .output { min-height: auto; padding: 2rem 1rem; }
+  .tab-btn { padding: 0 12px; font-size: 12px; }
+  .user-name { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-badge">
+      <div class="logo-badge-top">BUDGET</div>
+      <div class="logo-badge-divider"></div>
+      <div class="logo-badge-bottom"><span>BARBER</span></div>
+    </div>
+    <div class="logo-text">
+      <div class="logo-sub">Digital Men's Salon</div>
+      <div class="logo-desc">Franchise Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="user-chip">
+      <div class="user-avatar" id="userAvatar">—</div>
+      <div class="user-name" id="userName">Loading…</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
+
+<!-- ══ MODULE TABS ══ -->
+<div class="tabs-bar">
+  <button class="tab-btn active" id="tab-hairstyle" onclick="switchModule('hairstyle')">
+    <span class="tab-icon">✂️</span> AI Hairstyle Grid
+  </button>
+  <button class="tab-btn" id="tab-skin" onclick="switchModule('skin')">
+    <span class="tab-icon">🔬</span> AI Skin Analysis
+  </button>
+  <button class="tab-btn" id="tab-colour" onclick="switchModule('colour')">
+    <span class="tab-icon">🎨</span> Hair Colour
+  </button>
+  <button class="tab-btn" id="tab-beard" onclick="switchModule('beard')">
+    <span class="tab-icon">🧔</span> Beard Styles
+  </button>
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 1 — AI Hairstyle Grid
+══════════════════════════════ -->
+<div class="tab-panel active" id="panel-hairstyle">
+  <div class="page">
+    <aside class="panel">
+      <div>
+        <div class="section-label">Your Portrait</div>
+        <div class="img-source-tabs">
+          <button class="img-tab active" id="tab-camera" onclick="switchTab('camera')">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Camera
+          </button>
+          <button class="img-tab" id="tab-upload" onclick="switchTab('upload')">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload File
+          </button>
+        </div>
+
+        <!-- Camera panel -->
+        <div id="cameraPanel">
+          <div class="camera-zone" id="cameraZone">
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <p>Click below to start your camera</p>
+              <button class="cam-start-btn" onclick="startCamera()">Start Camera</button>
+            </div>
+            <video id="cameraFeed" autoplay playsinline style="display:none; width:100%; max-height:220px; object-fit:cover;"></video>
+            <canvas id="snapCanvas" style="display:none;"></canvas>
+            <div class="camera-controls" id="cameraControls" style="display:none;">
+              <button class="cam-btn cam-btn-snap" onclick="snapPhoto()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4" style="fill:currentColor"/></svg>
+                Capture
+              </button>
+              <button class="cam-btn cam-btn-flip" onclick="flipCamera()">
+                <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Flip
+              </button>
+              <button class="cam-btn cam-btn-flip" onclick="stopCamera()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Stop
+              </button>
+            </div>
+          </div>
+          <div id="cameraError" style="display:none;" class="cam-err"></div>
+        </div>
+
+        <!-- Upload panel -->
+        <div id="uploadPanel" style="display:none;">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" onchange="handleFile(event)"/>
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <h4>Drop or click to upload</h4>
+            <p>Clear front-facing portrait · JPG / PNG / WebP · Max 10MB</p>
+          </div>
+        </div>
+
+        <div id="previewSection" style="display:none; margin-top:8px;"></div>
+      </div>
+
+      <details id="promptAccordion" style="display:none;" class="accordion">
+        <summary>View AI prompt being sent</summary>
+        <pre id="promptText"></pre>
+      </details>
+
+      <button class="gen-btn" id="genBtn" onclick="generate()" disabled>
+        <span id="genBtnLabel">Generate My AI Hairstyle</span>
+      </button>
+    </aside>
+
+    <main class="output">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-grid">
+          <div class="eg-cell"></div><div class="eg-cell"></div><div class="eg-cell"></div>
+          <div class="eg-cell"></div><div class="eg-cell"></div><div class="eg-cell"></div>
+          <div class="eg-cell"></div><div class="eg-cell"></div><div class="eg-cell"></div>
+        </div>
+        <h3>Your AI Hairstyle Grid</h3>
+        <p>Capture or upload a clear front-facing portrait and generate your AI Hairstyle Grid.</p>
+      </div>
+      <div id="statusArea" style="display:none; width:100%; max-width:540px;"></div>
+      <div id="resultArea" style="display:none;"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 2 — AI Skin Analysis
+══════════════════════════════ -->
+<div class="tab-panel" id="panel-skin">
+<style>
+/* Skin Analysis scoped styles */
+#skinApp{font-family:'DM Sans',sans-serif;background:var(--off-white);min-height:calc(100vh - 116px)}
+#skinApp .sk-main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+#skinApp .hero{text-align:center;margin-bottom:32px}
+#skinApp .hero-tag{display:inline-block;background:#EAF2EB;color:#4A7150;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;border:1px solid #c5dcc8}
+#skinApp .hero h1{font-family:'DM Serif Display',serif;font-size:30px;font-weight:400;line-height:1.2;margin-bottom:10px}
+#skinApp .hero h1 span{color:#4A7150}
+#skinApp .hero p{font-size:15px;color:#5F5E5A;max-width:460px;margin:0 auto;line-height:1.65}
+#skinApp .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;flex-wrap:wrap;row-gap:8px}
+#skinApp .sk-step{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:#B4B2A9;transition:color .3s}
+#skinApp .sk-step.active{color:#2C2C2A}
+#skinApp .sk-step.done{color:#4A7150}
+#skinApp .step-n{width:26px;height:26px;border-radius:50%;border:1.5px solid #B4B2A9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#fff;transition:all .3s;flex-shrink:0}
+#skinApp .sk-step.active .step-n{border-color:#7A9E7E;background:#7A9E7E;color:#fff}
+#skinApp .sk-step.done .step-n{border-color:#4A7150;background:#EAF2EB;color:#4A7150}
+#skinApp .step-line{width:36px;height:1.5px;background:#E8E6E1;margin:0 4px;flex-shrink:0}
+#skinApp .sk-panel{background:#fff;border-radius:12px;border:1px solid #E8E6E1;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:28px;display:none}
+#skinApp .sk-panel.active{display:block}
+#skinApp .capture-tabs{display:flex;gap:0;border:1.5px solid #E8E6E1;border-radius:8px;overflow:hidden;margin-bottom:20px}
+#skinApp .ctab{flex:1;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#fff;color:#5F5E5A;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+#skinApp .ctab:not(:last-child){border-right:1.5px solid #E8E6E1}
+#skinApp .ctab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+#skinApp .ctab.active{background:#2C2C2A;color:#fff}
+#skinApp #skCameraSection{display:none}
+#skinApp .video-wrap{position:relative;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px}
+#skinApp #skLiveVideo{width:100%;height:100%;object-fit:cover;display:block}
+#skinApp .cam-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;aspect-ratio:3/4;border:2px solid rgba(255,255,255,.5);border-radius:50% 50% 45% 45%;pointer-events:none}
+#skinApp .cam-controls{display:flex;align-items:center;justify-content:center;gap:16px}
+#skinApp .cam-btn{width:56px;height:56px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(4px)}
+#skinApp .cam-btn.shutter{width:68px;height:68px;background:#fff}
+#skinApp .cam-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+#skinApp .cam-btn.shutter svg{stroke:#2C2C2A}
+#skinApp .cam-err{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:12px;display:none}
+#skinApp #skUploadSection{display:block}
+#skinApp .drop-zone{border:2px dashed #E8E6E1;border-radius:12px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#FAF8F5;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+#skinApp .drop-zone:hover{border-color:#7A9E7E;background:#EAF2EB}
+#skinApp .drop-zone.has-img{border-style:solid;border-color:#7A9E7E;padding:0;min-height:260px}
+#skinApp .drop-zone img{width:100%;height:260px;object-fit:cover;border-radius:10px;display:block}
+#skinApp .drop-icon{width:52px;height:52px;background:#EAF2EB;border-radius:50%;display:flex;align-items:center;justify-content:center}
+#skinApp .drop-icon svg{width:24px;height:24px;stroke:#4A7150;fill:none;stroke-width:1.5}
+#skinApp .drop-text h3{font-size:15px;font-weight:500;margin-bottom:4px;text-align:center}
+#skinApp .drop-text p{font-size:13px;color:#5F5E5A;text-align:center;line-height:1.5}
+#skinApp #skFileInput{display:none}
+#skinApp #skPreviewSection{display:none}
+#skinApp .preview-wrap{position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px}
+#skinApp #skPreviewImg{width:100%;max-height:300px;object-fit:cover;display:block;border-radius:8px}
+#skinApp .preview-retake{position:absolute;top:10px;right:10px}
+#skinApp .sk-tips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+#skinApp .sk-tip{background:#FAF8F5;border-radius:8px;padding:12px;border:1px solid #E8E6E1}
+#skinApp .sk-tip .ti{font-size:18px;margin-bottom:5px}
+#skinApp .sk-tip h4{font-size:12px;font-weight:500;margin-bottom:3px}
+#skinApp .sk-tip p{font-size:11px;color:#5F5E5A;line-height:1.5}
+#skinApp .sk-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+#skinApp .sk-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+#skinApp .sk-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+#skinApp .sk-btn-primary{background:#2C2C2A;color:#fff}
+#skinApp .sk-btn-primary:hover{background:#3a3a38}
+#skinApp .sk-btn-secondary{background:#fff;color:#2C2C2A;border:1.5px solid #E8E6E1}
+#skinApp .sk-btn-secondary:hover{border-color:#7A9E7E;color:#4A7150}
+#skinApp .sk-btn-sage{background:#7A9E7E;color:#fff}
+#skinApp .sk-btn-sage:hover{background:#4A7150}
+#skinApp .sk-btn-red{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb}
+#skinApp .sk-btn-lg{padding:12px 26px;font-size:14px}
+#skinApp .sk-btn-sm{padding:6px 12px;font-size:12px}
+#skinApp .cta-row{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+/* Analysing */
+#skinApp .analysing{text-align:center;padding:36px 0}
+#skinApp .sk-spin{width:64px;height:64px;border:3px solid #E8E6E1;border-top-color:#7A9E7E;border-radius:50%;animation:skSpin 1s linear infinite;margin:0 auto 20px}
+@keyframes skSpin{to{transform:rotate(360deg)}}
+#skinApp .analysing h3{font-size:18px;font-weight:500;margin-bottom:6px}
+#skinApp .analysing p{color:#5F5E5A;font-size:13px}
+#skinApp .prog-bg{height:4px;background:#E8E6E1;border-radius:2px;margin:24px auto 0;max-width:260px;overflow:hidden}
+#skinApp .prog-fill{height:100%;background:#7A9E7E;border-radius:2px;width:0;animation:skProg 8s ease forwards}
+@keyframes skProg{0%{width:0}40%{width:40%}70%{width:70%}90%{width:88%}100%{width:92%}}
+#skinApp #skStatusMsg{font-size:12px;color:#B4B2A9;margin-top:12px}
+/* Report */
+#skinApp .report-head{display:flex;align-items:flex-start;gap:16px;padding-bottom:20px;border-bottom:1px solid #E8E6E1;margin-bottom:24px}
+#skinApp .report-img{width:72px;height:72px;border-radius:10px;object-fit:cover;border:2px solid #E8E6E1;flex-shrink:0}
+#skinApp .report-meta h2{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:3px}
+#skinApp .report-meta p{font-size:13px;color:#5F5E5A;margin-bottom:7px}
+#skinApp .tag-row{display:flex;gap:7px;flex-wrap:wrap}
+#skinApp .sk-tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+#skinApp .tag-blue{background:#EEF4FB;color:#2471A3}
+#skinApp .tag-amber{background:#FDF3E3;color:#D4860B}
+#skinApp .tag-sage{background:#EAF2EB;color:#4A7150}
+#skinApp .tag-mock{background:#fff3cd;color:#856404;border:1px solid #ffc107}
+#skinApp .ov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+#skinApp .ov-card{background:#FAF8F5;border:1px solid #E8E6E1;border-radius:8px;padding:14px;text-align:center}
+#skinApp .ov-val{font-size:26px;font-weight:600;line-height:1;margin-bottom:3px}
+#skinApp .c-good{color:#4A7150}
+#skinApp .c-mid{color:#D4860B}
+#skinApp .c-low{color:#C0392B}
+#skinApp .sk-section-label{font-size:13px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:6px;color:#2C2C2A}
+#skinApp .sk-section-label svg{width:15px;height:15px;stroke:#4A7150;fill:none;stroke-width:2}
+#skinApp .params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:28px}
+#skinApp .p-card{background:#fff;border:1px solid #E8E6E1;border-radius:8px;padding:16px;transition:box-shadow .2s}
+#skinApp .p-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.08)}
+#skinApp .p-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+#skinApp .p-name{font-size:13px;font-weight:500;margin-bottom:2px}
+#skinApp .p-desc{font-size:11px;color:#5F5E5A;line-height:1.4}
+#skinApp .p-badge{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+#skinApp .bg-good{background:#EAF2EB;color:#4A7150}
+#skinApp .bg-mid{background:#FDF3E3;color:#D4860B}
+#skinApp .bg-low{background:#FDF0EE;color:#C0392B}
+#skinApp .bar-bg{height:5px;background:#E8E6E1;border-radius:3px;overflow:hidden;margin-bottom:10px}
+#skinApp .bar-fill{height:100%;border-radius:3px;width:0;transition:width 1s ease .2s}
+#skinApp .fill-good{background:#7A9E7E}
+#skinApp .fill-mid{background:#D4860B}
+#skinApp .fill-low{background:#C0392B}
+#skinApp .p-level-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#skinApp .p-level-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;flex-shrink:0}
+#skinApp .lbadge-good{background:#EAF2EB;color:#4A7150}
+#skinApp .lbadge-mid{background:#FDF3E3;color:#D4860B}
+#skinApp .lbadge-low{background:#FDF0EE;color:#C0392B}
+#skinApp .p-full-desc{font-size:12px;color:#5F5E5A;line-height:1.65;margin-bottom:2px}
+#skinApp .prods{margin-top:12px;border-top:1px solid #E8E6E1;padding-top:12px}
+#skinApp .prod-lbl{font-size:10px;font-weight:500;color:#B4B2A9;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+#skinApp .prod-row{display:flex;align-items:center;gap:8px;padding:7px 9px;background:#FAF8F5;border-radius:8px;margin-bottom:5px;border:1px solid #E8E6E1;text-decoration:none;transition:background .2s,border-color .2s;cursor:pointer}
+#skinApp .prod-row:hover{background:#EAF2EB;border-color:#c5dcc8}
+#skinApp .prod-emoji{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+#skinApp .prod-info{flex:1;min-width:0}
+#skinApp .prod-name{font-size:12px;font-weight:500;color:#2C2C2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#skinApp .prod-brand{font-size:10px;color:#5F5E5A}
+#skinApp .prod-arrow svg{width:12px;height:12px;stroke:#4A7150;fill:none;stroke-width:2.5}
+#skinApp .share-box{background:#FAF8F5;border:1px solid #E8E6E1;border-radius:12px;padding:24px;text-align:center;margin-top:8px}
+#skinApp .share-box h3{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;margin-bottom:5px}
+#skinApp .share-box>p{font-size:12px;color:#5F5E5A;margin-bottom:18px}
+#skinApp .qr-wrap{background:#fff;border:1px solid #E8E6E1;border-radius:8px;padding:14px;display:inline-block;margin-bottom:16px}
+#skinApp .link-row{display:flex;align-items:center;gap:8px;max-width:400px;margin:0 auto 16px}
+#skinApp .link-input{flex:1;padding:8px 12px;border:1.5px solid #E8E6E1;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:#2C2C2A;background:#fff;outline:none}
+#skinApp .share-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#skinApp .sk-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;padding:11px 22px;border-radius:40px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;pointer-events:none}
+#skinApp .sk-toast.show{transform:translateX(-50%) translateY(0)}
+#skinApp .err-banner{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:none}
+@media(max-width:580px){
+  #skinApp .sk-main{padding:16px 12px 60px}
+  #skinApp .hero h1{font-size:22px}
+  #skinApp .sk-panel{padding:18px}
+  #skinApp .sk-tips{grid-template-columns:1fr}
+  #skinApp .ov-grid{grid-template-columns:repeat(3,1fr)}
+  #skinApp .params-grid{grid-template-columns:1fr}
+  #skinApp .report-head{flex-direction:column}
+}
+</style>
+
+<div id="skinApp">
+<div class="sk-main">
+  <div class="hero">
+    <div class="hero-tag">Skin Intelligence</div>
+    <h1>Know Your <span>Skin</span>, Perfect Your Routine</h1>
+    <p>Take a photo or upload one to get a personalised skin report with product recommendations.</p>
+  </div>
+
+  <div class="steps">
+    <div class="sk-step active" id="ski1"><div class="step-n">1</div><span>Capture</span></div>
+    <div class="step-line"></div>
+    <div class="sk-step" id="ski2"><div class="step-n">2</div><span>Analysing</span></div>
+    <div class="step-line"></div>
+    <div class="sk-step" id="ski3"><div class="step-n">3</div><span>Report</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="sk-panel active" id="skp1">
+    <div class="capture-tabs">
+      <button class="ctab active" id="skTabCamera" onclick="skSwitchTab('camera')">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Take Photo
+      </button>
+      <button class="ctab" id="skTabUpload" onclick="skSwitchTab('upload')">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>Upload Photo
+      </button>
+    </div>
+    <div id="skCameraSection">
+      <div class="cam-err" id="skCamErr"></div>
+      <div class="video-wrap">
+        <video id="skLiveVideo" autoplay playsinline muted></video>
+        <div class="cam-guide"></div>
+      </div>
+      <div class="cam-controls">
+        <button class="cam-btn" onclick="skFlipCamera()" title="Flip camera">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+        <button class="cam-btn shutter" onclick="skCapturePhoto()" title="Take photo">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="cam-btn" onclick="skStopCamera();skSwitchTab('upload')" title="Close camera">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="skPreviewSection">
+      <div class="preview-wrap">
+        <img id="skPreviewImg" src="" alt="Captured photo">
+        <div class="preview-retake">
+          <button class="sk-btn sk-btn-red sk-btn-sm" onclick="skRetakePhoto()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Retake
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="skUploadSection">
+      <div class="drop-zone" id="skDropZone">
+        <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+        <div class="drop-text"><h3>Click to browse or drag & drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
+        <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">
+      </div>
+    </div>
+    <div class="sk-tips">
+      <div class="sk-tip"><div class="ti">💡</div><h4>Good lighting</h4><p>Natural or bright indoor light facing your face</p></div>
+      <div class="sk-tip"><div class="ti">🧴</div><h4>Clean face</h4><p>No heavy makeup for accurate results</p></div>
+      <div class="sk-tip"><div class="ti">📸</div><h4>Face forward</h4><p>Look straight ahead, neutral expression</p></div>
+    </div>
+    <div class="cta-row">
+      <button class="sk-btn sk-btn-primary sk-btn-lg" id="skAnalyseBtn" onclick="skStartAnalysis()" disabled>
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Analyse Skin
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="sk-panel" id="skp2">
+    <div class="analysing">
+      <div class="sk-spin"></div>
+      <h3>Analysing your skin…</h3>
+      <p>AI is scanning 9 skin parameters. Takes ~10 seconds.</p>
+      <div class="prog-bg"><div class="prog-fill" id="skProgFill"></div></div>
+      <div id="skStatusMsg">Preparing…</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="sk-panel" id="skp3">
+    <div id="skErrBanner" class="err-banner"></div>
+    <div class="report-head">
+      <img id="skRptImg" src="" alt="Your photo" class="report-img">
+      <div class="report-meta">
+        <h2>Your Skin Report</h2>
+        <p id="skRptDate"></p>
+        <div class="tag-row">
+          <span class="sk-tag tag-blue" id="skTagType"></span>
+          <span class="sk-tag tag-amber" id="skTagAge"></span>
+          <span class="sk-tag tag-sage" id="skTagScore"></span>
+          <span class="sk-tag tag-mock" id="skTagMock" style="display:none">Demo mode</span>
+        </div>
+      </div>
+    </div>
+    <div class="ov-grid">
+      <div class="ov-card"><div class="ov-val c-good" id="skOvGood">—</div><div style="font-size:11px;color:#5F5E5A">Good</div></div>
+      <div class="ov-card"><div class="ov-val c-mid"  id="skOvMid">—</div><div style="font-size:11px;color:#5F5E5A">Needs Care</div></div>
+      <div class="ov-card"><div class="ov-val c-low"  id="skOvLow">—</div><div style="font-size:11px;color:#5F5E5A">Concern</div></div>
+    </div>
+    <div class="sk-section-label">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Detailed Analysis
+    </div>
+    <div class="params-grid" id="skParamsGrid"></div>
+    <div class="share-box">
+      <h3>Share This Report</h3>
+      <p>Save or share this personalised skin analysis</p>
+      <div class="qr-wrap"><div id="skQrcode"></div></div>
+      <div class="link-row">
+        <input class="link-input" id="skShareLink" type="text" readonly>
+        <button class="sk-btn sk-btn-secondary sk-btn-sm" onclick="skCopyLink()">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy
+        </button>
+      </div>
+      <div class="share-btns">
+        <button class="sk-btn sk-btn-secondary" onclick="window.print()">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print
+        </button>
+        <button class="sk-btn sk-btn-sage" onclick="skRestart()">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>New Analysis
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sk-toast" id="skToast"></div>
+</div>
+
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 3 — AI Hair Colour
+══════════════════════════════ -->
+<div class="tab-panel" id="panel-colour">
+<style>
+/* Hair Colour scoped styles — mirrors skinApp pattern */
+#hairApp{font-family:'DM Sans',sans-serif;background:var(--off-white);min-height:calc(100vh - 116px)}
+#hairApp .hc-main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+#hairApp .hero{text-align:center;margin-bottom:32px}
+#hairApp .hero-tag{display:inline-block;background:#F3EAF7;color:#7B2FA0;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;border:1px solid #d8b8e8}
+#hairApp .hero h1{font-family:'DM Serif Display',serif;font-size:30px;font-weight:400;line-height:1.2;margin-bottom:10px}
+#hairApp .hero h1 span{color:#7B2FA0}
+#hairApp .hero p{font-size:15px;color:#5F5E5A;max-width:460px;margin:0 auto;line-height:1.65}
+#hairApp .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;flex-wrap:wrap;row-gap:8px}
+#hairApp .hc-step{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:#B4B2A9;transition:color .3s}
+#hairApp .hc-step.active{color:#2C2C2A}
+#hairApp .hc-step.done{color:#7B2FA0}
+#hairApp .step-n{width:26px;height:26px;border-radius:50%;border:1.5px solid #B4B2A9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#fff;transition:all .3s;flex-shrink:0}
+#hairApp .hc-step.active .step-n{border-color:#A855C8;background:#A855C8;color:#fff}
+#hairApp .hc-step.done .step-n{border-color:#7B2FA0;background:#F3EAF7;color:#7B2FA0}
+#hairApp .step-line{width:36px;height:1.5px;background:#E8E6E1;margin:0 4px;flex-shrink:0}
+#hairApp .hc-panel{background:#fff;border-radius:12px;border:1px solid #E8E6E1;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:28px;display:none}
+#hairApp .hc-panel.active{display:block}
+/* capture tabs */
+#hairApp .capture-tabs{display:flex;gap:0;border:1.5px solid #E8E6E1;border-radius:8px;overflow:hidden;margin-bottom:20px}
+#hairApp .ctab{flex:1;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#fff;color:#5F5E5A;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+#hairApp .ctab:not(:last-child){border-right:1.5px solid #E8E6E1}
+#hairApp .ctab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+#hairApp .ctab.active{background:#2C2C2A;color:#fff}
+/* camera */
+#hairApp #hcCameraSection{display:none}
+#hairApp .video-wrap{position:relative;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px}
+#hairApp #hcLiveVideo{width:100%;height:100%;object-fit:cover;display:block}
+#hairApp .cam-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;aspect-ratio:3/4;border:2px solid rgba(255,255,255,.5);border-radius:50% 50% 45% 45%;pointer-events:none}
+#hairApp .cam-controls{display:flex;align-items:center;justify-content:center;gap:16px}
+#hairApp .cam-btn{width:56px;height:56px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(4px)}
+#hairApp .cam-btn.shutter{width:68px;height:68px;background:#fff}
+#hairApp .cam-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+#hairApp .cam-btn.shutter svg{stroke:#2C2C2A}
+#hairApp .cam-err{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:12px;display:none}
+/* upload */
+#hairApp #hcUploadSection{display:block}
+#hairApp .drop-zone{border:2px dashed #E8E6E1;border-radius:12px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#FAF8F5;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+#hairApp .drop-zone:hover{border-color:#A855C8;background:#F7F0FA}
+#hairApp .drop-zone.has-img{border-style:solid;border-color:#A855C8;padding:0;min-height:260px}
+#hairApp .drop-zone img{width:100%;height:260px;object-fit:cover;border-radius:10px;display:block}
+#hairApp .drop-icon{width:52px;height:52px;background:#F3EAF7;border-radius:50%;display:flex;align-items:center;justify-content:center}
+#hairApp .drop-icon svg{width:24px;height:24px;stroke:#7B2FA0;fill:none;stroke-width:1.5}
+#hairApp .drop-text h3{font-size:15px;font-weight:500;margin-bottom:4px;text-align:center}
+#hairApp .drop-text p{font-size:13px;color:#5F5E5A;text-align:center;line-height:1.5}
+#hairApp #hcFileInput{display:none}
+#hairApp #hcPreviewSection{display:none}
+#hairApp .preview-wrap{position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px}
+#hairApp #hcPreviewImg{width:100%;max-height:300px;object-fit:cover;display:block;border-radius:8px}
+#hairApp .preview-retake{position:absolute;top:10px;right:10px}
+/* colour picker */
+#hairApp .colour-picker-section{margin-top:20px}
+#hairApp .colour-section-label{font-size:12px;font-weight:600;color:#5F5E5A;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+#hairApp .colour-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px;margin-bottom:16px}
+#hairApp .colour-swatch{width:100%;aspect-ratio:1;border-radius:10px;border:2px solid transparent;cursor:pointer;transition:all .2s;position:relative;display:flex;align-items:center;justify-content:center}
+#hairApp .colour-swatch:hover{transform:scale(1.08);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+#hairApp .colour-swatch.selected{border-color:#fff;box-shadow:0 0 0 3px #7B2FA0,0 4px 12px rgba(0,0,0,.18)}
+#hairApp .colour-swatch .tick{display:none;width:18px;height:18px;background:rgba(255,255,255,.95);border-radius:50%;font-size:11px;align-items:center;justify-content:center;color:#333;font-weight:700}
+#hairApp .colour-swatch.selected .tick{display:flex}
+#hairApp .custom-hex-row{display:flex;align-items:center;gap:10px;margin-top:4px}
+#hairApp .hex-preview{width:36px;height:36px;border-radius:8px;border:1.5px solid #E8E6E1;flex-shrink:0}
+#hairApp .hex-input{flex:1;padding:8px 12px;border:1.5px solid #E8E6E1;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#2C2C2A;outline:none}
+#hairApp .hex-input:focus{border-color:#A855C8}
+/* tips */
+#hairApp .hc-tips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+#hairApp .hc-tip{background:#FAF8F5;border-radius:8px;padding:12px;border:1px solid #E8E6E1}
+#hairApp .hc-tip .ti{font-size:18px;margin-bottom:5px}
+#hairApp .hc-tip h4{font-size:12px;font-weight:500;margin-bottom:3px}
+#hairApp .hc-tip p{font-size:11px;color:#5F5E5A;line-height:1.5}
+/* buttons */
+#hairApp .hc-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+#hairApp .hc-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+#hairApp .hc-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+#hairApp .hc-btn-primary{background:#2C2C2A;color:#fff}
+#hairApp .hc-btn-primary:hover{background:#3a3a38}
+#hairApp .hc-btn-secondary{background:#fff;color:#2C2C2A;border:1.5px solid #E8E6E1}
+#hairApp .hc-btn-secondary:hover{border-color:#A855C8;color:#7B2FA0}
+#hairApp .hc-btn-purple{background:#7B2FA0;color:#fff}
+#hairApp .hc-btn-purple:hover{background:#6a2289}
+#hairApp .hc-btn-red{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb}
+#hairApp .hc-btn-lg{padding:12px 26px;font-size:14px}
+#hairApp .hc-btn-sm{padding:6px 12px;font-size:12px}
+#hairApp .cta-row{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+/* analysing */
+#hairApp .analysing{text-align:center;padding:36px 0}
+#hairApp .hc-spin{width:64px;height:64px;border:3px solid #E8E6E1;border-top-color:#A855C8;border-radius:50%;animation:hcSpin 1s linear infinite;margin:0 auto 20px}
+@keyframes hcSpin{to{transform:rotate(360deg)}}
+#hairApp .analysing h3{font-size:18px;font-weight:500;margin-bottom:6px}
+#hairApp .analysing p{color:#5F5E5A;font-size:13px}
+#hairApp .prog-bg{height:4px;background:#E8E6E1;border-radius:2px;margin:24px auto 0;max-width:260px;overflow:hidden}
+#hairApp .prog-fill{height:100%;background:#A855C8;border-radius:2px;width:0;animation:hcProg 10s ease forwards}
+@keyframes hcProg{0%{width:0}30%{width:35%}60%{width:65%}85%{width:85%}100%{width:92%}}
+#hairApp #hcStatusMsg{font-size:12px;color:#B4B2A9;margin-top:12px}
+/* result */
+#hairApp .result-head{display:flex;align-items:flex-start;gap:16px;padding-bottom:20px;border-bottom:1px solid #E8E6E1;margin-bottom:24px}
+#hairApp .result-photo{width:72px;height:72px;border-radius:10px;object-fit:cover;border:2px solid #E8E6E1;flex-shrink:0}
+#hairApp .result-meta h2{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:3px}
+#hairApp .result-meta p{font-size:13px;color:#5F5E5A;margin-bottom:7px}
+#hairApp .hc-tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;display:inline-block}
+#hairApp .tag-purple{background:#F3EAF7;color:#7B2FA0}
+#hairApp .tag-mock{background:#fff3cd;color:#856404;border:1px solid #ffc107}
+#hairApp .result-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+#hairApp .compare-card{border-radius:10px;overflow:hidden;border:1px solid #E8E6E1}
+#hairApp .compare-card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+#hairApp .compare-label{padding:8px 12px;background:#FAF8F5;font-size:12px;font-weight:600;color:#5F5E5A;text-align:center;letter-spacing:.04em;text-transform:uppercase}
+#hairApp .result-img-full{border-radius:12px;overflow:hidden;border:2px solid #E8E6E1;margin-bottom:16px}
+#hairApp .result-img-full img{width:100%;display:block}
+#hairApp .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+/* err banner */
+#hairApp .err-banner{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:none}
+/* toast */
+#hairApp .hc-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;padding:11px 22px;border-radius:40px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;pointer-events:none}
+#hairApp .hc-toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:580px){
+  #hairApp .hc-main{padding:16px 12px 60px}
+  #hairApp .hero h1{font-size:22px}
+  #hairApp .hc-panel{padding:18px}
+  #hairApp .hc-tips{grid-template-columns:1fr}
+  #hairApp .result-compare{grid-template-columns:1fr}
+  #hairApp .colour-grid{grid-template-columns:repeat(auto-fill,minmax(44px,1fr))}
+}
+</style>
+
+<div id="hairApp">
+<div class="hc-main">
+  <div class="hero">
+    <div class="hero-tag">Hair Intelligence</div>
+    <h1>Try Any <span>Hair Colour</span> Before You Dye</h1>
+    <p>Upload or take a photo to instantly preview any hair colour — powered by YouCam AI.</p>
+  </div>
+
+  <div class="steps">
+    <div class="hc-step active" id="hci1"><div class="step-n">1</div><span>Photo</span></div>
+    <div class="step-line"></div>
+    <div class="hc-step" id="hci2"><div class="step-n">2</div><span>Pick Colour</span></div>
+    <div class="step-line"></div>
+    <div class="hc-step" id="hci3"><div class="step-n">3</div><span>Processing</span></div>
+    <div class="step-line"></div>
+    <div class="hc-step" id="hci4"><div class="step-n">4</div><span>Result</span></div>
+  </div>
+
+  <!-- STEP 1: Photo -->
+  <div class="hc-panel active" id="hcp1">
+    <div class="capture-tabs">
+      <button class="ctab" id="hcTabCamera" onclick="hcSwitchTab('camera')">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Take Photo
+      </button>
+      <button class="ctab active" id="hcTabUpload" onclick="hcSwitchTab('upload')">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>Upload Photo
+      </button>
+    </div>
+    <div id="hcCameraSection">
+      <div class="cam-err" id="hcCamErr"></div>
+      <div class="video-wrap">
+        <video id="hcLiveVideo" autoplay playsinline muted></video>
+        <div class="cam-guide"></div>
+      </div>
+      <div class="cam-controls">
+        <button class="cam-btn" onclick="hcFlipCamera()" title="Flip camera">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+        <button class="cam-btn shutter" onclick="hcCapturePhoto()" title="Take photo">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="cam-btn" onclick="hcStopCamera();hcSwitchTab('upload')" title="Close camera">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="hcPreviewSection">
+      <div class="preview-wrap">
+        <img id="hcPreviewImg" src="" alt="Captured photo">
+        <div class="preview-retake">
+          <button class="hc-btn hc-btn-red hc-btn-sm" onclick="hcRetakePhoto()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Retake
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="hcUploadSection">
+      <div class="drop-zone" id="hcDropZone">
+        <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+        <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — hair clearly visible, good lighting</p></div>
+        <input type="file" id="hcFileInput" accept="image/jpeg,image/png,image/webp" onchange="hcHandleUpload(event)" style="display:none">
+      </div>
+    </div>
+    <div class="hc-tips">
+      <div class="hc-tip"><div class="ti">💇</div><h4>Hair visible</h4><p>Hair should be down and visible — not tied up</p></div>
+      <div class="hc-tip"><div class="ti">💡</div><h4>Good lighting</h4><p>Bright, even lighting for accurate colour mapping</p></div>
+      <div class="hc-tip"><div class="ti">📸</div><h4>Face forward</h4><p>Look straight ahead with a neutral expression</p></div>
+    </div>
+    <div class="cta-row">
+      <button class="hc-btn hc-btn-primary hc-btn-lg" id="hcNextBtn" onclick="hcGoStep(2)" disabled>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>Choose Hair Colour
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Pick Colour -->
+  <div class="hc-panel" id="hcp2">
+    <div class="colour-picker-section">
+      <div class="colour-section-label">Popular Shades</div>
+      <div class="colour-grid" id="hcColourGrid"></div>
+      <div class="colour-section-label" style="margin-top:16px">Custom Colour</div>
+      <div class="custom-hex-row">
+        <div class="hex-preview" id="hcHexPreview" style="background:#1a1a1a"></div>
+        <input class="hex-input" id="hcHexInput" type="text" placeholder="#1A1A1A" maxlength="7" value="#1A1A1A" oninput="hcUpdateCustomHex(this.value)">
+        <button class="hc-btn hc-btn-secondary hc-btn-sm" onclick="hcSelectCustomHex()">Use This</button>
+      </div>
+    </div>
+    <div class="cta-row" style="margin-top:28px">
+      <button class="hc-btn hc-btn-secondary" onclick="hcGoStep(1)">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back
+      </button>
+      <button class="hc-btn hc-btn-purple hc-btn-lg" id="hcApplyBtn" onclick="hcStartProcessing()" disabled>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>Apply Colour
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Processing -->
+  <div class="hc-panel" id="hcp3">
+    <div class="analysing">
+      <div class="hc-spin"></div>
+      <h3>Applying hair colour…</h3>
+      <p>AI is recolouring your hair. Takes ~15 seconds.</p>
+      <div class="prog-bg"><div class="prog-fill" id="hcProgFill"></div></div>
+      <div id="hcStatusMsg">Uploading photo…</div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Result -->
+  <div class="hc-panel" id="hcp4">
+    <div id="hcErrBanner" class="err-banner"></div>
+    <div class="result-head">
+      <img id="hcRptImg" src="" alt="Your photo" class="result-photo">
+      <div class="result-meta">
+        <h2>Your New Hair Colour</h2>
+        <p id="hcRptDate"></p>
+        <span class="hc-tag tag-purple" id="hcTagColour"></span>
+        &nbsp;<span class="hc-tag tag-mock" id="hcTagMock" style="display:none">Demo mode</span>
+      </div>
+    </div>
+    <div class="result-compare">
+      <div class="compare-card">
+        <img id="hcBeforeImg" src="" alt="Before">
+        <div class="compare-label">Before</div>
+      </div>
+      <div class="compare-card">
+        <img id="hcAfterImg" src="" alt="After">
+        <div class="compare-label">After</div>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button class="hc-btn hc-btn-primary" onclick="hcDownloadResult()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
+      </button>
+      <button class="hc-btn hc-btn-secondary" onclick="hcTryAnother()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Try Another Colour
+      </button>
+      <button class="hc-btn hc-btn-secondary" onclick="hcRestart()">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>New Photo
+      </button>
+    </div>
+  </div>
+
+</div><!-- /hc-main -->
+<div class="hc-toast" id="hcToast"></div>
+</div><!-- /hairApp -->
+</div>
+
+<!-- ══════════════════════════════
+     MODULE 4 — AI Beard Styles
+══════════════════════════════ -->
+<div class="tab-panel" id="panel-beard">
+<style>
+/* Beard Styles scoped styles */
+#beardApp{font-family:'DM Sans',sans-serif;background:var(--off-white);min-height:calc(100vh - 116px)}
+#beardApp .bd-main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+#beardApp .hero{text-align:center;margin-bottom:32px}
+#beardApp .hero-tag{display:inline-block;background:#FFF4E6;color:#B45309;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;border:1px solid #f0d09c}
+#beardApp .hero h1{font-family:'DM Serif Display',serif;font-size:30px;font-weight:400;line-height:1.2;margin-bottom:10px}
+#beardApp .hero h1 span{color:#B45309}
+#beardApp .hero p{font-size:15px;color:#5F5E5A;max-width:460px;margin:0 auto;line-height:1.65}
+#beardApp .steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;flex-wrap:wrap;row-gap:8px}
+#beardApp .bd-step{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:#B4B2A9;transition:color .3s}
+#beardApp .bd-step.active{color:#2C2C2A}
+#beardApp .bd-step.done{color:#B45309}
+#beardApp .step-n{width:26px;height:26px;border-radius:50%;border:1.5px solid #B4B2A9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#fff;transition:all .3s;flex-shrink:0}
+#beardApp .bd-step.active .step-n{border-color:#D97706;background:#D97706;color:#fff}
+#beardApp .bd-step.done .step-n{border-color:#B45309;background:#FFF4E6;color:#B45309}
+#beardApp .step-line{width:36px;height:1.5px;background:#E8E6E1;margin:0 4px;flex-shrink:0}
+#beardApp .bd-panel{background:#fff;border-radius:12px;border:1px solid #E8E6E1;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:28px;display:none}
+#beardApp .bd-panel.active{display:block}
+/* capture tabs */
+#beardApp .capture-tabs{display:flex;gap:0;border:1.5px solid #E8E6E1;border-radius:8px;overflow:hidden;margin-bottom:20px}
+#beardApp .ctab{flex:1;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#fff;color:#5F5E5A;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+#beardApp .ctab:not(:last-child){border-right:1.5px solid #E8E6E1}
+#beardApp .ctab svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+#beardApp .ctab.active{background:#2C2C2A;color:#fff}
+/* camera */
+#beardApp #bdCameraSection{display:none}
+#beardApp .video-wrap{position:relative;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:12px}
+#beardApp #bdLiveVideo{width:100%;height:100%;object-fit:cover;display:block}
+#beardApp .cam-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:55%;aspect-ratio:3/4;border:2px solid rgba(255,255,255,.5);border-radius:50% 50% 45% 45%;pointer-events:none}
+#beardApp .cam-controls{display:flex;align-items:center;justify-content:center;gap:16px}
+#beardApp .cam-btn{width:56px;height:56px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.15);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(4px)}
+#beardApp .cam-btn.shutter{width:68px;height:68px;background:#fff}
+#beardApp .cam-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+#beardApp .cam-btn.shutter svg{stroke:#2C2C2A}
+#beardApp .cam-err{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:12px;display:none}
+/* upload */
+#beardApp #bdUploadSection{display:block}
+#beardApp .drop-zone{border:2px dashed #E8E6E1;border-radius:12px;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#FAF8F5;cursor:pointer;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+#beardApp .drop-zone:hover{border-color:#D97706;background:#FFFBF0}
+#beardApp .drop-zone.has-img{border-style:solid;border-color:#D97706;padding:0;min-height:260px}
+#beardApp .drop-zone img{width:100%;height:260px;object-fit:cover;border-radius:10px;display:block}
+#beardApp .drop-icon{width:52px;height:52px;background:#FFF4E6;border-radius:50%;display:flex;align-items:center;justify-content:center}
+#beardApp .drop-icon svg{width:24px;height:24px;stroke:#B45309;fill:none;stroke-width:1.5}
+#beardApp .drop-text h3{font-size:15px;font-weight:500;margin-bottom:4px;text-align:center}
+#beardApp .drop-text p{font-size:13px;color:#5F5E5A;text-align:center;line-height:1.5}
+#beardApp #bdFileInput{display:none}
+#beardApp #bdPreviewSection{display:none}
+#beardApp .preview-wrap{position:relative;border-radius:8px;overflow:hidden;margin-bottom:12px}
+#beardApp #bdPreviewImg{width:100%;max-height:300px;object-fit:cover;display:block;border-radius:8px}
+#beardApp .preview-retake{position:absolute;top:10px;right:10px}
+/* style selector */
+#beardApp .style-section-label{font-size:12px;font-weight:600;color:#5F5E5A;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+#beardApp .style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+#beardApp .style-card{border-radius:10px;border:2px solid #E8E6E1;cursor:pointer;overflow:hidden;transition:all .2s;background:#FAF8F5;position:relative}
+#beardApp .style-card:hover{border-color:#D97706;background:#FFFBF0;transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.1)}
+#beardApp .style-card.selected{border-color:#B45309;box-shadow:0 0 0 3px #FFF4E6,0 0 0 5px #B45309}
+#beardApp .style-card-img{width:100%;aspect-ratio:1;background:linear-gradient(135deg,#f5e6cc,#e8d5b0);display:flex;align-items:center;justify-content:center;font-size:36px}
+#beardApp .style-card-name{padding:8px;font-size:12px;font-weight:500;text-align:center;color:#2C2C2A;background:#fff;border-top:1px solid #E8E6E1}
+#beardApp .style-card.selected .style-card-name{background:#FFF4E6;color:#B45309}
+#beardApp .style-card .sel-tick{display:none;position:absolute;top:6px;right:6px;width:20px;height:20px;background:#B45309;border-radius:50%;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+#beardApp .style-card.selected .sel-tick{display:flex}
+#beardApp .style-loading{text-align:center;padding:32px;color:#B4B2A9;font-size:13px}
+/* tips */
+#beardApp .bd-tips{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+#beardApp .bd-tip{background:#FAF8F5;border-radius:8px;padding:12px;border:1px solid #E8E6E1}
+#beardApp .bd-tip .ti{font-size:18px;margin-bottom:5px}
+#beardApp .bd-tip h4{font-size:12px;font-weight:500;margin-bottom:3px}
+#beardApp .bd-tip p{font-size:11px;color:#5F5E5A;line-height:1.5}
+/* buttons */
+#beardApp .bd-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+#beardApp .bd-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+#beardApp .bd-btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+#beardApp .bd-btn-primary{background:#2C2C2A;color:#fff}
+#beardApp .bd-btn-primary:hover{background:#3a3a38}
+#beardApp .bd-btn-secondary{background:#fff;color:#2C2C2A;border:1.5px solid #E8E6E1}
+#beardApp .bd-btn-secondary:hover{border-color:#D97706;color:#B45309}
+#beardApp .bd-btn-amber{background:#B45309;color:#fff}
+#beardApp .bd-btn-amber:hover{background:#92400e}
+#beardApp .bd-btn-red{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb}
+#beardApp .bd-btn-lg{padding:12px 26px;font-size:14px}
+#beardApp .bd-btn-sm{padding:6px 12px;font-size:12px}
+#beardApp .cta-row{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+/* analysing */
+#beardApp .analysing{text-align:center;padding:36px 0}
+#beardApp .bd-spin{width:64px;height:64px;border:3px solid #E8E6E1;border-top-color:#D97706;border-radius:50%;animation:bdSpin 1s linear infinite;margin:0 auto 20px}
+@keyframes bdSpin{to{transform:rotate(360deg)}}
+#beardApp .analysing h3{font-size:18px;font-weight:500;margin-bottom:6px}
+#beardApp .analysing p{color:#5F5E5A;font-size:13px}
+#beardApp .prog-bg{height:4px;background:#E8E6E1;border-radius:2px;margin:24px auto 0;max-width:260px;overflow:hidden}
+#beardApp .prog-fill{height:100%;background:#D97706;border-radius:2px;width:0;animation:bdProg 10s ease forwards}
+@keyframes bdProg{0%{width:0}30%{width:35%}60%{width:65%}85%{width:85%}100%{width:92%}}
+#beardApp #bdStatusMsg{font-size:12px;color:#B4B2A9;margin-top:12px}
+/* result */
+#beardApp .result-head{display:flex;align-items:flex-start;gap:16px;padding-bottom:20px;border-bottom:1px solid #E8E6E1;margin-bottom:24px}
+#beardApp .result-photo{width:72px;height:72px;border-radius:10px;object-fit:cover;border:2px solid #E8E6E1;flex-shrink:0}
+#beardApp .result-meta h2{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:3px}
+#beardApp .result-meta p{font-size:13px;color:#5F5E5A;margin-bottom:7px}
+#beardApp .bd-tag{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;display:inline-block}
+#beardApp .tag-amber{background:#FFF4E6;color:#B45309}
+#beardApp .tag-mock{background:#fff3cd;color:#856404;border:1px solid #ffc107}
+#beardApp .result-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+#beardApp .compare-card{border-radius:10px;overflow:hidden;border:1px solid #E8E6E1}
+#beardApp .compare-card img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+#beardApp .compare-label{padding:8px 12px;background:#FAF8F5;font-size:12px;font-weight:600;color:#5F5E5A;text-align:center;letter-spacing:.04em;text-transform:uppercase}
+#beardApp .result-img-full{border-radius:12px;overflow:hidden;border:2px solid #E8E6E1;margin-bottom:16px}
+#beardApp .result-img-full img{width:100%;display:block}
+#beardApp .result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+/* err banner */
+#beardApp .err-banner{background:#FDF0EE;color:#C0392B;border:1px solid #f0c0bb;border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:none}
+/* toast */
+#beardApp .bd-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#2C2C2A;color:#fff;padding:11px 22px;border-radius:40px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;pointer-events:none}
+#beardApp .bd-toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:580px){
+  #beardApp .bd-main{padding:16px 12px 60px}
+  #beardApp .hero h1{font-size:22px}
+  #beardApp .bd-panel{padding:18px}
+  #beardApp .bd-tips{grid-template-columns:1fr}
+  #beardApp .result-compare{grid-template-columns:1fr}
+  #beardApp .style-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+}
+</style>
+
+<div id="beardApp">
+<div class="bd-main">
+  <div class="hero">
+    <div class="hero-tag">Beard Intelligence</div>
+    <h1>Try Any <span>Beard Style</span> Before You Trim</h1>
+    <p>Upload or take a photo to virtually preview beard styles — show customers before picking up the trimmer.</p>
+  </div>
+
+  <div class="steps">
+    <div class="bd-step active" id="bdi1"><div class="step-n">1</div><span>Photo</span></div>
+    <div class="step-line"></div>
+    <div class="bd-step" id="bdi2"><div class="step-n">2</div><span>Pick Style</span></div>
+    <div class="step-line"></div>
+    <div class="bd-step" id="bdi3"><div class="step-n">3</div><span>Processing</span></div>
+    <div class="step-line"></div>
+    <div class="bd-step" id="bdi4"><div class="step-n">4</div><span>Result</span></div>
+  </div>
+
+  <!-- STEP 1: Photo -->
+  <div class="bd-panel active" id="bdp1">
+    <div class="capture-tabs">
+      <button class="ctab" id="bdTabCamera" onclick="bdSwitchTab('camera')">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>Take Photo
+      </button>
+      <button class="ctab active" id="bdTabUpload" onclick="bdSwitchTab('upload')">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>Upload Photo
+      </button>
+    </div>
+    <div id="bdCameraSection">
+      <div class="cam-err" id="bdCamErr"></div>
+      <div class="video-wrap">
+        <video id="bdLiveVideo" autoplay playsinline muted></video>
+        <div class="cam-guide"></div>
+      </div>
+      <div class="cam-controls">
+        <button class="cam-btn" onclick="bdFlipCamera()" title="Flip camera">
+          <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+        <button class="cam-btn shutter" onclick="bdCapturePhoto()" title="Take photo">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="cam-btn" onclick="bdStopCamera();bdSwitchTab('upload')" title="Close camera">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="bdPreviewSection">
+      <div class="preview-wrap">
+        <img id="bdPreviewImg" src="" alt="Captured photo">
+        <div class="preview-retake">
+          <button class="bd-btn bd-btn-red bd-btn-sm" onclick="bdRetakePhoto()">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>Retake
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="bdUploadSection">
+      <div class="drop-zone" id="bdDropZone">
+        <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+        <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
+        <input type="file" id="bdFileInput" accept="image/jpeg,image/png,image/webp" onchange="bdHandleUpload(event)" style="display:none">
+      </div>
+    </div>
+    <div class="bd-tips">
+      <div class="bd-tip"><div class="ti">🧔</div><h4>Face visible</h4><p>Full face clearly visible — no hats or scarves</p></div>
+      <div class="bd-tip"><div class="ti">💡</div><h4>Good lighting</h4><p>Bright, even lighting for accurate style mapping</p></div>
+      <div class="bd-tip"><div class="ti">📸</div><h4>Face forward</h4><p>Look straight ahead with a neutral expression</p></div>
+    </div>
+    <div class="cta-row">
+      <button class="bd-btn bd-btn-primary bd-btn-lg" id="bdNextBtn" onclick="bdGoToStylePicker()" disabled>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>Choose Beard Style
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Pick Style -->
+  <div class="bd-panel" id="bdp2">
+    <div class="style-section-label">Choose a Beard Style</div>
+    <div class="style-grid" id="bdStyleGrid">
+      <div class="style-loading">Loading styles…</div>
+    </div>
+    <div class="cta-row" style="margin-top:8px">
+      <button class="bd-btn bd-btn-secondary" onclick="bdGoStep(1)">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back
+      </button>
+      <button class="bd-btn bd-btn-amber bd-btn-lg" id="bdApplyBtn" onclick="bdStartProcessing()" disabled>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>Apply Style
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Processing -->
+  <div class="bd-panel" id="bdp3">
+    <div class="analysing">
+      <div class="bd-spin"></div>
+      <h3>Applying beard style…</h3>
+      <p>AI is rendering your beard. Takes ~15 seconds.</p>
+      <div class="prog-bg"><div class="prog-fill" id="bdProgFill"></div></div>
+      <div id="bdStatusMsg">Uploading photo…</div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Result -->
+  <div class="bd-panel" id="bdp4">
+    <div id="bdErrBanner" class="err-banner"></div>
+    <div class="result-head">
+      <img id="bdRptImg" src="" alt="Your photo" class="result-photo">
+      <div class="result-meta">
+        <h2>Your New Beard Style</h2>
+        <p id="bdRptDate"></p>
+        <span class="bd-tag tag-amber" id="bdTagStyle"></span>
+        &nbsp;<span class="bd-tag tag-mock" id="bdTagMock" style="display:none">Demo mode</span>
+      </div>
+    </div>
+    <div class="result-compare">
+      <div class="compare-card">
+        <img id="bdBeforeImg" src="" alt="Before">
+        <div class="compare-label">Before</div>
+      </div>
+      <div class="compare-card">
+        <img id="bdAfterImg" src="" alt="After">
+        <div class="compare-label">After</div>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button class="bd-btn bd-btn-primary" onclick="bdDownloadResult()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
+      </button>
+      <button class="bd-btn bd-btn-secondary" onclick="bdTryAnother()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Try Another Style
+      </button>
+      <button class="bd-btn bd-btn-secondary" onclick="bdRestart()">
+        <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>New Photo
+      </button>
+    </div>
+  </div>
+
+</div><!-- /bd-main -->
+<div class="bd-toast" id="bdToast"></div>
+</div><!-- /beardApp -->
+</div>
+
+<script>
+// ============================================================
+//  CONFIGURATION — update with your Cloudflare Worker URL
+// ============================================================
+// ⚠️ REQUIRED: Replace with your actual Cloudflare Worker URL before deploying.
+// e.g. https://budget-barber.yourname.workers.dev
+// The "Generate My AI Hairstyle" button will not work until this is set.
+const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
+// ============================================================
+
+// ── Auth guard — redirect to login if no session exists ──
+// NOTE: If opening dashboard.html directly (without logging in via admin.html),
+// set a default session so buttons work. Remove the fallback below once
+// admin.html sets sessionStorage before redirecting here.
+let _session = sessionStorage.getItem('bb_user');
+if (!_session) {
+  // Fallback: set a guest session so the page is usable when opened directly.
+  // In production, replace this with: window.location.href = 'index.html';
+  _session = JSON.stringify({ name: 'Guest' });
+  sessionStorage.setItem('bb_user', _session);
+}
+const session = JSON.parse(_session || '{}');
+
+// Show user info in header
+const nameEl = document.getElementById('userName');
+const avatarEl = document.getElementById('userAvatar');
+if (session.name) {
+  nameEl.textContent = session.name;
+  avatarEl.textContent = session.name.charAt(0).toUpperCase();
+}
+
+function logout() {
+  sessionStorage.removeItem('bb_user');
+  window.location.href = 'index.html';
+}
+
+// ── Module tab switching ──
+const MODULES = ['hairstyle', 'skin', 'colour', 'beard'];
+function switchModule(id) {
+  MODULES.forEach(m => {
+    document.getElementById('tab-' + m).classList.toggle('active', m === id);
+    document.getElementById('panel-' + m).classList.toggle('active', m === id);
+  });
+}
+
+// ── Hairstyle tool prompt ──
+const PROMPT = `ABSOLUTE RULE: The subject is MALE. All 9 tiles must show a MALE person with a masculine men's haircut.
+
+Use the uploaded image as a STRICT, NON-NEGOTIABLE identity reference.
+
+ABSOLUTE FACE LOCK (HIGHEST PRIORITY):
+- The face in the output MUST be pixel-identical to the uploaded image
+- SAME facial geometry, SAME skin texture, SAME pores, SAME moles, SAME asymmetry
+- SAME expression, SAME head tilt, SAME eye direction
+- NO beautification, NO symmetry correction, NO aging or de-aging
+- NO gender change — the subject is MALE, every tile must show a MALE face
+- NO feminine hairstyles — nothing that goes past the ears on the sides or back
+- NO curly voluminous styles, NO layers, NO side-swept long styles
+- NO facial feature enhancement
+- NO lighting changes that alter facial appearance
+
+FIRST (INTERNAL STEP ONLY - DO NOT OUTPUT TEXT):
+Analyze the uploaded face to determine:
+- Face shape, Hair density, Hair texture and curl pattern
+- Natural growth direction and hairline
+- Confirm subject is male before proceeding
+
+SECOND (FINAL OUTPUT - IMAGE ONLY):
+Generate ONE single vertical 9:16, true-4K composite image containing a 3x3 grid.
+
+GRID RULES:
+- 9 UNIQUE hairstyles (no repeats)
+- ALL styles must be masculine men's haircuts
+- Hairstyles applied realistically while preserving the EXACT SAME FACE
+- Hair is the ONLY editable region
+- Face, skin tone, shadows, proportions MUST remain unchanged in every tile
+
+STRICT CONSISTENCY REQUIREMENTS:
+- SAME pose, SAME camera angle, SAME focal length
+- SAME background, SAME lighting direction and intensity
+- SAME facial expression across all 9 tiles
+
+HAIRSTYLE VARIATION RULES:
+- Mix short and medium men's haircuts ONLY — no hairstyle should go past the ears
+- Professional, college, and youthful MALE styles only
+- Respect real hair density, texture, and scalp visibility
+- Natural male hairlines and realistic parting
+- NO wigs, NO fantasy volume, NO AI over-styling
+- NO hairstyle that could appear on a woman — every tile must be identifiably male
+- If a hairstyle would look feminine, replace it with a buzz cut or taper fade instead
+
+STRICT MALE HAIRSTYLE LIST (pick 9 from these):
+Crew cut, buzz cut, taper fade, skin fade, side part, slick back, pompadour,
+quiff, french crop, textured crop, ivy league, undercut, disconnected undercut,
+classic comb-over, caesar cut
+
+TECHNICAL REQUIREMENTS:
+- Vertical 9:16 layout, True 4K clarity
+- Photorealistic hair texture and shadows
+- Natural hair movement without distortion
+
+ABSOLUTE RESTRICTIONS:
+- OUTPUT IMAGE ONLY
+- NO text, captions, labels, or explanations
+- NO background changes
+- NO makeup or facial changes unless present in the original image
+- NO feminine hairstyles in any tile under any circumstances
+
+GOAL: Create a barber-grade haircut reference grid where the uploaded MALE face is IDENTICAL in all 9 tiles and ONLY the hairstyle changes.`;
+
+let imageBase64 = null;
+let imageMime = null;
+let lastDataUrl = null;
+let stream = null;
+let facingMode = 'user';
+
+// ── Tab switching (camera/upload) ──
+function switchTab(tab) {
+  const isCamera = tab === 'camera';
+  document.getElementById('tab-camera').className = 'img-tab' + (isCamera ? ' active' : '');
+  document.getElementById('tab-upload').className = 'img-tab' + (!isCamera ? ' active' : '');
+  document.getElementById('cameraPanel').style.display = isCamera ? 'block' : 'none';
+  document.getElementById('uploadPanel').style.display = isCamera ? 'none' : 'block';
+  if (!isCamera) stopCamera();
+}
+
+// ── Camera ──
+async function startCamera() {
+  document.getElementById('cameraError').style.display = 'none';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false
+    });
+    const video = document.getElementById('cameraFeed');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('cameraControls').style.display = 'flex';
+  } catch (err) {
+    const errEl = document.getElementById('cameraError');
+    errEl.style.display = 'block';
+    errEl.textContent = err.name === 'NotAllowedError'
+      ? '⚠ Camera access denied. Please allow camera permission and try again.'
+      : '⚠ Could not access camera: ' + err.message;
+  }
+}
+
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const video = document.getElementById('cameraFeed');
+  video.srcObject = null;
+  video.style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'block';
+  document.getElementById('cameraControls').style.display = 'none';
+}
+
+async function flipCamera() {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  stopCamera(); await startCamera();
+}
+
+function snapPhoto() {
+  const video = document.getElementById('cameraFeed');
+  const canvas = document.getElementById('snapCanvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  imageBase64 = dataUrl.split(',')[1];
+  imageMime = 'image/jpeg';
+  stopCamera();
+  showPreview(dataUrl, 'Camera Snapshot');
+}
+
+// ── File upload ──
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { alert('File too large — max 10MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    imageBase64 = dataUrl.split(',')[1];
+    imageMime = file.type || 'image/jpeg';
+    showPreview(dataUrl, file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(dataUrl, name) {
+  const sec = document.getElementById('previewSection');
+  sec.style.display = 'block';
+  sec.innerHTML = `<div class="preview-card">
+    <img src="${dataUrl}" alt="preview"/>
+    <div class="preview-info">
+      <p>${name}</p>
+      <span>✓ Ready to generate</span>
+    </div>
+    <button class="rm-btn" onclick="removeImage()">×</button>
+  </div>`;
+  document.getElementById('promptText').textContent = PROMPT;
+  document.getElementById('promptAccordion').style.display = 'block';
+  checkReady();
+}
+
+function removeImage() {
+  imageBase64 = null; imageMime = null;
+  document.getElementById('previewSection').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('promptAccordion').style.display = 'none';
+  resetOutput(); checkReady();
+}
+
+function checkReady() {
+  document.getElementById('genBtn').disabled = !imageBase64;
+}
+
+function resetOutput() {
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('statusArea').style.display = 'none';
+  document.getElementById('resultArea').style.display = 'none';
+}
+
+function showStatus(type, msg, spinner) {
+  document.getElementById('emptyState').style.display = 'none';
+  const sa = document.getElementById('statusArea');
+  sa.style.display = 'block';
+  sa.innerHTML = `<div class="status-bar ${type}">
+    ${spinner ? '<div class="spin2"></div>' : ''}
+    <span>${msg}</span>
+  </div>`;
+}
+
+async function generate() {
+  if (!imageBase64) return;
+  const btn = document.getElementById('genBtn');
+  const label = document.getElementById('genBtnLabel');
+  btn.disabled = true;
+  label.innerHTML = '<div class="spinner"></div> Generating Grid...';
+  document.getElementById('resultArea').style.display = 'none';
+  showStatus('info', 'Sending portrait to Gemini — generating your 9-hairstyle grid. This takes 30–90 seconds…', true);
+
+  try {
+    const payload = {
+      contents: [{
+        parts: [
+          { text: PROMPT },
+          { inline_data: { mime_type: imageMime, data: imageBase64 } }
+        ]
+      }],
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 1 }
+    };
+
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payload })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || data?.error || 'Error ' + res.status);
+
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+
+    if (!imgPart) {
+      const txt = parts.find(p => p.text);
+      throw new Error(txt?.text?.slice(0, 220) || 'No image returned. Try a clearer front-facing portrait.');
+    }
+
+    lastDataUrl = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+    showStatus('success', '✓ 9-hairstyle grid generated! Download below or regenerate for a new set.', false);
+
+    const ra = document.getElementById('resultArea');
+    ra.style.display = 'block';
+    ra.innerHTML = `<div class="result-wrap">
+      <div class="result-label">Your Budget Barber Reference Grid</div>
+      <div class="result-img-box">
+        <img src="${lastDataUrl}" alt="9-hairstyle reference grid"/>
+      </div>
+      <div class="result-actions">
+        <button class="btn-dl" onclick="downloadImg()">↓ Download Grid</button>
+        <button class="btn-retry" onclick="generate()">↻ Regenerate</button>
+      </div>
+    </div>`;
+
+  } catch (err) {
+    showStatus('error', '⚠ ' + err.message, false);
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Generate My AI Hairstyle';
+    checkReady();
+  }
+}
+
+function downloadImg() {
+  if (!lastDataUrl) return;
+  const a = document.createElement('a');
+  a.href = lastDataUrl;
+  a.download = 'budget-barber-haircut-grid.png';
+  a.click();
+}
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════
+// SKIN ANALYSIS MODULE — Configuration
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
+const YOUCAM_API_KEY   = 'sk-_DqRLIN1iHacG-RHKf8RCjqTKx060p6bxz4QrAUal14AGW2Jg5F50ML_fh6TMr37';
+const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
+
+let skSb = null;
+try {
+  skSb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(e) {
+  console.warn('Supabase not available for skin module:', e.message);
+}
+
+const SK_PARAMS = [
+  { id:'spots',        label:'Spots',        desc:'Pigmentation & dark marks',      youcam:'spot' },
+  { id:'wrinkles',     label:'Wrinkles',      desc:'Fine lines & expression lines',  youcam:'wrinkle' },
+  { id:'oiliness',     label:'Oiliness',      desc:'Sebum & shine levels',           youcam:'oily' },
+  { id:'moisture',     label:'Moisture',      desc:'Hydration & water content',      youcam:'moisture' },
+  { id:'acne',         label:'Acne',          desc:'Breakouts & blemishes',          youcam:'acne' },
+  { id:'firmness',     label:'Firmness',      desc:'Skin elasticity & tone',         youcam:'firmness' },
+  { id:'radiance',     label:'Radiance',      desc:'Overall glow & brightness',      youcam:'radiance' },
+  { id:'eye_bag',      label:'Eye Bag',       desc:'Puffiness under eyes',           youcam:'eye_bag' },
+  { id:'dark_circles', label:'Dark Circles',  desc:'Under-eye discolouration',       youcam:'dark_circle' },
+];
+
+const SK_PARAM_INFO = {
+  spots:       { icon:'🔵', good:{label:'Excellent',   desc:'Your skin is clear with very minimal pigmentation. Skin tone appears even and luminous.'},             mid:{label:'Fair',        desc:'Some uneven pigmentation or mild dark spots visible. Regular SPF and brightening serums can help.'}, low:{label:'Needs Care', desc:'Noticeable pigmentation detected. Consider Vitamin C, niacinamide, or kojic acid treatments.'} },
+  wrinkles:    { icon:'〰️', good:{label:'Excellent',   desc:'Skin appears smooth with minimal fine lines. Collagen levels look healthy.'},                          mid:{label:'Fair',        desc:'Mild fine lines visible, especially around eyes and forehead. Retinol or peptide moisturiser can help.'}, low:{label:'Needs Care', desc:'Visible wrinkles detected. Focus on retinoids, hyaluronic acid, and daily SPF.'} },
+  oiliness:    { icon:'💧', good:{label:'Balanced',    desc:'Healthy balanced sebum level. No excessive shine detected. Current routine is working well.'},          mid:{label:'Moderate',    desc:'Some oiliness in T-zone. Lightweight non-comedogenic moisturiser and gentle cleanser will help.'}, low:{label:'High',       desc:'Significant excess oil detected. Focus on oil-control products, clay masks, avoid heavy creams.'} },
+  moisture:    { icon:'🌊', good:{label:'Well Hydrated',desc:'Excellent hydration levels. Skin barrier appears intact. Continue current routine.'},                  mid:{label:'Mildly Dry',  desc:'Slight dehydration. Add hyaluronic acid serum and increase daily water intake.'}, low:{label:'Dehydrated',  desc:'Significant moisture deficiency. Prioritise rich moisturiser and hydrating serum immediately.'} },
+  acne:        { icon:'🔴', good:{label:'Clear',        desc:'No significant acne detected. Skin surface appears clean and healthy.'},                               mid:{label:'Mild',        desc:'A few minor blemishes present. Salicylic acid cleanser used consistently can help.'}, low:{label:'Active',      desc:'Active breakouts detected. Avoid picking. Consider salicylic acid or benzoyl peroxide treatment.'} },
+  firmness:    { icon:'💪', good:{label:'Firm',         desc:'Excellent firmness and elasticity. Strong collagen levels. Skin appears toned and youthful.'},         mid:{label:'Moderate',    desc:'Mild reduction in firmness. Retinol, peptides or Vitamin C can help.'}, low:{label:'Low',         desc:'Noticeable loss of firmness. Focus on firming serum, facial massage, collagen-supportive diet.'} },
+  radiance:    { icon:'✨', good:{label:'Glowing',      desc:'Beautiful healthy radiance. Even skin tone contributing to a natural glow.'},                          mid:{label:'Fair',        desc:'Moderate radiance, some areas slightly dull. Regular exfoliation and Vitamin C serum can help.'}, low:{label:'Dull',        desc:'Skin appears lacklustre. Exfoliate regularly and use a brightening serum.'} },
+  eye_bag:      { icon:'👁️', good:{label:'None',         desc:'No significant puffiness detected. Under-eye area looks smooth and refreshed.'},                      mid:{label:'Mild',        desc:'Mild puffiness. Try cold compresses, elevate head while sleeping, reduce salt intake.'}, low:{label:'Noticeable',  desc:'Noticeable puffiness. Eye creams with caffeine or peptides can help. Ensure 7-8 hours sleep.'} },
+  dark_circles: { icon:'🌑', good:{label:'Bright',       desc:'Under-eye area appears bright and even-toned. No significant discolouration detected.'},               mid:{label:'Mild',        desc:'Slight discolouration visible. Vitamin K or caffeine-based eye creams can help over time.'}, low:{label:'Dark',        desc:'Visible dark circles detected. Targeted eye treatments and sufficient rest are advised.'} },
+};
+
+let skCapturedDataUrl = null;
+let skCapturedBlob    = null;
+let skStream          = null;
+let skFacingMode      = 'user';
+let skCurrentTab      = 'upload';
+
+// ── Step nav ──
+function skGoStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById(`skp${i}`).classList.toggle('active', i===n);
+    const si = document.getElementById(`ski${i}`);
+    si.classList.remove('active','done');
+    if (i===n) si.classList.add('active');
+    if (i<n)   si.classList.add('done');
+  });
+  document.getElementById('panel-skin').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── Tabs ──
+function skSwitchTab(tab) {
+  skCurrentTab = tab;
+  document.getElementById('skTabCamera').classList.toggle('active', tab==='camera');
+  document.getElementById('skTabUpload').classList.toggle('active', tab==='upload');
+  document.getElementById('skCameraSection').style.display  = tab==='camera' ? 'block' : 'none';
+  document.getElementById('skUploadSection').style.display  = tab==='upload' ? 'block' : 'none';
+  // Only hide preview section when switching tabs (not when photo already captured)
+  if (!skCapturedDataUrl) {
+    document.getElementById('skPreviewSection').style.display = 'none';
+  }
+  if (tab==='camera') skStartCamera(); else skStopCamera();
+}
+
+// ── Camera ──
+async function skStartCamera() {
+  skStopCamera();
+  const err = document.getElementById('skCamErr');
+  err.style.display='none';
+  document.getElementById('skLiveVideo').style.display='block';
+  try {
+    skStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:skFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio:false });
+    document.getElementById('skLiveVideo').srcObject = skStream;
+  } catch(e) {
+    err.textContent = e.name==='NotAllowedError' ? 'Camera access denied. Please allow permission.' : 'Camera error: '+e.message;
+    err.style.display='block';
+  }
+}
+function skStopCamera() { if (skStream){skStream.getTracks().forEach(t=>t.stop()); skStream=null;} }
+async function skFlipCamera() { skFacingMode=skFacingMode==='user'?'environment':'user'; await skStartCamera(); }
+
+function skCapturePhoto() {
+  const video=document.getElementById('skLiveVideo');
+  if (!video.srcObject){skShowToast('Camera not ready');return;}
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||960;
+  const ctx=canvas.getContext('2d');
+  if (skFacingMode==='user'){ctx.translate(canvas.width,0);ctx.scale(-1,1);}
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  skCapturedDataUrl=canvas.toDataURL('image/jpeg',0.92);
+  canvas.toBlob(b=>{b._source='camera';skCapturedBlob=b;},'image/jpeg',0.92);
+  skStopCamera();
+  document.getElementById('skCameraSection').style.display='none';
+  document.getElementById('skUploadSection').style.display='none';
+  document.getElementById('skPreviewSection').style.display='block';
+  document.getElementById('skPreviewImg').src=skCapturedDataUrl;
+  document.getElementById('skAnalyseBtn').disabled=false;
+}
+
+function skRetakePhoto() {
+  skCapturedDataUrl=null; skCapturedBlob=null;
+  document.getElementById('skAnalyseBtn').disabled=true;
+  document.getElementById('skPreviewSection').style.display='none';
+  document.getElementById('skCameraSection').style.display='block';
+  document.getElementById('skUploadSection').style.display='none';
+  skStartCamera();
+}
+
+// ── Upload ──
+function skHandleUpload(e) { const f=e.target.files[0]; if(f) skProcessFile(f); }
+
+function skProcessFile(file) {
+  if (!file.type.startsWith('image/')) { skShowToast('Please select an image file'); return; }
+  if (file.size > 10*1024*1024) { skShowToast('Image too large — max 10 MB'); return; }
+  skCapturedBlob = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    skCapturedDataUrl = ev.target.result;
+    const dz = document.getElementById('skDropZone');
+    dz.classList.add('has-img');
+    // Keep the input inside — just add the image on top, don't wipe everything
+    dz.innerHTML = `
+      <img src="${skCapturedDataUrl}" alt="Uploaded" style="width:100%;height:260px;object-fit:cover;border-radius:10px;display:block;">
+      <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">`;
+    // Restore onclick so clicking the image lets them re-pick
+    dz.onclick = (e) => { e.stopPropagation(); document.getElementById('skFileInput').click(); };
+    document.getElementById('skAnalyseBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function skResetDropZone() {
+  const dz = document.getElementById('skDropZone');
+  dz.classList.remove('has-img');
+  dz.innerHTML = `
+    <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+    <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
+    <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">`;
+  // Restore onclick after innerHTML wipe, with stopPropagation to prevent double dialog
+  dz.onclick = (e) => { e.stopPropagation(); document.getElementById('skFileInput').click(); };
+  document.getElementById('skAnalyseBtn').disabled = true;
+}
+  
+// Drag and drop + initial click handler
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=document.getElementById('skDropZone');
+  if(!dz) return;
+  // Set initial click handler (stopPropagation prevents double file picker)
+  dz.onclick = (e) => { e.stopPropagation(); document.getElementById('skFileInput').click(); };
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#7A9E7E';});
+  dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)skProcessFile(f);});
+});
+
+// ── Analysis ──
+async function skStartAnalysis() {
+  if (!skCapturedDataUrl||!skCapturedBlob){skShowToast('Please capture or upload a photo first');return;}
+  skStopCamera(); skGoStep(2);
+  document.getElementById('skStatusMsg').textContent='Preparing image…';
+
+  let results; let isMock=false;
+  if (YOUCAM_API_KEY!=='YOUR_YOUCAM_API_KEY') {
+    try {
+      document.getElementById('skStatusMsg').textContent='Uploading to YouCam API…';
+      const fileId=await skApiUpload(skCapturedBlob);
+      document.getElementById('skStatusMsg').textContent='Running AI skin analysis…';
+      const taskId=await skApiRunTask(fileId);
+      document.getElementById('skStatusMsg').textContent='Processing results…';
+      results=await skApiPollResults(taskId);
+    } catch(err) {
+      document.getElementById('skErrBanner').textContent='API error — showing demo results. ('+err.message+')';
+      document.getElementById('skErrBanner').style.display='block';
+      results=skMockResults(); isMock=true;
+    }
+  } else {
+    document.getElementById('skStatusMsg').textContent='Demo mode…';
+    await skDelay(2500); results=skMockResults(); isMock=true;
+  }
+
+  document.getElementById('skStatusMsg').textContent='Saving report…';
+  const reportCode=await skSaveReport(results,isMock);
+  await skDelay(300);
+  await skRenderReport(results,reportCode,isMock);
+  skGoStep(3);
+}
+
+async function skApiUpload(blob) {
+  // Step 1: Convert blob to JPEG if needed, then to base64
+  const jpegBlob = await skToJpeg(blob);
+  const base64 = await skBlobToBase64(jpegBlob);
+
+  // Step 2: Upload via multipart/form-data (YouCam V2 format)
+  const formData = new FormData();
+  formData.append('file', jpegBlob, 'skin.jpg');
+
+  const uploadRes = await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/file`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${YOUCAM_API_KEY}` },
+    // No Content-Type header — let browser set multipart boundary automatically
+    body: formData
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    throw new Error(`File init failed: ${uploadRes.status} — ${errText.slice(0,120)}`);
+  }
+  const initData = await uploadRes.json();
+  // Support both response shapes: data.file_id or data.data.file_id
+  return initData?.data?.file_id || initData?.file_id;
+}
+
+async function skToJpeg(blob) {
+  // If already jpeg, return as-is
+  if (blob.type === 'image/jpeg') return blob;
+  // Otherwise convert via canvas
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(resolve, 'image/jpeg', 0.92);
+    };
+    img.src = url;
+  });
+}
+
+function skBlobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function skApiRunTask(fileId) {
+  // SD concerns only — must not mix SD and HD in one request
+  const SD_CONCERNS = ['spot','wrinkle','oily','moisture','acne','firmness','radiance','eye_bag','dark_circle'];
+  const res = await fetch(`${YOUCAM_API_BASE}/task/skin-analysis`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${YOUCAM_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ file_id: fileId, concerns: SD_CONCERNS, analysis_type: 'SD' })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Run task failed: ${res.status} — ${errText.slice(0,120)}`);
+  }
+  const data = await res.json();
+  return data?.data?.task_id || data?.task_id;
+}
+async function skApiPollResults(taskId) {
+  for(let i=0;i<25;i++){
+    await skDelay(1200);
+    const res=await fetch(`${YOUCAM_API_BASE}/task/skin-analysis/${taskId}`,{headers:{'Authorization':`Bearer ${YOUCAM_API_KEY}`}});
+    if(!res.ok) throw new Error(`Poll failed: ${res.status}`);
+    const data=await res.json();
+    const status=data.data?.status||data.status;
+    if(status==='completed'||status==='success') return skParseApiResults(data.data||data);
+    if(status==='failed'||status==='error') throw new Error('Analysis failed: '+(data.data?.message||data.message||'unknown'));
+  }
+  throw new Error('Timeout waiting for results');
+}
+function skParseApiResults(apiData) {
+  const scores={};
+  const raw=apiData.results||apiData.concerns||apiData.scores||{};
+  SK_PARAMS.forEach(p=>{
+    const rawScore=raw[p.youcam]?.score??raw[p.youcam]??raw[p.id]??null;
+    if(rawScore!==null){
+      const positive=['moisture','firmness','radiance'].includes(p.id);
+      scores[p.id]=positive?Math.round(rawScore):Math.round(100-rawScore);
+    } else { scores[p.id]=Math.floor(Math.random()*30)+55; }
+  });
+  return { scores, skin_type:apiData.skin_type||'Combination', skin_age:apiData.skin_age||null };
+}
+function skMockResults() {
+  const scores={};
+  SK_PARAMS.forEach(p=>{scores[p.id]=Math.floor(Math.random()*40)+45;});
+  return { scores, skin_type:['Normal','Oily','Dry','Combination'][Math.floor(Math.random()*4)], skin_age:Math.floor(Math.random()*15)+24 };
+}
+
+async function skSaveReport(results, isMock) {
+  const code = 'BB-' + Date.now().toString(36).toUpperCase();
+  const sess = JSON.parse(sessionStorage.getItem('bb_user') || '{}');
+  try {
+    if (skSb) {
+      const { data, error } = await skSb.from('bb_reports').insert({
+        share_token: code,
+        user_id:     sess.id || null,
+        skin_type:   results.skin_type,
+        skin_age:    results.skin_age,
+        scores:      results.scores,
+        summary:     results.skin_type + ' skin, age ' + (results.skin_age || 'N/A'),
+      }).select();
+      if (error) console.warn('Supabase insert error:', error.message, error.details, error.hint);
+      else console.log('Report saved to Supabase:', code);
+    } else {
+      console.warn('Supabase client not initialised — report not saved to database.');
+    }
+  } catch(e) { console.warn('Supabase save exception:', e.message); }
+  return code;
+}
+
+async function skLoadProducts() {
+  try {
+    if (!skSb) return {};
+    const { data, error } = await skSb.from('bb_products')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at');
+    if (error || !data) return {};
+    const map = {};
+    data.forEach(p => {
+      if (!map[p.parameter_key]) map[p.parameter_key] = [];
+      map[p.parameter_key].push(p);
+    });
+    return map;
+  } catch(e) { return {}; }
+}
+
+async function skRenderReport(results, reportCode, isMock) {
+  const scores=results.scores;
+  const dateStr=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('skRptImg').src=skCapturedDataUrl;
+  document.getElementById('skRptDate').textContent='Analysed '+dateStr;
+  document.getElementById('skTagType').textContent=(results.skin_type||'Combination')+' Skin';
+  document.getElementById('skTagAge').textContent=results.skin_age?'Skin Age: '+results.skin_age:'Skin Age: N/A';
+  let good=0,mid=0,low=0;
+  SK_PARAMS.forEach(p=>{const s=scores[p.id]||0; if(s>=70)good++; else if(s>=45)mid++; else low++;});
+  document.getElementById('skOvGood').textContent=good;
+  document.getElementById('skOvMid').textContent=mid;
+  document.getElementById('skOvLow').textContent=low;
+  const avg=Math.round(SK_PARAMS.reduce((a,p)=>a+(scores[p.id]||0),0)/SK_PARAMS.length);
+  document.getElementById('skTagScore').textContent='Score: '+avg+'/100';
+  document.getElementById('skTagMock').style.display=isMock?'':'none';
+  const products=await skLoadProducts();
+  const grid=document.getElementById('skParamsGrid');
+  grid.innerHTML='';
+  SK_PARAMS.forEach(p=>{
+    const s=scores[p.id]||0;
+    const lv=s>=70?'good':s>=45?'mid':'low';
+    const info=SK_PARAM_INFO[p.id];
+    const lvInfo=info[lv];
+    const prods=products[p.id]||[];
+    const prodsHTML=prods.length?`<div class="prods"><div class="prod-lbl">Recommended Products</div>${prods.map(pr=>`<a href="${pr.buy_link||'#'}" target="_blank" rel="noopener" class="prod-row"><div class="prod-emoji">${pr.emoji||'🧴'}</div><div class="prod-info"><div class="prod-name">${pr.name}${pr.price?' · '+pr.price:''}</div><div class="prod-brand">${pr.brand||''}</div></div><div class="prod-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div></a>`).join('')}</div>`:'';
+    const card=document.createElement('div');
+    card.className='p-card';
+    card.innerHTML=`<div class="p-top"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">${info.icon}</span><div><div class="p-name">${p.label}</div><div class="p-desc">${p.desc}</div></div></div><div class="p-badge bg-${lv}">${s}</div></div><div class="bar-bg"><div class="bar-fill fill-${lv}" style="width:0" data-w="${s}%"></div></div><div class="p-level-row"><span class="p-level-badge lbadge-${lv}">${lvInfo.label}</span></div><div class="p-full-desc">${lvInfo.desc}</div>${prodsHTML}`;
+    grid.appendChild(card);
+  });
+  setTimeout(()=>{ document.querySelectorAll('#skinApp .bar-fill').forEach(el=>{el.style.width=el.dataset.w;}); },120);
+
+  // Share link
+  const shareUrl = window.location.href.split('/').slice(0,-1).join('/') + '/report.html?token=' + reportCode;
+  document.getElementById('skShareLink').value=shareUrl;
+  document.getElementById('skQrcode').innerHTML='';
+  if(typeof QRCode!=='undefined'){
+    new QRCode(document.getElementById('skQrcode'),{text:shareUrl,width:120,height:120,colorDark:'#2C2C2A',colorLight:'#FFFFFF'});
+  }
+}
+
+function skRestart() {
+  skCapturedDataUrl=null; skCapturedBlob=null;
+  skStopCamera();
+  document.getElementById('skAnalyseBtn').disabled=true;
+  document.getElementById('skErrBanner').style.display='none';
+  document.getElementById('skPreviewSection').style.display='none';
+  document.getElementById('skCameraSection').style.display='none';
+  document.getElementById('skUploadSection').style.display='block';
+  // Reset capture tabs to upload
+  document.getElementById('skTabCamera').classList.remove('active');
+  document.getElementById('skTabUpload').classList.add('active');
+  skCurrentTab='upload';
+  skResetDropZone(); skGoStep(1);
+}
+function skCopyLink() {
+  const val=document.getElementById('skShareLink').value;
+  navigator.clipboard.writeText(val).then(()=>skShowToast('Link copied!')).catch(()=>{document.getElementById('skShareLink').select();document.execCommand('copy');skShowToast('Link copied!');});
+}
+function skShowToast(msg) {
+  const t=document.getElementById('skToast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  MODULE 3 — AI HAIR COLOUR
+//  YouCam V2: POST /task/hair-color  |  file_id + hex_color
+// ═══════════════════════════════════════════════════════════════
+
+// ── Predefined colour palette ──────────────────────────────────
+const HC_COLOURS = [
+  { name:'Jet Black',      hex:'#0A0A0A' },
+  { name:'Dark Brown',     hex:'#2C1A0E' },
+  { name:'Medium Brown',   hex:'#5C3317' },
+  { name:'Chestnut',       hex:'#7B3F00' },
+  { name:'Auburn',         hex:'#922B21' },
+  { name:'Copper',         hex:'#B87333' },
+  { name:'Golden Brown',   hex:'#A0522D' },
+  { name:'Caramel',        hex:'#C68642' },
+  { name:'Honey Blonde',   hex:'#D4A843' },
+  { name:'Golden Blonde',  hex:'#E0B84F' },
+  { name:'Ash Blonde',     hex:'#C8B89A' },
+  { name:'Platinum',       hex:'#E8E0D0' },
+  { name:'Silver',         hex:'#9E9E9E' },
+  { name:'Salt & Pepper',  hex:'#7A7A6A' },
+  { name:'Burgundy',       hex:'#800020' },
+  { name:'Red',            hex:'#C0392B' },
+  { name:'Strawberry',     hex:'#D4625A' },
+  { name:'Rose Gold',      hex:'#C97B84' },
+  { name:'Blue Black',     hex:'#0D1B2A' },
+  { name:'Navy',           hex:'#1A2B4A' },
+];
+
+// ── State ─────────────────────────────────────────────────────
+let hcCapturedDataUrl = null;
+let hcCapturedBlob    = null;
+let hcStream          = null;
+let hcFacingMode      = 'user';
+let hcCurrentTab      = 'upload';
+let hcSelectedHex     = null;
+let hcSelectedName    = '';
+let hcResultDataUrl   = null;
+
+// ── Initialise colour swatches ─────────────────────────────────
+(function hcInitSwatches() {
+  const grid = document.getElementById('hcColourGrid');
+  HC_COLOURS.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'colour-swatch';
+    sw.title = c.name;
+    sw.style.background = c.hex;
+    sw.innerHTML = '<span class="tick">✓</span>';
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('#hairApp .colour-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      hcSelectedHex = c.hex;
+      hcSelectedName = c.name;
+      document.getElementById('hcApplyBtn').disabled = false;
+      document.getElementById('hcHexInput').value = c.hex;
+      document.getElementById('hcHexPreview').style.background = c.hex;
+    });
+    grid.appendChild(sw);
+  });
+})();
+
+// ── Step navigation ────────────────────────────────────────────
+function hcGoStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById(`hcp${i}`).classList.toggle('active', i===n);
+    const si = document.getElementById(`hci${i}`);
+    si.classList.remove('active','done');
+    if (i===n) si.classList.add('active');
+    if (i<n)   si.classList.add('done');
+  });
+  document.getElementById('panel-colour').scrollIntoView({behavior:'smooth',block:'start'});
+  // Reset progress bar animation when entering step 3
+  if (n===3) {
+    const pf = document.getElementById('hcProgFill');
+    pf.style.animation='none'; pf.offsetHeight; pf.style.animation='';
+  }
+}
+
+// ── Tab switching ──────────────────────────────────────────────
+function hcSwitchTab(tab) {
+  hcCurrentTab = tab;
+  document.getElementById('hcTabCamera').classList.toggle('active', tab==='camera');
+  document.getElementById('hcTabUpload').classList.toggle('active', tab==='upload');
+  document.getElementById('hcCameraSection').style.display = tab==='camera' ? 'block' : 'none';
+  document.getElementById('hcUploadSection').style.display = tab==='upload' ? 'block' : 'none';
+  if (!hcCapturedDataUrl) document.getElementById('hcPreviewSection').style.display = 'none';
+  if (tab==='camera') hcStartCamera(); else hcStopCamera();
+}
+
+// ── Camera ─────────────────────────────────────────────────────
+async function hcStartCamera() {
+  hcStopCamera();
+  const err = document.getElementById('hcCamErr');
+  err.style.display = 'none';
+  try {
+    hcStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:hcFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio:false });
+    const v = document.getElementById('hcLiveVideo');
+    v.srcObject = hcStream; v.style.display = 'block';
+  } catch(e) {
+    err.textContent = e.name==='NotAllowedError' ? 'Camera access denied. Please allow permission.' : 'Camera error: '+e.message;
+    err.style.display = 'block';
+  }
+}
+function hcStopCamera() { if(hcStream){hcStream.getTracks().forEach(t=>t.stop()); hcStream=null;} }
+async function hcFlipCamera() { hcFacingMode=hcFacingMode==='user'?'environment':'user'; await hcStartCamera(); }
+
+function hcCapturePhoto() {
+  const video = document.getElementById('hcLiveVideo');
+  if (!video.srcObject) { hcShowToast('Camera not ready'); return; }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth||1280; canvas.height = video.videoHeight||960;
+  const ctx = canvas.getContext('2d');
+  if (hcFacingMode==='user') { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  hcCapturedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  canvas.toBlob(b => { hcCapturedBlob = b; }, 'image/jpeg', 0.92);
+  hcStopCamera();
+  document.getElementById('hcCameraSection').style.display = 'none';
+  document.getElementById('hcUploadSection').style.display = 'none';
+  document.getElementById('hcPreviewSection').style.display = 'block';
+  document.getElementById('hcPreviewImg').src = hcCapturedDataUrl;
+  document.getElementById('hcNextBtn').disabled = false;
+}
+function hcRetakePhoto() {
+  hcCapturedDataUrl=null; hcCapturedBlob=null;
+  document.getElementById('hcNextBtn').disabled = true;
+  document.getElementById('hcPreviewSection').style.display = 'none';
+  document.getElementById('hcCameraSection').style.display = 'block';
+  document.getElementById('hcUploadSection').style.display = 'none';
+  hcStartCamera();
+}
+
+// ── Upload ─────────────────────────────────────────────────────
+function hcHandleUpload(e) { const f=e.target.files[0]; if(f) hcProcessFile(f); }
+function hcProcessFile(file) {
+  if (!file.type.startsWith('image/')) { hcShowToast('Please select an image file'); return; }
+  if (file.size > 10*1024*1024) { hcShowToast('Image too large — max 10 MB'); return; }
+  hcCapturedBlob = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    hcCapturedDataUrl = ev.target.result;
+    const dz = document.getElementById('hcDropZone');
+    dz.classList.add('has-img');
+    dz.innerHTML = `<img src="${hcCapturedDataUrl}" alt="Uploaded" style="width:100%;height:260px;object-fit:cover;border-radius:10px;display:block;">
+      <input type="file" id="hcFileInput" accept="image/jpeg,image/png,image/webp" onchange="hcHandleUpload(event)" style="display:none">`;
+    dz.onclick = e => { e.stopPropagation(); document.getElementById('hcFileInput').click(); };
+    document.getElementById('hcNextBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Custom hex ─────────────────────────────────────────────────
+function hcUpdateCustomHex(val) {
+  const clean = val.startsWith('#') ? val : '#'+val;
+  if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+    document.getElementById('hcHexPreview').style.background = clean;
+  }
+}
+function hcSelectCustomHex() {
+  const val = document.getElementById('hcHexInput').value.trim();
+  const clean = val.startsWith('#') ? val : '#'+val;
+  if (!/^#[0-9A-Fa-f]{6}$/.test(clean)) { hcShowToast('Enter a valid hex colour e.g. #C68642'); return; }
+  document.querySelectorAll('#hairApp .colour-swatch').forEach(s => s.classList.remove('selected'));
+  hcSelectedHex = clean;
+  hcSelectedName = 'Custom ('+clean+')';
+  document.getElementById('hcHexPreview').style.background = clean;
+  document.getElementById('hcApplyBtn').disabled = false;
+  hcShowToast('Custom colour selected: '+clean);
+}
+
+// ── API helpers ────────────────────────────────────────────────
+async function hcToJpeg(blob) {
+  if (blob.type==='image/jpeg') return blob;
+  return new Promise(resolve => {
+    const img = new Image(), url = URL.createObjectURL(blob);
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      c.getContext('2d').drawImage(img,0,0);
+      URL.revokeObjectURL(url);
+      c.toBlob(resolve,'image/jpeg',0.92);
+    };
+    img.src = url;
+  });
+}
+
+async function hcApiUpload(blob) {
+  const jpeg = await hcToJpeg(blob);
+  const fd = new FormData();
+  fd.append('file', jpeg, 'hair.jpg');
+  const res = await fetch(`${YOUCAM_API_BASE}/task/hair-color/file`, {
+    method:'POST',
+    headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}` },
+    body: fd
+  });
+  if (!res.ok) { const t=await res.text(); throw new Error(`Upload failed: ${res.status} — ${t.slice(0,120)}`); }
+  const d = await res.json();
+  return d?.data?.file_id || d?.file_id;
+}
+
+async function hcApiRunTask(fileId) {
+  // Strip '#' — YouCam expects hex without the hash sign
+  const hexVal = hcSelectedHex.replace('#','');
+  const res = await fetch(`${YOUCAM_API_BASE}/task/hair-color`, {
+    method:'POST',
+    headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ file_id: fileId, hex_color: hexVal })
+  });
+  if (!res.ok) { const t=await res.text(); throw new Error(`Task failed: ${res.status} — ${t.slice(0,120)}`); }
+  const d = await res.json();
+  return d?.data?.task_id || d?.task_id;
+}
+
+async function hcApiPoll(taskId) {
+  for (let i=0; i<30; i++) {
+    await hcDelay(1500);
+    const res = await fetch(`${YOUCAM_API_BASE}/task/hair-color/${taskId}`, {
+      headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}` }
+    });
+    if (!res.ok) throw new Error(`Poll failed: ${res.status}`);
+    const d = await res.json();
+    const status = d?.data?.status || d?.status;
+    if (status==='success'||status==='completed') {
+      const url = d?.data?.result_url || d?.data?.image_url || d?.result_url || d?.image_url;
+      if (!url) throw new Error('No result URL in response');
+      return url;
+    }
+    if (status==='failed'||status==='error') throw new Error('API processing failed: '+(d?.data?.message||d?.message||'unknown'));
+  }
+  throw new Error('Timeout waiting for hair colour result');
+}
+
+function hcMockResult() {
+  // Return the original image with a colour-tinted canvas overlay for demo
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      ctx.fillStyle = hcSelectedHex + '55';
+      ctx.fillRect(0,0,c.width,c.height);
+      resolve(c.toDataURL('image/jpeg',0.85));
+    };
+    img.src = hcCapturedDataUrl;
+  });
+}
+
+// ── Main analysis flow ─────────────────────────────────────────
+async function hcStartProcessing() {
+  if (!hcCapturedBlob) { hcShowToast('Please select a photo first'); return; }
+  if (!hcSelectedHex) { hcShowToast('Please pick a hair colour first'); return; }
+  hcGoStep(3);
+  document.getElementById('hcErrBanner').style.display = 'none';
+  document.getElementById('hcStatusMsg').textContent = 'Uploading photo…';
+
+  let resultUrl = null; let isMock = false;
+  try {
+    const fileId = await hcApiUpload(hcCapturedBlob);
+    document.getElementById('hcStatusMsg').textContent = 'Running hair colour AI…';
+    const taskId = await hcApiRunTask(fileId);
+    document.getElementById('hcStatusMsg').textContent = 'Rendering your new look…';
+    resultUrl = await hcApiPoll(taskId);
+  } catch(err) {
+    console.warn('Hair colour API error:', err.message);
+    document.getElementById('hcErrBanner').textContent = 'API error — showing demo result. ('+err.message+')';
+    document.getElementById('hcErrBanner').style.display = 'block';
+    resultUrl = await hcMockResult();
+    isMock = true;
+  }
+
+  hcResultDataUrl = resultUrl;
+  hcRenderResult(resultUrl, isMock);
+}
+
+function hcRenderResult(url, isMock) {
+  const dateStr = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('hcRptImg').src = hcCapturedDataUrl;
+  document.getElementById('hcRptDate').textContent = 'Applied '+dateStr;
+  document.getElementById('hcTagColour').textContent = hcSelectedName || hcSelectedHex;
+  document.getElementById('hcTagMock').style.display = isMock ? '' : 'none';
+  document.getElementById('hcBeforeImg').src = hcCapturedDataUrl;
+  document.getElementById('hcAfterImg').src = url;
+  hcGoStep(4);
+}
+
+function hcDownloadResult() {
+  if (!hcResultDataUrl) return;
+  const a = document.createElement('a');
+  a.href = hcResultDataUrl;
+  a.download = 'budget-barber-hair-colour.jpg';
+  a.click();
+}
+function hcTryAnother() { hcGoStep(2); }
+function hcRestart() {
+  hcCapturedDataUrl=null; hcCapturedBlob=null; hcSelectedHex=null; hcSelectedName=''; hcResultDataUrl=null;
+  hcStopCamera();
+  document.getElementById('hcNextBtn').disabled=true;
+  document.getElementById('hcApplyBtn').disabled=true;
+  document.getElementById('hcErrBanner').style.display='none';
+  document.getElementById('hcPreviewSection').style.display='none';
+  document.getElementById('hcCameraSection').style.display='none';
+  document.getElementById('hcUploadSection').style.display='block';
+  document.getElementById('hcTabCamera').classList.remove('active');
+  document.getElementById('hcTabUpload').classList.add('active');
+  hcCurrentTab='upload';
+  // Reset drop zone
+  const dz=document.getElementById('hcDropZone');
+  dz.classList.remove('has-img');
+  dz.innerHTML=`<div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+    <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — hair clearly visible, good lighting</p></div>
+    <input type="file" id="hcFileInput" accept="image/jpeg,image/png,image/webp" onchange="hcHandleUpload(event)" style="display:none">`;
+  dz.onclick=e=>{e.stopPropagation();document.getElementById('hcFileInput').click();};
+  // Deselect colour swatches
+  document.querySelectorAll('#hairApp .colour-swatch').forEach(s=>s.classList.remove('selected'));
+  hcGoStep(1);
+}
+function hcShowToast(msg) {
+  const t=document.getElementById('hcToast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function hcDelay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// Init drop zone on load
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=document.getElementById('hcDropZone');
+  if(!dz) return;
+  dz.onclick=e=>{e.stopPropagation();document.getElementById('hcFileInput').click();};
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#A855C8';});
+  dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)hcProcessFile(f);});
+});
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  MODULE 4 — AI BEARD STYLES
+//  YouCam V2: GET /task/template/beard-style (list templates)
+//             POST /task/beard-style-generator (run task)
+// ═══════════════════════════════════════════════════════════════
+
+// ── Fallback styles if API template list fails ─────────────────
+const BD_FALLBACK_STYLES = [
+  { id:'full_beard',        name:'Full Beard',        icon:'🧔' },
+  { id:'short_beard',       name:'Short Beard',       icon:'🧔' },
+  { id:'goatee',            name:'Goatee',            icon:'🧔' },
+  { id:'stubble',           name:'Stubble',           icon:'🧔' },
+  { id:'circle_beard',      name:'Circle Beard',      icon:'🧔' },
+  { id:'van_dyke',          name:'Van Dyke',          icon:'🧔' },
+  { id:'mutton_chops',      name:'Mutton Chops',      icon:'🧔' },
+  { id:'chin_strap',        name:'Chin Strap',        icon:'🧔' },
+  { id:'balbo',             name:'Balbo',             icon:'🧔' },
+  { id:'anchor_beard',      name:'Anchor',            icon:'🧔' },
+  { id:'french_fork',       name:'French Fork',       icon:'🧔' },
+  { id:'clean_shave',       name:'Clean Shave',       icon:'🪒' },
+];
+
+// ── State ─────────────────────────────────────────────────────
+let bdCapturedDataUrl = null;
+let bdCapturedBlob    = null;
+let bdStream          = null;
+let bdFacingMode      = 'user';
+let bdCurrentTab      = 'upload';
+let bdSelectedStyle   = null;
+let bdSelectedName    = '';
+let bdResultDataUrl   = null;
+let bdTemplates       = [];
+
+// ── Load templates from YouCam API ────────────────────────────
+async function bdLoadTemplates() {
+  try {
+    const res = await fetch(`${YOUCAM_API_BASE}/task/template/beard-style`, {
+      headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}` }
+    });
+    if (!res.ok) throw new Error('Template list failed: '+res.status);
+    const d = await res.json();
+    bdTemplates = d?.data?.templates || d?.templates || [];
+    if (!bdTemplates.length) throw new Error('Empty template list');
+    return bdTemplates;
+  } catch(e) {
+    console.warn('Using fallback beard styles:', e.message);
+    bdTemplates = BD_FALLBACK_STYLES;
+    return bdTemplates;
+  }
+}
+
+// ── Render style grid ─────────────────────────────────────────
+function bdRenderStyleGrid(templates) {
+  const grid = document.getElementById('bdStyleGrid');
+  grid.innerHTML = '';
+  templates.forEach(tpl => {
+    const card = document.createElement('div');
+    card.className = 'style-card';
+    card.dataset.id = tpl.id || tpl.template_id;
+    card.dataset.name = tpl.name || tpl.template_name || tpl.id;
+    const hasImg = tpl.preview_url || tpl.thumbnail_url;
+    card.innerHTML = hasImg
+      ? `<img src="${tpl.preview_url||tpl.thumbnail_url}" alt="${card.dataset.name}" style="width:100%;aspect-ratio:1;object-fit:cover;display:block">
+         <div class="sel-tick">✓</div>
+         <div class="style-card-name">${card.dataset.name}</div>`
+      : `<div class="style-card-img">${tpl.icon||'🧔'}</div>
+         <div class="sel-tick">✓</div>
+         <div class="style-card-name">${card.dataset.name}</div>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('#beardApp .style-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      bdSelectedStyle = card.dataset.id;
+      bdSelectedName  = card.dataset.name;
+      document.getElementById('bdApplyBtn').disabled = false;
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ── Step navigation ────────────────────────────────────────────
+function bdGoStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById(`bdp${i}`).classList.toggle('active', i===n);
+    const si = document.getElementById(`bdi${i}`);
+    si.classList.remove('active','done');
+    if (i===n) si.classList.add('active');
+    if (i<n)   si.classList.add('done');
+  });
+  document.getElementById('panel-beard').scrollIntoView({behavior:'smooth',block:'start'});
+  if (n===3) {
+    const pf=document.getElementById('bdProgFill');
+    pf.style.animation='none'; pf.offsetHeight; pf.style.animation='';
+  }
+}
+
+async function bdGoToStylePicker() {
+  bdGoStep(2);
+  const grid = document.getElementById('bdStyleGrid');
+  if (grid.children.length <= 1 || grid.querySelector('.style-loading')) {
+    grid.innerHTML = '<div class="style-loading">Loading beard styles…</div>';
+    const tpls = await bdLoadTemplates();
+    bdRenderStyleGrid(tpls);
+  }
+}
+
+// ── Tab switching ──────────────────────────────────────────────
+function bdSwitchTab(tab) {
+  bdCurrentTab = tab;
+  document.getElementById('bdTabCamera').classList.toggle('active', tab==='camera');
+  document.getElementById('bdTabUpload').classList.toggle('active', tab==='upload');
+  document.getElementById('bdCameraSection').style.display = tab==='camera' ? 'block' : 'none';
+  document.getElementById('bdUploadSection').style.display = tab==='upload' ? 'block' : 'none';
+  if (!bdCapturedDataUrl) document.getElementById('bdPreviewSection').style.display = 'none';
+  if (tab==='camera') bdStartCamera(); else bdStopCamera();
+}
+
+// ── Camera ─────────────────────────────────────────────────────
+async function bdStartCamera() {
+  bdStopCamera();
+  const err = document.getElementById('bdCamErr');
+  err.style.display = 'none';
+  try {
+    bdStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:bdFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio:false });
+    const v = document.getElementById('bdLiveVideo');
+    v.srcObject = bdStream; v.style.display = 'block';
+  } catch(e) {
+    err.textContent = e.name==='NotAllowedError' ? 'Camera access denied. Please allow permission.' : 'Camera error: '+e.message;
+    err.style.display = 'block';
+  }
+}
+function bdStopCamera() { if(bdStream){bdStream.getTracks().forEach(t=>t.stop()); bdStream=null;} }
+async function bdFlipCamera() { bdFacingMode=bdFacingMode==='user'?'environment':'user'; await bdStartCamera(); }
+
+function bdCapturePhoto() {
+  const video = document.getElementById('bdLiveVideo');
+  if (!video.srcObject) { bdShowToast('Camera not ready'); return; }
+  const canvas = document.createElement('canvas');
+  canvas.width=video.videoWidth||1280; canvas.height=video.videoHeight||960;
+  const ctx=canvas.getContext('2d');
+  if (bdFacingMode==='user') { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  bdCapturedDataUrl = canvas.toDataURL('image/jpeg',0.92);
+  canvas.toBlob(b=>{bdCapturedBlob=b;},'image/jpeg',0.92);
+  bdStopCamera();
+  document.getElementById('bdCameraSection').style.display='none';
+  document.getElementById('bdUploadSection').style.display='none';
+  document.getElementById('bdPreviewSection').style.display='block';
+  document.getElementById('bdPreviewImg').src=bdCapturedDataUrl;
+  document.getElementById('bdNextBtn').disabled=false;
+}
+function bdRetakePhoto() {
+  bdCapturedDataUrl=null; bdCapturedBlob=null;
+  document.getElementById('bdNextBtn').disabled=true;
+  document.getElementById('bdPreviewSection').style.display='none';
+  document.getElementById('bdCameraSection').style.display='block';
+  document.getElementById('bdUploadSection').style.display='none';
+  bdStartCamera();
+}
+
+// ── Upload ─────────────────────────────────────────────────────
+function bdHandleUpload(e) { const f=e.target.files[0]; if(f) bdProcessFile(f); }
+function bdProcessFile(file) {
+  if (!file.type.startsWith('image/')) { bdShowToast('Please select an image file'); return; }
+  if (file.size>10*1024*1024) { bdShowToast('Image too large — max 10 MB'); return; }
+  bdCapturedBlob = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    bdCapturedDataUrl = ev.target.result;
+    const dz=document.getElementById('bdDropZone');
+    dz.classList.add('has-img');
+    dz.innerHTML=`<img src="${bdCapturedDataUrl}" alt="Uploaded" style="width:100%;height:260px;object-fit:cover;border-radius:10px;display:block;">
+      <input type="file" id="bdFileInput" accept="image/jpeg,image/png,image/webp" onchange="bdHandleUpload(event)" style="display:none">`;
+    dz.onclick=e=>{e.stopPropagation();document.getElementById('bdFileInput').click();};
+    document.getElementById('bdNextBtn').disabled=false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── API helpers ────────────────────────────────────────────────
+async function bdToJpeg(blob) {
+  if (blob.type==='image/jpeg') return blob;
+  return new Promise(resolve=>{
+    const img=new Image(), url=URL.createObjectURL(blob);
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      c.getContext('2d').drawImage(img,0,0);
+      URL.revokeObjectURL(url);
+      c.toBlob(resolve,'image/jpeg',0.92);
+    };
+    img.src=url;
+  });
+}
+
+async function bdApiUpload(blob) {
+  const jpeg = await bdToJpeg(blob);
+  const fd = new FormData();
+  fd.append('file', jpeg, 'face.jpg');
+  const res = await fetch(`${YOUCAM_API_BASE}/task/beard-style-generator/file`, {
+    method:'POST',
+    headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}` },
+    body: fd
+  });
+  if (!res.ok) { const t=await res.text(); throw new Error(`Upload failed: ${res.status} — ${t.slice(0,120)}`); }
+  const d = await res.json();
+  return d?.data?.file_id || d?.file_id;
+}
+
+async function bdApiRunTask(fileId) {
+  const res = await fetch(`${YOUCAM_API_BASE}/task/beard-style-generator`, {
+    method:'POST',
+    headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ file_id: fileId, template_id: bdSelectedStyle })
+  });
+  if (!res.ok) { const t=await res.text(); throw new Error(`Task failed: ${res.status} — ${t.slice(0,120)}`); }
+  const d = await res.json();
+  return d?.data?.task_id || d?.task_id;
+}
+
+async function bdApiPoll(taskId) {
+  for (let i=0; i<30; i++) {
+    await bdDelay(1500);
+    const res = await fetch(`${YOUCAM_API_BASE}/task/beard-style-generator/${taskId}`, {
+      headers:{ 'Authorization':`Bearer ${YOUCAM_API_KEY}` }
+    });
+    if (!res.ok) throw new Error(`Poll failed: ${res.status}`);
+    const d = await res.json();
+    const status = d?.data?.status || d?.status;
+    if (status==='success'||status==='completed') {
+      const url = d?.data?.result_url || d?.data?.image_url || d?.result_url || d?.image_url;
+      if (!url) throw new Error('No result URL in response');
+      return url;
+    }
+    if (status==='failed'||status==='error') throw new Error('API processing failed: '+(d?.data?.message||d?.message||'unknown'));
+  }
+  throw new Error('Timeout waiting for beard style result');
+}
+
+function bdMockResult() {
+  // Return original image with a brown beard overlay for demo
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.width; c.height=img.height;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0);
+      // Draw a simple beard shape overlay
+      ctx.fillStyle='rgba(60,30,10,0.35)';
+      const cx=c.width/2, cy=c.height*0.68;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, c.width*0.22, c.height*0.12, 0, 0, Math.PI*2);
+      ctx.fill();
+      resolve(c.toDataURL('image/jpeg',0.85));
+    };
+    img.src=bdCapturedDataUrl;
+  });
+}
+
+// ── Main flow ──────────────────────────────────────────────────
+async function bdStartProcessing() {
+  if (!bdCapturedBlob) { bdShowToast('Please select a photo first'); return; }
+  if (!bdSelectedStyle) { bdShowToast('Please pick a beard style first'); return; }
+  bdGoStep(3);
+  document.getElementById('bdErrBanner').style.display='none';
+  document.getElementById('bdStatusMsg').textContent='Uploading photo…';
+
+  let resultUrl=null; let isMock=false;
+  try {
+    const fileId = await bdApiUpload(bdCapturedBlob);
+    document.getElementById('bdStatusMsg').textContent='Running beard style AI…';
+    const taskId = await bdApiRunTask(fileId);
+    document.getElementById('bdStatusMsg').textContent='Rendering your new look…';
+    resultUrl = await bdApiPoll(taskId);
+  } catch(err) {
+    console.warn('Beard style API error:', err.message);
+    document.getElementById('bdErrBanner').textContent='API error — showing demo result. ('+err.message+')';
+    document.getElementById('bdErrBanner').style.display='block';
+    resultUrl = await bdMockResult();
+    isMock = true;
+  }
+
+  bdResultDataUrl = resultUrl;
+  bdRenderResult(resultUrl, isMock);
+}
+
+function bdRenderResult(url, isMock) {
+  const dateStr=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('bdRptImg').src=bdCapturedDataUrl;
+  document.getElementById('bdRptDate').textContent='Generated '+dateStr;
+  document.getElementById('bdTagStyle').textContent=bdSelectedName||bdSelectedStyle;
+  document.getElementById('bdTagMock').style.display=isMock?'':'none';
+  document.getElementById('bdBeforeImg').src=bdCapturedDataUrl;
+  document.getElementById('bdAfterImg').src=url;
+  bdGoStep(4);
+}
+
+function bdDownloadResult() {
+  if (!bdResultDataUrl) return;
+  const a=document.createElement('a');
+  a.href=bdResultDataUrl;
+  a.download='budget-barber-beard-style.jpg';
+  a.click();
+}
+function bdTryAnother() { bdGoStep(2); }
+function bdRestart() {
+  bdCapturedDataUrl=null; bdCapturedBlob=null; bdSelectedStyle=null; bdSelectedName=''; bdResultDataUrl=null;
+  bdStopCamera();
+  document.getElementById('bdNextBtn').disabled=true;
+  document.getElementById('bdApplyBtn').disabled=true;
+  document.getElementById('bdErrBanner').style.display='none';
+  document.getElementById('bdPreviewSection').style.display='none';
+  document.getElementById('bdCameraSection').style.display='none';
+  document.getElementById('bdUploadSection').style.display='block';
+  document.getElementById('bdTabCamera').classList.remove('active');
+  document.getElementById('bdTabUpload').classList.add('active');
+  bdCurrentTab='upload';
+  const dz=document.getElementById('bdDropZone');
+  dz.classList.remove('has-img');
+  dz.innerHTML=`<div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
+    <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
+    <input type="file" id="bdFileInput" accept="image/jpeg,image/png,image/webp" onchange="bdHandleUpload(event)" style="display:none">`;
+  dz.onclick=e=>{e.stopPropagation();document.getElementById('bdFileInput').click();};
+  document.querySelectorAll('#beardApp .style-card').forEach(c=>c.classList.remove('selected'));
+  bdGoStep(1);
+}
+function bdShowToast(msg) {
+  const t=document.getElementById('bdToast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function bdDelay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// Init drop zone on load
+document.addEventListener('DOMContentLoaded',()=>{
+  const dz=document.getElementById('bdDropZone');
+  if(!dz) return;
+  dz.onclick=e=>{e.stopPropagation();document.getElementById('bdFileInput').click();};
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#D97706';});
+  dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)bdProcessFile(f);});
+});
+</script>
+</body>
+</html>
