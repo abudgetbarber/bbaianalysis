@@ -1813,8 +1813,15 @@ async function skSaveReport(results, isMock) {
         scores:      results.scores,
         summary:     results.skin_type + ' skin, age ' + (results.skin_age || 'N/A'),
       }).select();
-      if (error) console.warn('Supabase insert error:', error.message, error.details, error.hint);
-      else console.log('Report saved to Supabase:', code);
+      if (error) {
+        console.warn('Supabase insert error:', error.message, error.details, error.hint, error.code);
+      } else if (!data || data.length === 0) {
+        // RLS is blocking the insert — row written but not returned, or silently rejected
+        console.warn('Supabase insert blocked silently (RLS policy missing). Code:', code,
+          '\nFix: Add anon INSERT + SELECT policies on bb_reports in Supabase Dashboard.');
+      } else {
+        console.log('Report saved to Supabase:', code, data[0]);
+      }
     } else {
       console.warn('Supabase client not initialised — report not saved to database.');
     }

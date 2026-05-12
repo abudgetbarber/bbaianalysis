@@ -305,7 +305,8 @@ async function loadReport(){
     });
 
     if (!reports || reports.length === 0) {
-      showError('Report not found. The link may be invalid or the report was not saved.');
+      // Could be: token never saved (RLS blocked insert), token doesn't exist, or RLS blocks select
+      showError('Report not found. This is usually caused by missing RLS policies on the bb_reports table in Supabase — the report was generated but could not be saved. Please check the Supabase Dashboard → bb_reports → RLS Policies and ensure anon INSERT and SELECT are allowed.');
       return;
     }
 
