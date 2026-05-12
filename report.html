@@ -184,6 +184,10 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;min-height:100vh;color:
             <span class="sk-tag tag-sage"  id="rptTagScore"></span>
           </div>
         </div>
+        <div id="rptPhotoWrap" style="display:none;flex-shrink:0;margin-left:12px">
+          <img id="rptPhoto" src="" alt="Skin photo"
+            style="width:90px;height:90px;object-fit:cover;border-radius:10px;border:2px solid #E8E6E1;display:block"/>
+        </div>
       </div>
 
       <div class="ov-grid">
@@ -353,6 +357,11 @@ function renderReport(report, prodMap){
   document.getElementById('rptDate').textContent     = 'Analysed ' + dateStr;
   document.getElementById('rptTagType').textContent  = (report.skin_type || 'Combination') + ' Skin';
   document.getElementById('rptTagAge').textContent   = report.skin_age ? 'Skin Age: ' + report.skin_age : 'Skin Age: N/A';
+
+  if (report.image_url) {
+    document.getElementById('rptPhoto').src          = report.image_url;
+    document.getElementById('rptPhotoWrap').style.display = 'block';
+  }
 
   let good=0, mid=0, low=0;
   SK_PARAMS.forEach(p=>{ const s=scores[p.id]||0; if(s>=70)good++; else if(s>=45)mid++; else low++; });

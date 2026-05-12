@@ -1800,11 +1800,30 @@ function skMockResults() {
   return { scores, skin_type:['Normal','Oily','Dry','Combination'][Math.floor(Math.random()*4)], skin_age:Math.floor(Math.random()*15)+24 };
 }
 
+async function skUploadPhoto(code) {
+  try {
+    if (!skSb || !skCapturedBlob) return null;
+    const jpeg = skCapturedBlob.type === 'image/jpeg' ? skCapturedBlob
+      : await new Promise(res => {
+          const c = document.createElement('canvas');
+          const img = new Image();
+          img.onload = () => { c.width=img.width; c.height=img.height; c.getContext('2d').drawImage(img,0,0); c.toBlob(b=>res(b),'image/jpeg',0.85); };
+          img.src = skCapturedDataUrl;
+        });
+    const path = `reports/${code}.jpg`;
+    const { error } = await skSb.storage.from('report-photos').upload(path, jpeg, { contentType:'image/jpeg', upsert:true });
+    if (error) { console.warn('Photo upload error:', error.message); return null; }
+    const { data } = skSb.storage.from('report-photos').getPublicUrl(path);
+    return data?.publicUrl || null;
+  } catch(e) { console.warn('Photo upload exception:', e.message); return null; }
+}
+
 async function skSaveReport(results, isMock) {
   const code = 'BB-' + Date.now().toString(36).toUpperCase();
   const sess = JSON.parse(sessionStorage.getItem('bb_user') || '{}');
   try {
     if (skSb) {
+      const imageUrl = await skUploadPhoto(code);
       const { data, error } = await skSb.from('bb_reports').insert({
         share_token: code,
         user_id:     sess.id || null,
@@ -1812,6 +1831,7 @@ async function skSaveReport(results, isMock) {
         skin_age:    results.skin_age,
         scores:      results.scores,
         summary:     results.skin_type + ' skin, age ' + (results.skin_age || 'N/A'),
+        image_url:   imageUrl,
       }).select();
       if (error) {
         console.warn('Supabase insert error:', error.message, error.details, error.hint, error.code);
