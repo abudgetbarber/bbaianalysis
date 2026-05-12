@@ -224,8 +224,8 @@ body{font-family:'DM Sans',sans-serif;background:#F7F5F0;min-height:100vh;color:
 
 <script>
 // ── Config — same as dashboard.html ──────────────────────────────
- const SUPABASE_URL = 'https://bzriumzcqlrfrzynavel.supabase.co';
-  const SUPABASE_ANON = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
+const SUPABASE_URL  = 'https://bzriumzcqlrfrzynavel.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Dody-Q_ZGBx8KuGPTX8DNw_KuroMQOA';
 
 // ── Param definitions (must match dashboard.html SK_PARAMS) ───────
 const SK_PARAMS = [
@@ -273,7 +273,7 @@ function copyLink(){
 async function sbGet(table, params){
   const qs = Object.entries(params).map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join('&');
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${qs}`, {
-    headers:{ 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+    headers:{ 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
   });
   if (!res.ok) throw new Error('Supabase error: ' + res.status);
   return res.json();
