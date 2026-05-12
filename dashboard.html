@@ -579,10 +579,10 @@ details[open] .accordion summary::after { content: '↑'; }
       </div>
     </div>
     <div id="skUploadSection">
-      <div class="drop-zone" id="skDropZone" onclick="document.getElementById('skFileInput').click()">
+      <div class="drop-zone" id="skDropZone">
         <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
         <div class="drop-text"><h3>Click to browse or drag & drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
-        <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)">
+        <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">
       </div>
     </div>
     <div class="sk-tips">
@@ -697,12 +697,12 @@ const WORKER_URL = "https://bbhairstyle.abudgetbarber.workers.dev/";
 // NOTE: If opening dashboard.html directly (without logging in via admin.html),
 // set a default session so buttons work. Remove the fallback below once
 // admin.html sets sessionStorage before redirecting here.
-let _session = sessionStorage.getItem('bb_auth');
+let _session = sessionStorage.getItem('bb_user');
 if (!_session) {
   // Fallback: set a guest session so the page is usable when opened directly.
   // In production, replace this with: window.location.href = 'index.html';
   _session = JSON.stringify({ name: 'Guest' });
-  sessionStorage.setItem('bb_auth', _session);
+  sessionStorage.setItem('bb_user', _session);
 }
 const session = JSON.parse(_session || '{}');
 
@@ -715,7 +715,7 @@ if (session.name) {
 }
 
 function logout() {
-  sessionStorage.removeItem('bb_auth');
+  sessionStorage.removeItem('bb_user');
   window.location.href = 'index.html';
 }
 
@@ -998,7 +998,7 @@ const YOUCAM_API_BASE  = 'https://yce-api-01.makeupar.com/s2s/v2.0';
 
 let skSb = null;
 try {
-  skSb = supabase.createClient(SK_SUPABASE_URL, SK_SUPABASE_ANON);
+  skSb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch(e) {
   console.warn('Supabase not available for skin module:', e.message);
 }
@@ -1011,8 +1011,8 @@ const SK_PARAMS = [
   { id:'acne',         label:'Acne',          desc:'Breakouts & blemishes',          youcam:'acne' },
   { id:'firmness',     label:'Firmness',      desc:'Skin elasticity & tone',         youcam:'firmness' },
   { id:'radiance',     label:'Radiance',      desc:'Overall glow & brightness',      youcam:'radiance' },
-  { id:'eye_bag',      label:'Eye Bag',       desc:'Puffiness under eyes',           youcam:'eye_bag' },      // ✅ was 'eyebag'
-  { id:'dark_circles', label:'Dark Circles',  desc:'Under-eye discolouration',       youcam:'dark_circle' }, // ✅ was 'dark_circle'
+  { id:'eye_bag',      label:'Eye Bag',       desc:'Puffiness under eyes',           youcam:'eye_bag' },
+  { id:'dark_circles', label:'Dark Circles',  desc:'Under-eye discolouration',       youcam:'dark_circle' },
 ];
 
 const SK_PARAM_INFO = {
@@ -1052,7 +1052,10 @@ function skSwitchTab(tab) {
   document.getElementById('skTabUpload').classList.toggle('active', tab==='upload');
   document.getElementById('skCameraSection').style.display  = tab==='camera' ? 'block' : 'none';
   document.getElementById('skUploadSection').style.display  = tab==='upload' ? 'block' : 'none';
-  document.getElementById('skPreviewSection').style.display = 'none';
+  // Only hide preview section when switching tabs (not when photo already captured)
+  if (!skCapturedDataUrl) {
+    document.getElementById('skPreviewSection').style.display = 'none';
+  }
   if (tab==='camera') skStartCamera(); else skStopCamera();
 }
 
@@ -1084,7 +1087,8 @@ function skCapturePhoto() {
   skCapturedDataUrl=canvas.toDataURL('image/jpeg',0.92);
   canvas.toBlob(b=>{b._source='camera';skCapturedBlob=b;},'image/jpeg',0.92);
   skStopCamera();
-  document.getElementById('skLiveVideo').style.display='none';
+  document.getElementById('skCameraSection').style.display='none';
+  document.getElementById('skUploadSection').style.display='none';
   document.getElementById('skPreviewSection').style.display='block';
   document.getElementById('skPreviewImg').src=skCapturedDataUrl;
   document.getElementById('skAnalyseBtn').disabled=false;
@@ -1094,6 +1098,8 @@ function skRetakePhoto() {
   skCapturedDataUrl=null; skCapturedBlob=null;
   document.getElementById('skAnalyseBtn').disabled=true;
   document.getElementById('skPreviewSection').style.display='none';
+  document.getElementById('skCameraSection').style.display='block';
+  document.getElementById('skUploadSection').style.display='none';
   skStartCamera();
 }
 
@@ -1109,12 +1115,12 @@ function skProcessFile(file) {
     skCapturedDataUrl = ev.target.result;
     const dz = document.getElementById('skDropZone');
     dz.classList.add('has-img');
-    // ✅ Keep the input inside — just add the image on top, don't wipe everything
+    // Keep the input inside — just add the image on top, don't wipe everything
     dz.innerHTML = `
       <img src="${skCapturedDataUrl}" alt="Uploaded" style="width:100%;height:260px;object-fit:cover;border-radius:10px;display:block;">
       <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">`;
-    // ✅ Restore onclick so clicking the image lets them re-pick
-    dz.onclick = () => document.getElementById('skFileInput').click();
+    // Restore onclick so clicking the image lets them re-pick
+    dz.onclick = (e) => { e.stopPropagation(); document.getElementById('skFileInput').click(); };
     document.getElementById('skAnalyseBtn').disabled = false;
   };
   reader.readAsDataURL(file);
@@ -1127,15 +1133,17 @@ function skResetDropZone() {
     <div class="drop-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg></div>
     <div class="drop-text"><h3>Click to browse or drag &amp; drop</h3><p>JPG, PNG, WebP — face forward, good lighting</p></div>
     <input type="file" id="skFileInput" accept="image/jpeg,image/png,image/webp" onchange="skHandleUpload(event)" style="display:none">`;
-  // ✅ Restore onclick after innerHTML wipe
-  dz.onclick = () => document.getElementById('skFileInput').click();
+  // Restore onclick after innerHTML wipe, with stopPropagation to prevent double dialog
+  dz.onclick = (e) => { e.stopPropagation(); document.getElementById('skFileInput').click(); };
   document.getElementById('skAnalyseBtn').disabled = true;
 }
   
-// Drag and drop
+// Drag and drop + initial click handler
 document.addEventListener('DOMContentLoaded',()=>{
   const dz=document.getElementById('skDropZone');
   if(!dz) return;
+  // Set initial click handler (stopPropagation prevents double file picker)
+  dz.onclick = (e) => { e.stopPropagation(); document.getElementById('skFileInput').click(); };
   dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='#7A9E7E';});
   dz.addEventListener('dragleave',()=>{dz.style.borderColor='';});
   dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';const f=e.dataTransfer.files[0];if(f)skProcessFile(f);});
@@ -1275,11 +1283,11 @@ function skMockResults() {
 
 async function skSaveReport(results, isMock) {
   const code = 'BB-' + Date.now().toString(36).toUpperCase();
-  const sess = JSON.parse(sessionStorage.getItem('bb_user') || '{}'); // ✅ was bb_auth
+  const sess = JSON.parse(sessionStorage.getItem('bb_user') || '{}')
   try {
     if (skSb) await skSb.from('bb_reports').insert({
-      share_token:   code,          // ✅ was report_code
-      user_id:       sess.id || null, // ✅ was customer_id
+      share_token:   code,
+      user_id:       sess.id || null,
       skin_type:     results.skin_type,
       skin_age:      results.skin_age,
       scores:        results.scores,
@@ -1294,12 +1302,12 @@ async function skLoadProducts() {
     if (!skSb) return {};
     const { data, error } = await skSb.from('bb_products')
       .select('*')
-      .eq('is_active', true)        // ✅ was 'active'
-      .order('created_at');         // ✅ was 'sort_order' (doesn't exist)
+      .eq('is_active', true)
+      .order('created_at');
     if (error || !data) return {};
     const map = {};
     data.forEach(p => {
-      if (!map[p.parameter_key]) map[p.parameter_key] = [];  // ✅ was p.param_id
+      if (!map[p.parameter_key]) map[p.parameter_key] = [];
       map[p.parameter_key].push(p);
     });
     return map;
@@ -1339,7 +1347,7 @@ async function skRenderReport(results, reportCode, isMock) {
   setTimeout(()=>{ document.querySelectorAll('#skinApp .bar-fill').forEach(el=>{el.style.width=el.dataset.w;}); },120);
 
   // Share link
-  cconst shareUrl = window.location.href.split('/').slice(0,-1).join('/') + '/report.html?token=' + reportCode;
+  const shareUrl = window.location.href.split('/').slice(0,-1).join('/') + '/report.html?token=' + reportCode;
   document.getElementById('skShareLink').value=shareUrl;
   document.getElementById('skQrcode').innerHTML='';
   if(typeof QRCode!=='undefined'){
@@ -1349,10 +1357,17 @@ async function skRenderReport(results, reportCode, isMock) {
 
 function skRestart() {
   skCapturedDataUrl=null; skCapturedBlob=null;
+  skStopCamera();
   document.getElementById('skAnalyseBtn').disabled=true;
   document.getElementById('skErrBanner').style.display='none';
   document.getElementById('skPreviewSection').style.display='none';
-  skResetDropZone(); skGoStep(1); skSwitchTab('upload');
+  document.getElementById('skCameraSection').style.display='none';
+  document.getElementById('skUploadSection').style.display='block';
+  // Reset capture tabs to upload
+  document.getElementById('skTabCamera').classList.remove('active');
+  document.getElementById('skTabUpload').classList.add('active');
+  skCurrentTab='upload';
+  skResetDropZone(); skGoStep(1);
 }
 function skCopyLink() {
   const val=document.getElementById('skShareLink').value;
