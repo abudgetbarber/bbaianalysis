@@ -2006,12 +2006,38 @@ function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 
 const HCG_PROMPT = `STRICT GENERATION MODE: HAIR COLOR REFERENCE SHEET
 
-IMPORTANT:
-DO NOT CREATE A COLLAGE AUTOMATICALLY.
-DO NOT DECIDE GRID SIZE YOURSELF.
-DO NOT ADD EXTRA TILES.
-DO NOT PRINT TILE NUMBERS ANYWHERE IN THE IMAGE.
-DO NOT DISPLAY TEXT LIKE "TILE 1", "TILE 2", etc.
+==================================================
+CRITICAL API-MODE RULES — READ FIRST
+==================================================
+
+YOU ARE RUNNING AS AN API. FOLLOW THESE EXACTLY:
+
+RULE 1 — COLOUR ISOLATION (MOST IMPORTANT):
+- Change ONLY the hair on top of the head.
+- DO NOT change skin colour.
+- DO NOT change face colour.
+- DO NOT tint cheeks, forehead, neck, or ears.
+- DO NOT change shirt or clothing colour.
+- DO NOT change background colour.
+- The colour change applies ONLY to scalp hair.
+- Mustache and beard colour must NOT change.
+
+RULE 2 — EXACT 12 TILES, NO MORE, NO LESS:
+- Output EXACTLY 12 portrait tiles.
+- Layout: 3 columns × 4 rows = 12 total.
+- DO NOT output 9 tiles.
+- DO NOT output 16 tiles.
+- DO NOT skip any tile.
+
+RULE 3 — FACE IDENTITY LOCKED:
+- Every tile must show the EXACT SAME person.
+- Face shape, skin tone, eyes, nose, mouth — ALL unchanged.
+- DO NOT beautify, lighten, or alter the face.
+
+RULE 4 — LABELS VISIBLE INSIDE IMAGE:
+- Each tile must have its colour label printed below the portrait.
+- Use EXACTLY the label names listed below.
+- No tile numbers. No debug text.
 
 ==================================================
 LAYOUT (NON-NEGOTIABLE)
@@ -2024,33 +2050,14 @@ FINAL LAYOUT MUST BE:
 - 4 rows
 - Total = EXACTLY 12 tiles
 
-DO NOT create:
-- 16 images
-- 15 images
-- 9 images
-- 4x4 grids
-- extra rows
-- extra columns
-
-Each tile must contain:
+Each tile contains:
 - ONE portrait only
 - ONE hair color only
 - ONE label underneath only
 
-NO additional panels.
-
-IMPORTANT:
-The words "Tile 1", "Tile 2", etc. are ONLY INTERNAL GENERATION INSTRUCTIONS.
-THEY MUST NEVER APPEAR INSIDE THE FINAL IMAGE.
-
 ==================================================
-IMPORTANT ANTI-FAILURE RULE
+TILE ORDER (INTERNAL ONLY — DO NOT PRINT NUMBERS)
 ==================================================
-
-Generate the image internally in this exact order.
-DO NOT print tile numbers visually.
-
-Internal order only:
 
 Tile 1 = Natural Black
 Tile 2 = Soft Black
@@ -2069,13 +2076,12 @@ Tile 11 = Platinum Blonde
 Tile 12 = Blue Black
 
 STOP after Tile 12.
-DO NOT generate more tiles.
 
 ==================================================
 STRICT LABEL LOCK
 ==================================================
 
-The ONLY visible labels allowed inside image are:
+Visible labels ONLY:
 
 Natural Black
 Soft Black
@@ -2090,165 +2096,67 @@ Silver Grey
 Platinum Blonde
 Blue Black
 
-STRICTLY FORBIDDEN:
-- Tile 1
-- Tile 2
-- Tile 3
-- Any numbering
-- Any debug text
-- Any internal instructions
-
-NEVER:
-- invent labels
-- misspell labels
-- duplicate labels
-- swap labels
-
-==================================================
-STRICT COLOR MATCHING
-==================================================
-
-The hair color MUST visually match the label.
-
-If hair color and label mismatch,
-REGENERATE that tile BEFORE final output.
+FORBIDDEN: Tile numbers, debug text, any other labels.
 
 ==================================================
 STRICT COLOR DEFINITIONS
 ==================================================
 
-NATURAL BLACK:
-- Deep natural black hair tone.
-
-SOFT BLACK:
-- Slightly lighter black with soft tone.
-
-DARK BROWN:
-- Rich dark brown hair.
-
-CHOCOLATE BROWN:
-- Warm medium-dark chocolate tone.
-
-ASH BROWN:
-- Cool smoky brown tone.
-
-GOLDEN BROWN:
-- Brown with subtle golden warmth.
-
-BURGUNDY:
-- Deep wine-red undertone.
-
-COPPER BROWN:
-- Brown mixed with copper-orange warmth.
-
-DARK RED:
-- Deep muted red hair tone.
-
-SILVER GREY:
-- Metallic silver-grey hair.
-
-PLATINUM BLONDE:
-- Very light icy blonde tone.
-
-BLUE BLACK:
-- Black hair with subtle blue shine.
+NATURAL BLACK: Deep natural black hair tone.
+SOFT BLACK: Slightly lighter black with soft tone.
+DARK BROWN: Rich dark brown hair.
+CHOCOLATE BROWN: Warm medium-dark chocolate tone.
+ASH BROWN: Cool smoky brown tone.
+GOLDEN BROWN: Brown with subtle golden warmth.
+BURGUNDY: Deep wine-red undertone.
+COPPER BROWN: Brown mixed with copper-orange warmth.
+DARK RED: Deep muted red hair tone.
+SILVER GREY: Metallic silver-grey hair.
+PLATINUM BLONDE: Very light icy blonde tone.
+BLUE BLACK: Black hair with subtle blue shine.
 
 ==================================================
 STRICT FACE PRESERVATION
 ==================================================
 
 Use uploaded image as exact identity reference.
-
 The SAME PERSON must appear in all 12 tiles.
 
-LOCK:
-- forehead
-- eyes
-- nose
-- ears
-- expression
-- skin texture
-- beard style
-- clothing
-- background
-- lighting
-- camera angle
-- crop size
+LOCK (DO NOT CHANGE):
+- face, skin tone, forehead, eyes, nose, ears
+- expression, head tilt, lighting
+- beard and mustache style and colour
+- clothing and shirt colour
+- background colour and camera angle
 
-ONLY change:
-- Hair color
-
-DO NOT:
-- change hairstyle
-- change hair length
-- change face
-- beautify
-- reshape
-- age/de-age
-- change beard shape
-- add makeup
+ONLY CHANGE: Hair colour on top of head.
 
 ==================================================
 HAIR CONSISTENCY RULE
 ==================================================
 
 - SAME hairstyle in all tiles.
-- SAME hair volume.
-- SAME curls/waves.
-- SAME beard style.
-- ONLY hair COLOR changes.
+- SAME hair volume and length.
+- SAME curls or waves.
+- ONLY hair COLOR changes between tiles.
 
 ==================================================
-ANTI-DUPLICATE RULE
+FINAL VALIDATION
 ==================================================
 
-Every hair color must look visually different.
+Before output, verify:
+[ ] Exactly 12 portraits
+[ ] 3 columns × 4 rows
+[ ] Hair colour changed — skin/face/clothes unchanged
+[ ] All 12 labels correct and visible
+[ ] Same face in all 12 tiles
+[ ] No tile numbers visible
 
-DO NOT:
-- repeat similar shades
-- create duplicate colors
-- make colors indistinguishable
-
-==================================================
-FINAL VALIDATION (MANDATORY)
-==================================================
-
-Before output:
-Count tiles manually.
-
-Checklist:
-[ ] exactly 12 portraits
-[ ] exactly 12 labels
-[ ] 3 columns
-[ ] 4 rows
-[ ] no extra tiles
-[ ] no missing tiles
-[ ] all hair colors unique
-[ ] labels correctly matched
-[ ] no spelling mistakes
-[ ] NO visible tile numbers
-[ ] NO internal instruction text
-
-If ANY checklist item fails:
-REGENERATE ENTIRE IMAGE.
+If any item fails — REGENERATE.
 
 ==================================================
-OUTPUT RULE
-==================================================
-
-OUTPUT IMAGE ONLY.
-NO explanation.
-NO extra graphics.
-NO decorative elements.
-NO watermark.
-NO title text.
-NO tile numbering visible.
-
-==================================================
-GOAL
-==================================================
-
-Create a perfect professional salon hair color reference chart with EXACTLY 12 correctly labeled hair colors on the SAME PERSON while preserving identity perfectly and changing ONLY hair color.`;
+OUTPUT: IMAGE ONLY. No text outside tile labels.
+==================================================`;
 
 // ── State ──────────────────────────────────────────
 let hcgImageBase64 = null;
@@ -2387,7 +2295,7 @@ async function hcgGenerate() {
           { inline_data: { mime_type: hcgImageMime, data: hcgImageBase64 } }
         ]
       }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 1 }
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 0.4 }
     };
 
     const res = await fetch(WORKER_URL, {
