@@ -2004,159 +2004,107 @@ function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 // HAIR COLOUR GRID MODULE
 // ═══════════════════════════════════════════════════
 
-const HCG_PROMPT = `STRICT GENERATION MODE: HAIR COLOR REFERENCE SHEET
+const HCG_PROMPT = `You are a photo editing tool. You will receive ONE portrait photo.
+
+Your task: Create a 3-column × 4-row reference grid showing the SAME photo edited 12 times. In each edit, change ONLY the hair colour on the top of the head. Nothing else changes.
 
 ==================================================
-CRITICAL API-MODE RULES — READ FIRST
+THIS IS A PHOTO EDIT — NOT A GENERATION TASK
 ==================================================
 
-YOU ARE RUNNING AS AN API. FOLLOW THESE EXACTLY:
+DO NOT generate a new person.
+DO NOT regenerate the face.
+DO NOT imagine what the person looks like.
 
-RULE 1 — COLOUR ISOLATION (MOST IMPORTANT):
-- Change ONLY the hair on top of the head.
-- DO NOT change skin colour.
-- DO NOT change face colour.
-- DO NOT tint cheeks, forehead, neck, or ears.
-- DO NOT change shirt or clothing colour.
-- DO NOT change background colour.
-- The colour change applies ONLY to scalp hair.
-- Mustache and beard colour must NOT change.
-
-RULE 2 — EXACT 12 TILES, NO MORE, NO LESS:
-- Output EXACTLY 12 portrait tiles.
-- Layout: 3 columns × 4 rows = 12 total.
-- DO NOT output 9 tiles.
-- DO NOT output 16 tiles.
-- DO NOT skip any tile.
-
-RULE 3 — FACE IDENTITY LOCKED:
-- Every tile must show the EXACT SAME person.
-- Face shape, skin tone, eyes, nose, mouth — ALL unchanged.
-- DO NOT beautify, lighten, or alter the face.
-
-RULE 4 — LABELS VISIBLE INSIDE IMAGE:
-- Each tile must have its colour label printed below the portrait.
-- Use EXACTLY the label names listed below.
-- No tile numbers. No debug text.
+COPY the uploaded photo exactly 12 times.
+In each copy, apply ONE hair colour using digital recolouring.
+Every other pixel in the image stays IDENTICAL to the original.
 
 ==================================================
-LAYOUT (NON-NEGOTIABLE)
+WHAT TO RECOLOUR (ONLY THIS):
 ==================================================
 
-Create EXACTLY 12 PORTRAITS ONLY.
-
-FINAL LAYOUT MUST BE:
-- 3 columns
-- 4 rows
-- Total = EXACTLY 12 tiles
-
-Each tile contains:
-- ONE portrait only
-- ONE hair color only
-- ONE label underneath only
+✅ Scalp hair — the hair on top of the head ONLY
 
 ==================================================
-TILE ORDER (INTERNAL ONLY — DO NOT PRINT NUMBERS)
+WHAT MUST NEVER CHANGE (PIXEL-PERFECT PRESERVE):
 ==================================================
 
-Tile 1 = Natural Black
-Tile 2 = Soft Black
-Tile 3 = Dark Brown
-
-Tile 4 = Chocolate Brown
-Tile 5 = Ash Brown
-Tile 6 = Golden Brown
-
-Tile 7 = Burgundy
-Tile 8 = Copper Brown
-Tile 9 = Dark Red
-
-Tile 10 = Silver Grey
-Tile 11 = Platinum Blonde
-Tile 12 = Blue Black
-
-STOP after Tile 12.
+❌ Face — skin tone, forehead, cheeks, nose, ears, neck
+❌ Eyes — colour, shape, expression
+❌ Beard and mustache — colour and shape stay as in original
+❌ Shirt — colour, collar, fabric must be IDENTICAL in all 12 tiles
+❌ Tie — colour and pattern must be IDENTICAL in all 12 tiles
+❌ Background — same colour in all 12 tiles
+❌ Lighting — same in all 12 tiles
+❌ Crop / zoom — same framing in all 12 tiles
 
 ==================================================
-STRICT LABEL LOCK
+GRID LAYOUT (NON-NEGOTIABLE)
 ==================================================
 
-Visible labels ONLY:
-
-Natural Black
-Soft Black
-Dark Brown
-Chocolate Brown
-Ash Brown
-Golden Brown
-Burgundy
-Copper Brown
-Dark Red
-Silver Grey
-Platinum Blonde
-Blue Black
-
-FORBIDDEN: Tile numbers, debug text, any other labels.
+- EXACTLY 3 columns
+- EXACTLY 4 rows
+- EXACTLY 12 tiles total
+- DO NOT make 4 columns
+- DO NOT make 16 tiles
 
 ==================================================
-STRICT COLOR DEFINITIONS
+HAIR COLOUR FOR EACH TILE (INTERNAL ORDER)
 ==================================================
 
-NATURAL BLACK: Deep natural black hair tone.
-SOFT BLACK: Slightly lighter black with soft tone.
-DARK BROWN: Rich dark brown hair.
-CHOCOLATE BROWN: Warm medium-dark chocolate tone.
-ASH BROWN: Cool smoky brown tone.
-GOLDEN BROWN: Brown with subtle golden warmth.
-BURGUNDY: Deep wine-red undertone.
-COPPER BROWN: Brown mixed with copper-orange warmth.
-DARK RED: Deep muted red hair tone.
-SILVER GREY: Metallic silver-grey hair.
-PLATINUM BLONDE: Very light icy blonde tone.
-BLUE BLACK: Black hair with subtle blue shine.
+DO NOT print tile numbers in the image.
+Apply colours in this order, left to right, top to bottom:
+
+Row 1: Natural Black | Soft Black | Dark Brown
+Row 2: Chocolate Brown | Ash Brown | Golden Brown
+Row 3: Burgundy | Copper Brown | Dark Red
+Row 4: Silver Grey | Platinum Blonde | Blue Black
 
 ==================================================
-STRICT FACE PRESERVATION
+LABELS (PRINT BELOW EACH PORTRAIT)
 ==================================================
 
-Use uploaded image as exact identity reference.
-The SAME PERSON must appear in all 12 tiles.
+Print ONLY these labels, one per tile, centred below the face:
 
-LOCK (DO NOT CHANGE):
-- face, skin tone, forehead, eyes, nose, ears
-- expression, head tilt, lighting
-- beard and mustache style and colour
-- clothing and shirt colour
-- background colour and camera angle
+Natural Black, Soft Black, Dark Brown,
+Chocolate Brown, Ash Brown, Golden Brown,
+Burgundy, Copper Brown, Dark Red,
+Silver Grey, Platinum Blonde, Blue Black
 
-ONLY CHANGE: Hair colour on top of head.
+Spelling must be exact. No tile numbers. No other text.
 
 ==================================================
-HAIR CONSISTENCY RULE
+COLOUR DEFINITIONS
 ==================================================
 
-- SAME hairstyle in all tiles.
-- SAME hair volume and length.
-- SAME curls or waves.
-- ONLY hair COLOR changes between tiles.
+Natural Black — deep natural black
+Soft Black — slightly soft off-black
+Dark Brown — rich dark brown
+Chocolate Brown — warm medium-dark chocolate
+Ash Brown — cool smoky brown
+Golden Brown — warm brown with golden tint
+Burgundy — deep wine-red
+Copper Brown — warm copper-orange brown
+Dark Red — deep muted red
+Silver Grey — metallic silver-grey
+Platinum Blonde — very light icy blonde
+Blue Black — black with subtle blue sheen
 
 ==================================================
-FINAL VALIDATION
+ANTI-FAILURE CHECKLIST (verify before output)
 ==================================================
 
-Before output, verify:
-[ ] Exactly 12 portraits
-[ ] 3 columns × 4 rows
-[ ] Hair colour changed — skin/face/clothes unchanged
-[ ] All 12 labels correct and visible
+[ ] Exactly 12 tiles — 3 columns × 4 rows
 [ ] Same face in all 12 tiles
+[ ] Same shirt colour in all 12 tiles
+[ ] Same tie colour in all 12 tiles
+[ ] Same background in all 12 tiles
+[ ] Hair colour changed — nothing else changed
+[ ] All 12 labels correct and spelled correctly
 [ ] No tile numbers visible
 
-If any item fails — REGENERATE.
-
-==================================================
-OUTPUT: IMAGE ONLY. No text outside tile labels.
-==================================================`;
+OUTPUT: The reference grid image only. No explanations.`;
 
 // ── State ──────────────────────────────────────────
 let hcgImageBase64 = null;
@@ -2287,15 +2235,33 @@ async function hcgGenerate() {
   document.getElementById('hcgResultArea').style.display = 'none';
   hcgShowStatus('info', 'Sending portrait to Gemini — generating your 12-colour hair grid. This takes 30–90 seconds…', true);
 
+  // Sample shirt colour from bottom-centre of image to anchor Gemini
+  let shirtNote = '';
+  try {
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.src = `data:${hcgImageMime};base64,${hcgImageBase64}`; });
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    // Sample bottom-centre area (shirt region)
+    const sx = Math.floor(img.width * 0.4), sy = Math.floor(img.height * 0.78);
+    const px = ctx.getImageData(sx, sy, 10, 10).data;
+    const r = Math.round([...Array(10)].reduce((a,_,i) => a + px[i*4],   0) / 10);
+    const g = Math.round([...Array(10)].reduce((a,_,i) => a + px[i*4+1], 0) / 10);
+    const b = Math.round([...Array(10)].reduce((a,_,i) => a + px[i*4+2], 0) / 10);
+    shirtNote = `\n\nIMPORTANT: In the uploaded photo, the shirt colour is approximately RGB(${r},${g},${b}). Every single tile must show this EXACT shirt colour. Do not change it.`;
+  } catch(e) { /* skip if canvas fails */ }
+
   try {
     const payload = {
       contents: [{
         parts: [
-          { text: HCG_PROMPT },
+          { text: HCG_PROMPT + shirtNote },
           { inline_data: { mime_type: hcgImageMime, data: hcgImageBase64 } }
         ]
       }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 0.4 }
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 0.2 }
     };
 
     const res = await fetch(WORKER_URL, {
