@@ -1142,240 +1142,125 @@ function downloadImg() {
 // ═══════════════════════════════════════════════════
 // BEARD GRID MODULE
 // ═══════════════════════════════════════════════════
+const BD_PROMPT = `YOU ARE A PHOTO EDITOR. THIS IS A PHOTO EDIT TASK, NOT A GENERATION TASK.
 
-const BD_PROMPT = `ULTRA STRICT GENERATION MODE: EXACTLY 12 BEARD STYLES ONLY.
-
-THIS IS A PHOTO EDIT TASK — NOT A FREE GENERATION TASK.
-You will receive ONE portrait photo. Copy it exactly 12 times and edit ONLY the facial hair in each copy.
-
-THIS IS NOT AN OPEN COLLAGE TASK.
-THIS IS A FIXED 12-TILE BARBER REFERENCE GRID.
-
-IF THE OUTPUT CONTAINS MORE THAN 12 IMAGES,
-THE OUTPUT IS INVALID.
-IF THE OUTPUT CONTAINS LESS THAN 12 IMAGES,
-THE OUTPUT IS INVALID.
+TASK: Take the uploaded portrait photo. Edit it exactly 12 times. In each edit, change ONLY the facial hair. Output all 12 edits arranged in a single image as a 3-column × 4-row grid.
 
 ==================================================
-ABSOLUTE HARD LIMIT
+PHYSICAL CANVAS RULE — READ THIS FIRST
 ==================================================
 
-GENERATE EXACTLY 12 PORTRAITS.
-NOT 13.
-NOT 14.
-NOT 15.
-NOT 16.
+The output canvas must be PORTRAIT orientation (taller than wide).
+Divide the canvas into exactly 3 equal columns and 4 equal rows.
+This creates exactly 12 cells. One portrait per cell. No more. No less.
 
-STOP GENERATION IMMEDIATELY AFTER THE 12TH TILE.
+A 3-column × 4-row grid has:
+- 3 cells across
+- 4 cells down
+- 12 cells total
 
-NEVER create:
-- 4x4 grids
-- 16 images
-- extra rows
-- extra columns
-- duplicate tiles
-- filler portraits
+A 4-column × 4-row grid has 16 cells. THAT IS WRONG. DO NOT DO THAT.
+A 3-column × 3-row grid has 9 cells. THAT IS WRONG. DO NOT DO THAT.
 
-==================================================
-MANDATORY GRID STRUCTURE
-==================================================
-
-FINAL OUTPUT MUST CONTAIN:
-
-ROW 1:
-[1] [2] [3]
-
-ROW 2:
-[4] [5] [6]
-
-ROW 3:
-[7] [8] [9]
-
-ROW 4:
-[10] [11] [12]
-
-TOTAL:
-- 3 columns ONLY
-- 4 rows ONLY
-- EXACTLY 12 images ONLY
-
-NO additional panels allowed.
+COUNT YOUR ROWS BEFORE OUTPUTTING: You must see exactly 4 rows.
+COUNT YOUR COLUMNS BEFORE OUTPUTTING: You must see exactly 3 columns.
 
 ==================================================
-ZERO TEXT RULE
+THE 12 BEARD STYLES — FIXED ORDER, NO CHANGES
 ==================================================
 
-DO NOT display:
-- beard names
-- labels
-- captions
-- tile names
-- tile numbers
-- titles
-- watermarks
-- instructions
-- debug text
+You will place exactly these 12 styles, one per cell, in this exact order:
+Left to right, top to bottom.
 
-THE IMAGE MUST CONTAIN ZERO TEXT.
+CELL 1  (Row 1, Col 1): CLEAN SHAVE      — zero facial hair, completely smooth face
+CELL 2  (Row 1, Col 2): STUBBLE          — 1–2mm shadow over entire lower face
+CELL 3  (Row 1, Col 3): CHIN STRAP       — thin line of hair tracing jawline edge only, cheeks bare
 
-==================================================
-INTERNAL TILE ASSIGNMENT (INTERNAL ONLY)
-==================================================
+CELL 4  (Row 2, Col 1): GOATEE           — chin hair only (no mustache, no cheek hair)
+CELL 5  (Row 2, Col 2): CIRCLE BEARD     — mustache and chin beard connected in a circle
+CELL 6  (Row 2, Col 3): VAN DYKE         — pointed chin beard + disconnected floating mustache above lip
 
-These names are INTERNAL REFERENCES ONLY.
-DO NOT display them visually.
+CELL 7  (Row 3, Col 1): MUTTON CHOPS     — heavy sideburn patches on cheeks only, chin completely bare
+CELL 8  (Row 3, Col 2): BALBO            — chin beard + mustache with gap between them, no cheek hair
+CELL 9  (Row 3, Col 3): ANCHOR BEARD     — pointed chin beard + thin mustache + thin line along jaw
 
-Tile 1 = Full Beard
-Tile 2 = Short Beard
-Tile 3 = Goatee
-Tile 4 = Stubble
-Tile 5 = Circle Beard
-Tile 6 = Van Dyke
-Tile 7 = Mutton Chops
-Tile 8 = Chin Strap
-Tile 9 = Balbo
-Tile 10 = Anchor Beard
-Tile 11 = French Fork
-Tile 12 = Clean Shave
-
-STOP AFTER TILE 12.
-DO NOT GENERATE TILE 13.
-DO NOT GENERATE TILE 14.
-DO NOT GENERATE TILE 15.
-DO NOT GENERATE TILE 16.
+CELL 10 (Row 4, Col 1): SHORT FULL BEARD — trimmed even beard covering full face, max 1cm length
+CELL 11 (Row 4, Col 2): FULL BEARD       — dense thick beard covering entire lower face and neck, 3–5cm
+CELL 12 (Row 4, Col 3): FRENCH FORK      — long full beard with chin split into two distinct points
 
 ==================================================
-STRICT NO-REPEAT RULE
+WHY EACH STYLE IS VISUALLY DISTINCT
 ==================================================
 
-ALL 12 beard styles MUST be visually DIFFERENT.
+Each row is ordered from least to most coverage:
+- Row 1: no hair → shadow → jawline only
+- Row 2: chin only → chin + connected moustache → disconnected chin + moustache
+- Row 3: cheeks only → chin + moustache gap → chin + jaw line anchor
+- Row 4: short full → medium full → long forked
 
-STRICTLY FORBIDDEN:
-- repeating Circle Beard
-- repeating Balbo
-- repeating Chin Strap
-- repeating Full Beard
-- visually similar duplicates
-
-EVERY tile must represent a UNIQUE beard style.
-
-If ANY beard style repeats,
-REGENERATE ENTIRE IMAGE.
+If two cells look the same, you have made an error. Regenerate.
 
 ==================================================
-STRICT STYLE DEFINITIONS
+UNIQUENESS ENFORCEMENT — CRITICAL
 ==================================================
 
-FULL BEARD:
-Dense full beard covering cheeks, jaw, chin.
+Before placing each style, ask: "Does this look different from all previous cells?"
 
-SHORT BEARD:
-Trimmed short boxed beard.
-
-GOATEE:
-Chin beard only. No cheek beard.
-
-STUBBLE:
-Very short beard shadow.
-
-CIRCLE BEARD:
-Rounded connected mustache + chin beard.
-No cheek beard.
-
-VAN DYKE:
-Pointed chin beard with disconnected mustache.
-
-MUTTON CHOPS:
-Heavy sideburn beard. No chin beard.
-
-CHIN STRAP:
-Thin beard tracing jawline only.
-
-BALBO:
-Disconnected mustache + separate chin beard.
-No sideburns.
-
-ANCHOR BEARD:
-Anchor-shaped beard with structured jaw extension.
-
-FRENCH FORK:
-Full beard split into TWO distinct chin sections.
-
-CLEAN SHAVE:
-No facial hair at all.
+FORBIDDEN combinations that look identical:
+- Goatee (Cell 4) must NOT look like Circle Beard (Cell 5) — Goatee has NO mustache
+- Van Dyke (Cell 6) must NOT look like Balbo (Cell 8) — Van Dyke has a POINTED chin beard
+- Short Full Beard (Cell 10) must NOT look like Full Beard (Cell 11) — Cell 10 is closely trimmed 1cm, Cell 11 is 3–5cm thick
+- French Fork (Cell 12) must look clearly FORKED — two visible prongs at chin
 
 ==================================================
-STRICT FACE LOCK
+FACE LOCK — ONLY FACIAL HAIR CHANGES
 ==================================================
 
-Use uploaded image as exact identity reference.
+The uploaded photo is the identity reference.
+Copy this person's face exactly into all 12 cells.
 
-The SAME MAN must appear in ALL 12 images.
+LOCKED (must not change in any cell):
+✅ Face shape, skin tone, forehead, nose, eyes, ears
+✅ Hairstyle and hair colour
+✅ Shirt colour and collar style
+✅ Background colour
+✅ Head pose and camera angle
+✅ Lighting and shadows on face
 
-LOCK:
-- hairstyle
-- eyes
-- nose
-- forehead
-- ears
-- skin texture
-- lighting
-- expression
-- shirt
-- background
-- pose
-- camera angle
-
-ONLY facial hair may change.
+ONLY THIS CHANGES per cell:
+✏️ Facial hair — shape, coverage, and length as defined above
 
 ==================================================
-ANTI-AI COLLAGE RULE
+LABEL RULE
 ==================================================
 
-DO NOT auto-expand canvas.
-DO NOT auto-add tiles.
-DO NOT create montage variations.
-DO NOT create alternative versions.
+Print the style name in small text below each portrait inside its cell.
+Use these exact labels in this exact order:
 
-ONLY create the REQUIRED 12 images.
+Row 1: Clean Shave | Stubble | Chin Strap
+Row 2: Goatee | Circle Beard | Van Dyke
+Row 3: Mutton Chops | Balbo | Anchor Beard
+Row 4: Short Full Beard | Full Beard | French Fork
 
-==================================================
-FINAL VALIDATION (MANDATORY)
-==================================================
-
-Before output, internally verify:
-
-[ ] EXACTLY 12 images
-[ ] EXACTLY 3 columns
-[ ] EXACTLY 4 rows
-[ ] NO 4x4 layout
-[ ] NO extra portraits
-[ ] NO duplicate beard styles
-[ ] ALL beard styles unique
-[ ] NO visible text
-[ ] SAME FACE in all tiles
-
-IF ANY CHECK FAILS:
-DELETE OUTPUT AND REGENERATE.
+Font: small, clean, centred. No tile numbers. No other text.
 
 ==================================================
-OUTPUT RULE
+FINAL COUNT CHECK (MANDATORY BEFORE OUTPUT)
 ==================================================
 
-OUTPUT IMAGE ONLY.
+Before generating the final image, count aloud internally:
+"Row 1 has 3 cells. Row 2 has 3 cells. Row 3 has 3 cells. Row 4 has 3 cells.
+Total: 12 cells. 3 columns. 4 rows. CORRECT."
 
-NO text.
-NO captions.
-NO labels.
-NO numbering.
-NO explanations.
-NO watermark.
+If you count 16 cells → STOP. You made a 4×4 grid. Redo as 3×4.
+If you count 9 cells → STOP. You made a 3×3 grid. Add Row 4 with cells 10, 11, 12.
 
 ==================================================
-GOAL
+OUTPUT
 ==================================================
 
-Create an ultra-clean professional barber reference grid with EXACTLY 12 UNIQUE beard styles on the SAME MAN with ZERO repeated beard styles and ZERO extra images.`;
+Output the single grid image only. No text outside the image.`;
+
 // ── State ──────────────────────────────────────────
 let bdImageBase64  = null;
 let bdImageMime    = 'image/jpeg';
