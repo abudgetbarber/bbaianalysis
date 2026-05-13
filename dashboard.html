@@ -2072,7 +2072,7 @@ async function hcgGenerate() {
           { inline_data: { mime_type: hcgImageMime, data: hcgImageBase64 } }
         ]
       }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 0.2 }
+      generationConfig: { responseModalities: ['IMAGE'] }
     };
 
     const res = await fetch(WORKER_URL, {
