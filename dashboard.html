@@ -2105,100 +2105,151 @@ async function hcgGetHairRegion(base64, mime) {
   return JSON.parse(clean);
 }
 
-// ── Step 2: Recolour hair pixels on a tile ──────────
-function hcgRecolourTile(srcData, w, h, region, colour) {
-  const [tH, tS, tL, strength] = colour;
-  const out = new ImageData(new Uint8ClampedArray(srcData.data), w, h);
+// ── Build per-pixel hair mask via column scanning ──
+// Scans each column top-down finding contiguous dark pixels = hair.
+// Much more reliable than bounding-box hue filtering.
+function hcgBuildHairMask(srcData, w, h, region) {
+  const mask = new Uint8Array(w * h);
 
-  const x0 = Math.floor(region.hairLeft  * w);
-  const x1 = Math.ceil (region.hairRight * w);
-  const y0 = Math.floor(region.hairTop   * h);
-  // HARD CAP: hairBottom never exceeds 34% of image — forehead bleed fix
-  const y1 = Math.min(Math.ceil(region.hairBottom * h), Math.floor(h * 0.34));
+  // Search zone — use Claude's hint, expanded generously for side hair
+  const yTop  = Math.max(0, Math.floor(region.hairTop   * h) - 5);
+  const yBot  = Math.min(h - 1, Math.ceil(region.hairBottom * h) + 30);
+  const xLeft = Math.max(0, Math.floor(region.hairLeft  * w) - 30);
+  const xRight= Math.min(w - 1, Math.ceil(region.hairRight * w) + 30);
 
   const skinH    = region.skinHue          || 20;
-  const skinLMin = region.skinLightnessMin || 28;
-  const skinLMax = region.skinLightnessMax || 82;
+  const skinLMin = region.skinLightnessMin || 30;
+  const skinLMax = region.skinLightnessMax || 80;
 
-  // Sample top-centre of hair box to get true hair lightness anchor
-  const sampleY = y0 + Math.floor((y1 - y0) * 0.1);
-  const sampleX = Math.floor((x0 + x1) / 2);
-  const si = (sampleY * w + sampleX) * 4;
-  const [,, hairSampleL] = hcgRgbToHsl(srcData.data[si], srcData.data[si+1], srcData.data[si+2]);
+  // Measure average lightness of definite hair: top 15% of box, centre third
+  let hairLSum = 0, hairLCount = 0;
+  const sYBot = yTop + Math.floor((yBot - yTop) * 0.15);
+  const sXL = xLeft + Math.floor((xRight - xLeft) * 0.25);
+  const sXR = xLeft + Math.floor((xRight - xLeft) * 0.75);
+  for(let y = yTop; y <= sYBot; y++){
+    for(let x = sXL; x <= sXR; x++){
+      const i = (y * w + x) * 4;
+      const [,,L] = hcgRgbToHsl(srcData.data[i], srcData.data[i+1], srcData.data[i+2]);
+      if(L < 75){ hairLSum += L; hairLCount++; }
+    }
+  }
+  const avgHairL = hairLCount > 0 ? hairLSum / hairLCount : 22;
+  // Threshold: hair is anything up to avgHairL + 28 (catches grey/lighter edges)
+  const thresh = Math.min(avgHairL + 28, 65);
 
-  for(let y = y0; y <= y1; y++){
-    for(let x = x0; x <= x1; x++){
+  // Per-column scan: find the bottom of the contiguous dark region from top
+  for(let x = xLeft; x <= xRight; x++){
+    let inHair = false;
+    let hairEndY = yTop - 1;
+    let gapCount = 0;
+
+    for(let y = yTop; y <= yBot; y++){
       const i = (y * w + x) * 4;
       const r = srcData.data[i], g = srcData.data[i+1], b = srcData.data[i+2];
       const [pH, pS, pL] = hcgRgbToHsl(r, g, b);
 
-      // Skip near-white background
-      if(pL > 92) continue;
+      if(pL > 93) { if(inHair && gapCount++ > 3) break; continue; } // background
 
-      // Primary skin filter: hue near skin + some saturation + skin lightness range
       const hd = Math.min(Math.abs(pH - skinH), 360 - Math.abs(pH - skinH));
-      if(hd < 35 && pS > 6 && pL >= skinLMin && pL <= skinLMax) continue;
+      const isSkin = hd < 30 && pS > 8 && pL >= skinLMin && pL <= skinLMax;
+      const isHairDark = pL <= thresh && !isSkin;
 
-      // Forehead guard: lower half of box — skip pixels noticeably brighter than hair top
-      const boxFrac = (y - y0) / Math.max(y1 - y0, 1);
-      if(boxFrac > 0.45 && pL > hairSampleL + 18 && pS < 25) continue;
-
-      // Bindi/skin patch guard: warm-hued pixels in lower portion of box
-      if(boxFrac > 0.35 && hd < 50 && pS > 12 && pL > 28 && pL < 72) continue;
-
-      // Compute target lightness preserving hair texture
-      let finalL;
-      if(tL < 20)      finalL = pL * (tL / 100) * 2.2;
-      else if(tL > 78) finalL = tL + (pL - 50) * 0.10;
-      else             finalL = tL * 0.65 + pL * 0.35;
-      finalL = Math.max(3, Math.min(96, finalL));
-
-      const finalS = tS < 5 ? tS : Math.min(tS, tS * 0.55 + pS * 0.45);
-      const [nr, ng, nb] = hcgHslToRgb(tH, finalS, finalL);
-
-      out.data[i]   = Math.round(r * (1 - strength) + nr * strength);
-      out.data[i+1] = Math.round(g * (1 - strength) + ng * strength);
-      out.data[i+2] = Math.round(b * (1 - strength) + nb * strength);
+      if(isHairDark){ inHair = true; hairEndY = y; gapCount = 0; }
+      else if(inHair){
+        if(isSkin) break; // hit definite skin — stop
+        if(pL <= thresh + 14 && !isSkin){ hairEndY = y; gapCount++; } // soft edge
+        else if(gapCount++ > 4) break; // too many non-hair rows
+      }
     }
+
+    // Mark all hair pixels in this column
+    if(inHair && hairEndY >= yTop){
+      for(let y = yTop; y <= hairEndY; y++){
+        const i = (y * w + x) * 4;
+        const [,,L] = hcgRgbToHsl(srcData.data[i], srcData.data[i+1], srcData.data[i+2]);
+        if(L <= thresh + 14 && L > 1) mask[y * w + x] = 1;
+      }
+    }
+  }
+  return mask;
+}
+
+// ── Step 2: Recolour using the hair mask ────────────
+function hcgRecolourTile(srcData, w, h, hairMask, avgHairLightness, colour) {
+  const [tH, tS, tL, strength] = colour;
+  const out = new ImageData(new Uint8ClampedArray(srcData.data), w, h);
+
+  for(let i = 0; i < w * h; i++){
+    if(!hairMask[i]) continue;
+    const p = i * 4;
+    const r = srcData.data[p], g = srcData.data[p+1], b = srcData.data[p+2];
+    const [, pS, pL] = hcgRgbToHsl(r, g, b);
+
+    let finalL;
+    if(tL < 20)      finalL = pL * (tL / 100) * 2.4;
+    else if(tL > 78) finalL = tL + (pL - avgHairLightness) * 0.08;
+    else             finalL = tL * 0.60 + pL * 0.40;
+    finalL = Math.max(3, Math.min(96, finalL));
+
+    const finalS = tS < 5 ? tS : Math.min(tS, tS * 0.55 + pS * 0.45);
+    const [nr, ng, nb] = hcgHslToRgb(tH, finalS, finalL);
+
+    out.data[p]   = Math.round(r * (1 - strength) + nr * strength);
+    out.data[p+1] = Math.round(g * (1 - strength) + ng * strength);
+    out.data[p+2] = Math.round(b * (1 - strength) + nb * strength);
   }
   return out;
 }
-
 // ── Step 3: Assemble 3×4 grid canvas ───────────────
 async function hcgBuildGrid(img, region) {
-  const TW=320,TH=400,LH=46,COLS=3,ROWS=4;
+  const TW=320, TH=400, LH=46, COLS=3, ROWS=4;
   const GW=TW*COLS, GH=(TH+LH)*ROWS;
 
-  const src=document.createElement('canvas');
-  src.width=TW;src.height=TH;
-  src.getContext('2d').drawImage(img,0,0,TW,TH);
-  const srcData=src.getContext('2d').getImageData(0,0,TW,TH);
+  // Draw image to tile-sized canvas
+  const src = document.createElement('canvas');
+  src.width = TW; src.height = TH;
+  src.getContext('2d').drawImage(img, 0, 0, TW, TH);
+  const srcData = src.getContext('2d').getImageData(0, 0, TW, TH);
 
-  const grid=document.createElement('canvas');
-  grid.width=GW;grid.height=GH;
-  const gc=grid.getContext('2d');
-  gc.fillStyle='#f4f4f2';
-  gc.fillRect(0,0,GW,GH);
+  // Build hair mask ONCE — shared by all 12 tiles
+  const hairMask = hcgBuildHairMask(srcData, TW, TH, region);
 
-  for(let i=0;i<12;i++){
-    const col=i%COLS, row=Math.floor(i/COLS);
-    const tx=col*TW, ty=row*(TH+LH);
-    const [name,...colourArgs]=HCG_COLOURS[i];
-    const recoloured=hcgRecolourTile(srcData,TW,TH,region,colourArgs);
-    const tc=document.createElement('canvas');
-    tc.width=TW;tc.height=TH;
-    tc.getContext('2d').putImageData(recoloured,0,0);
-    gc.drawImage(tc,tx,ty);
-    // Subtle tile border
-    gc.strokeStyle='#ddd';gc.lineWidth=1;
-    gc.strokeRect(tx+.5,ty+.5,TW-1,TH-1);
+  // Compute average lightness of masked hair pixels for blonde/silver anchor
+  let lSum = 0, lCount = 0;
+  for(let i = 0; i < hairMask.length; i++){
+    if(!hairMask[i]) continue;
+    const p = i * 4;
+    const [,,L] = hcgRgbToHsl(srcData.data[p], srcData.data[p+1], srcData.data[p+2]);
+    lSum += L; lCount++;
+    if(lCount > 800) break;
+  }
+  const avgHairL = lCount > 0 ? lSum / lCount : 22;
+
+  const grid = document.createElement('canvas');
+  grid.width = GW; grid.height = GH;
+  const gc = grid.getContext('2d');
+  gc.fillStyle = '#f4f4f2';
+  gc.fillRect(0, 0, GW, GH);
+
+  for(let i = 0; i < 12; i++){
+    const col = i % COLS, row = Math.floor(i / COLS);
+    const tx = col * TW, ty = row * (TH + LH);
+    const [name, ...colourArgs] = HCG_COLOURS[i];
+    const recoloured = hcgRecolourTile(srcData, TW, TH, hairMask, avgHairL, colourArgs);
+    const tc = document.createElement('canvas');
+    tc.width = TW; tc.height = TH;
+    tc.getContext('2d').putImageData(recoloured, 0, 0);
+    gc.drawImage(tc, tx, ty);
+    // Tile border
+    gc.strokeStyle = '#ddd'; gc.lineWidth = 1;
+    gc.strokeRect(tx + .5, ty + .5, TW - 1, TH - 1);
     // Label
-    gc.fillStyle='#fff';
-    gc.fillRect(tx,ty+TH,TW,LH);
-    gc.fillStyle='#1a1a14';
-    gc.font='600 14px Barlow,Arial,sans-serif';
-    gc.textAlign='center';gc.textBaseline='middle';
-    gc.fillText(name,tx+TW/2,ty+TH+LH/2);
+    gc.fillStyle = '#fff';
+    gc.fillRect(tx, ty + TH, TW, LH);
+    gc.fillStyle = '#1a1a14';
+    gc.font = '600 14px Barlow,Arial,sans-serif';
+    gc.textAlign = 'center'; gc.textBaseline = 'middle';
+    gc.fillText(name, tx + TW / 2, ty + TH + LH / 2);
   }
   return grid.toDataURL('image/png');
 }
