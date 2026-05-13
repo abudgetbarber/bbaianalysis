@@ -2105,6 +2105,7 @@ function hcgShowStatus(type, msg, spinner) {
 }
 
 // ── Generate ───────────────────────────────────────
+// ── Generate ───────────────────────────────────────
 async function hcgGenerate() {
   if (!hcgImageBase64) return;
   const btn   = document.getElementById('hcgGenBtn');
@@ -2114,13 +2115,32 @@ async function hcgGenerate() {
   document.getElementById('hcgResultArea').style.display = 'none';
   hcgShowStatus('info', 'Sending portrait to Gemini — generating your 12-colour hair grid. This takes 30–90 seconds…', true);
 
-  
+  // ── STEP 1: Resize image to max 800px to reduce timeout risk ──
+  let finalBase64 = hcgImageBase64;
+  let finalMime   = hcgImageMime;
+  try {
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.src = `data:${hcgImageMime};base64,${hcgImageBase64}`; });
+    const MAX = 800;
+    if (img.width > MAX || img.height > MAX) {
+      const scale = Math.min(MAX / img.width, MAX / img.height);
+      const c = document.createElement('canvas');
+      c.width  = Math.round(img.width  * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const dataUrl = c.toDataURL('image/jpeg', 0.88);
+      finalBase64   = dataUrl.split(',')[1];
+      finalMime     = 'image/jpeg';
+    }
+  } catch(e) { /* use original if resize fails */ }
+
+  // ── STEP 2: Build payload using resized image ──────────────
   try {
     const payload = {
       contents: [{
         parts: [
           { text: HCG_PROMPT },
-          { inline_data: { mime_type: hcgImageMime, data: hcgImageBase64 } }
+          { inline_data: { mime_type: finalMime, data: finalBase64 } }
         ]
       }],
       generationConfig: { responseModalities: ['IMAGE'] }
