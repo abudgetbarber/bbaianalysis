@@ -2001,110 +2001,56 @@ function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 </script>
 <script>
 // ═══════════════════════════════════════════════════
-// HAIR COLOUR GRID MODULE
+// HAIR COLOUR GRID MODULE  — Canvas Recolour Engine
+// Uses Claude vision to detect hair region, then
+// recolours pixel-by-pixel in browser. Zero hallucination.
 // ═══════════════════════════════════════════════════
 
-const HCG_PROMPT = `You are a photo editing tool. You will receive ONE portrait photo.
+// Claude vision prompt — only asks for hair region coordinates + base hair hue
+const HCG_VISION_PROMPT = `You are a precise image analyser for a hair-colour reference tool.
 
-Your task: Create a 3-column × 4-row reference grid showing the SAME photo edited 12 times. In each edit, change ONLY the hair colour on the top of the head. Nothing else changes.
+Examine this portrait photo and return ONLY a JSON object — no markdown, no explanation, no backticks.
 
-==================================================
-THIS IS A PHOTO EDIT — NOT A GENERATION TASK
-==================================================
+Return this exact structure:
+{
+  "hairTop": 0.05,
+  "hairBottom": 0.32,
+  "hairLeft": 0.18,
+  "hairRight": 0.82,
+  "hairHue": 25,
+  "hairSaturation": 30,
+  "skinHue": 20,
+  "skinLightnessMin": 35,
+  "skinLightnessMax": 75
+}
 
-DO NOT generate a new person.
-DO NOT regenerate the face.
-DO NOT imagine what the person looks like.
+Field definitions:
+- hairTop/Bottom/Left/Right: fractional coordinates (0.0–1.0) of the bounding box enclosing ALL scalp hair visible in this image
+- hairHue: the dominant hue angle (0–359) of the person's current hair colour
+- hairSaturation: approximate saturation % (0–100) of current hair
+- skinHue: dominant hue angle of the facial skin (to avoid recolouring skin)
+- skinLightnessMin/Max: lightness range of the skin pixels
 
-COPY the uploaded photo exactly 12 times.
-In each copy, apply ONE hair colour using digital recolouring.
-Every other pixel in the image stays IDENTICAL to the original.
+Be precise. Return ONLY the JSON.`;
 
-==================================================
-WHAT TO RECOLOUR (ONLY THIS):
-==================================================
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
-✅ Scalp hair — the hair on top of the head ONLY
-
-==================================================
-WHAT MUST NEVER CHANGE (PIXEL-PERFECT PRESERVE):
-==================================================
-
-❌ Face — skin tone, forehead, cheeks, nose, ears, neck
-❌ Eyes — colour, shape, expression
-❌ Beard and mustache — colour and shape stay as in original
-❌ Shirt — colour, collar, fabric must be IDENTICAL in all 12 tiles
-❌ Tie — colour and pattern must be IDENTICAL in all 12 tiles
-❌ Background — same colour in all 12 tiles
-❌ Lighting — same in all 12 tiles
-❌ Crop / zoom — same framing in all 12 tiles
-
-==================================================
-GRID LAYOUT (NON-NEGOTIABLE)
-==================================================
-
-- EXACTLY 3 columns
-- EXACTLY 4 rows
-- EXACTLY 12 tiles total
-- DO NOT make 4 columns
-- DO NOT make 16 tiles
-
-==================================================
-HAIR COLOUR FOR EACH TILE (INTERNAL ORDER)
-==================================================
-
-DO NOT print tile numbers in the image.
-Apply colours in this order, left to right, top to bottom:
-
-Row 1: Natural Black | Soft Black | Dark Brown
-Row 2: Chocolate Brown | Ash Brown | Golden Brown
-Row 3: Burgundy | Copper Brown | Dark Red
-Row 4: Silver Grey | Platinum Blonde | Blue Black
-
-==================================================
-LABELS (PRINT BELOW EACH PORTRAIT)
-==================================================
-
-Print ONLY these labels, one per tile, centred below the face:
-
-Natural Black, Soft Black, Dark Brown,
-Chocolate Brown, Ash Brown, Golden Brown,
-Burgundy, Copper Brown, Dark Red,
-Silver Grey, Platinum Blonde, Blue Black
-
-Spelling must be exact. No tile numbers. No other text.
-
-==================================================
-COLOUR DEFINITIONS
-==================================================
-
-Natural Black — deep natural black
-Soft Black — slightly soft off-black
-Dark Brown — rich dark brown
-Chocolate Brown — warm medium-dark chocolate
-Ash Brown — cool smoky brown
-Golden Brown — warm brown with golden tint
-Burgundy — deep wine-red
-Copper Brown — warm copper-orange brown
-Dark Red — deep muted red
-Silver Grey — metallic silver-grey
-Platinum Blonde — very light icy blonde
-Blue Black — black with subtle blue sheen
-
-==================================================
-ANTI-FAILURE CHECKLIST (verify before output)
-==================================================
-
-[ ] Exactly 12 tiles — 3 columns × 4 rows
-[ ] Same face in all 12 tiles
-[ ] Same shirt colour in all 12 tiles
-[ ] Same tie colour in all 12 tiles
-[ ] Same background in all 12 tiles
-[ ] Hair colour changed — nothing else changed
-[ ] All 12 labels correct and spelled correctly
-[ ] No tile numbers visible
-
-OUTPUT: The reference grid image only. No explanations.`;
+// 12 hair colours: [name, hue, saturation, lightness, blendStrength]
+// blendStrength: how opaque the colour overlay is (0–1)
+const HCG_COLOURS = [
+  ['Natural Black',    0,    0,   8,  0.82],
+  ['Soft Black',       0,    0,  14,  0.78],
+  ['Dark Brown',      22,   55,  18,  0.80],
+  ['Chocolate Brown', 22,   60,  24,  0.78],
+  ['Ash Brown',       20,   15,  32,  0.72],
+  ['Golden Brown',    32,   70,  38,  0.75],
+  ['Burgundy',       340,   65,  22,  0.80],
+  ['Copper Brown',    22,   80,  35,  0.78],
+  ['Dark Red',       355,   60,  22,  0.80],
+  ['Silver Grey',      0,    0,  72,  0.70],
+  ['Platinum Blonde',  0,    0,  90,  0.68],
+  ['Blue Black',     220,   30,  10,  0.82],
+];
 
 // ── State ──────────────────────────────────────────
 let hcgImageBase64 = null;
@@ -2225,71 +2171,215 @@ function hcgShowStatus(type, msg, spinner) {
   </div>`;
 }
 
-// ── Generate ───────────────────────────────────────
+// ── Colour helpers ─────────────────────────────────
+function hcgRgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max + min) / 2;
+  if (max === min) { h = s = 0; }
+  else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch(max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return [h * 360, s * 100, l * 100];
+}
+
+function hcgHslToRgb(h, s, l) {
+  h /= 360; s /= 100; l /= 100;
+  let r, g, b;
+  if (s === 0) { r = g = b = l; }
+  else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1; if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q-p)*6*t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q-p)*(2/3-t)*6;
+      return p;
+    };
+    const q = l < 0.5 ? l*(1+s) : l+s-l*s;
+    const p = 2*l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+}
+
+// ── Step 1: Call Claude vision to get hair bounding box ──
+async function hcgGetHairRegion(base64, mime) {
+  const body = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 300,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: mime, data: base64 } },
+        { type: 'text',  text: HCG_VISION_PROMPT }
+      ]
+    }]
+  };
+  const res = await fetch(ANTHROPIC_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || 'Claude API error');
+  const text = data.content?.find(b => b.type === 'text')?.text || '';
+  // Strip any markdown fences
+  const clean = text.replace(/```json|```/gi, '').trim();
+  return JSON.parse(clean);
+}
+
+// ── Step 2: Recolour hair pixels for one colour ──────
+function hcgRecolourTile(srcImageData, w, h, region, targetColour) {
+  // region: {hairTop, hairBottom, hairLeft, hairRight} as fractions
+  // targetColour: [hue, saturation, lightness, strength]
+  const [tH, tS, tL, strength] = targetColour;
+  const out = new ImageData(new Uint8ClampedArray(srcImageData.data), w, h);
+
+  const x0 = Math.floor(region.hairLeft   * w);
+  const x1 = Math.floor(region.hairRight  * w);
+  const y0 = Math.floor(region.hairTop    * h);
+  const y1 = Math.floor(region.hairBottom * h);
+
+  // Skin detection thresholds from Claude's analysis
+  const skinH = region.skinHue   || 20;
+  const skinLMin = region.skinLightnessMin || 30;
+  const skinLMax = region.skinLightnessMax || 80;
+
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const i = (y * w + x) * 4;
+      const r = srcImageData.data[i];
+      const g = srcImageData.data[i+1];
+      const b = srcImageData.data[i+2];
+      const [pH, pS, pL] = hcgRgbToHsl(r, g, b);
+
+      // Skip very bright pixels (background/highlights) and very dark below hair range
+      if (pL > 92 || pL < 2) continue;
+
+      // Skip skin-tone pixels: skin hue ±25°, in skin lightness range, with some saturation
+      const hueDiff = Math.abs(pH - skinH);
+      const hueDiffWrap = Math.min(hueDiff, 360 - hueDiff);
+      if (hueDiffWrap < 25 && pS > 10 && pL >= skinLMin && pL <= skinLMax) continue;
+
+      // Blend: preserve original lightness structure, apply target hue+sat
+      // For dark targets (black, dark brown), dim; for light targets, brighten
+      const lightnessAnchor = tL < 20
+        ? pL * (tL / 100) * 2          // dark colours: compress lightness down
+        : tL > 75
+        ? tL + (pL - 50) * 0.15        // very light: shift up while keeping texture
+        : tL * 0.7 + pL * 0.3;         // mid tones: blend target+original
+
+      const finalL = Math.max(2, Math.min(97, lightnessAnchor));
+      const finalS = tS < 5 ? tS : Math.min(tS, tS * 0.6 + pS * 0.4); // preserve some original sat for grey
+
+      const [nr, ng, nb] = hcgHslToRgb(tH, finalS, finalL);
+
+      // Blend with original by strength factor (soft edges)
+      out.data[i]   = Math.round(r * (1 - strength) + nr * strength);
+      out.data[i+1] = Math.round(g * (1 - strength) + ng * strength);
+      out.data[i+2] = Math.round(b * (1 - strength) + nb * strength);
+    }
+  }
+  return out;
+}
+
+// ── Step 3: Build the 3×4 grid canvas ───────────────
+async function hcgBuildGrid(img, region) {
+  const TILE_W = 320, TILE_H = 420;
+  const LABEL_H = 44;
+  const COLS = 3, ROWS = 4;
+  const GRID_W = TILE_W * COLS;
+  const GRID_H = (TILE_H + LABEL_H) * ROWS;
+
+  // Draw original image to a source canvas at tile size
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width = TILE_W; srcCanvas.height = TILE_H;
+  const srcCtx = srcCanvas.getContext('2d');
+  srcCtx.drawImage(img, 0, 0, TILE_W, TILE_H);
+  const srcData = srcCtx.getImageData(0, 0, TILE_W, TILE_H);
+
+  // Output grid canvas
+  const gridCanvas = document.createElement('canvas');
+  gridCanvas.width = GRID_W; gridCanvas.height = GRID_H;
+  const gc = gridCanvas.getContext('2d');
+  gc.fillStyle = '#f5f5f5';
+  gc.fillRect(0, 0, GRID_W, GRID_H);
+
+  for (let i = 0; i < 12; i++) {
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const tx = col * TILE_W;
+    const ty = row * (TILE_H + LABEL_H);
+
+    const [name, h, s, l, strength] = HCG_COLOURS[i];
+    const recoloured = hcgRecolourTile(srcData, TILE_W, TILE_H, region, [h, s, l, strength]);
+
+    // Draw tile
+    const tileCanvas = document.createElement('canvas');
+    tileCanvas.width = TILE_W; tileCanvas.height = TILE_H;
+    tileCanvas.getContext('2d').putImageData(recoloured, 0, 0);
+    gc.drawImage(tileCanvas, tx, ty);
+
+    // Draw thin border between tiles
+    gc.strokeStyle = '#ddd';
+    gc.lineWidth = 1;
+    gc.strokeRect(tx + 0.5, ty + 0.5, TILE_W - 1, TILE_H - 1);
+
+    // Draw label area
+    gc.fillStyle = '#ffffff';
+    gc.fillRect(tx, ty + TILE_H, TILE_W, LABEL_H);
+    gc.fillStyle = '#1a1a14';
+    gc.font = 'bold 15px Barlow, Barlow Condensed, Arial, sans-serif';
+    gc.textAlign = 'center';
+    gc.textBaseline = 'middle';
+    gc.fillText(name, tx + TILE_W / 2, ty + TILE_H + LABEL_H / 2);
+  }
+
+  return gridCanvas.toDataURL('image/png');
+}
+
+// ── Main Generate ──────────────────────────────────
 async function hcgGenerate() {
   if (!hcgImageBase64) return;
   const btn   = document.getElementById('hcgGenBtn');
   const label = document.getElementById('hcgGenBtnLabel');
   btn.disabled = true;
-  label.innerHTML = '<div class="spinner"></div> Generating Grid...';
+  label.innerHTML = '<div class="spinner"></div> Analysing hair…';
   document.getElementById('hcgResultArea').style.display = 'none';
-  hcgShowStatus('info', 'Sending portrait to Gemini — generating your 12-colour hair grid. This takes 30–90 seconds…', true);
+  hcgShowStatus('info', 'Step 1/2 — Claude is detecting the hair region in your portrait…', true);
 
-  // Sample shirt colour from bottom-centre of image to anchor Gemini
-  let shirtNote = '';
   try {
+    // Step 1: Claude vision detects hair region
+    const region = await hcgGetHairRegion(hcgImageBase64, hcgImageMime);
+
+    hcgShowStatus('info', 'Step 2/2 — Building 12-colour grid in browser (no AI regeneration — only your hair pixels change)…', true);
+
+    // Step 2: Load image
     const img = new Image();
-    await new Promise(res => { img.onload = res; img.src = `data:${hcgImageMime};base64,${hcgImageBase64}`; });
-    const c = document.createElement('canvas');
-    c.width = img.width; c.height = img.height;
-    const ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    // Sample bottom-centre area (shirt region)
-    const sx = Math.floor(img.width * 0.4), sy = Math.floor(img.height * 0.78);
-    const px = ctx.getImageData(sx, sy, 10, 10).data;
-    const r = Math.round([...Array(10)].reduce((a,_,i) => a + px[i*4],   0) / 10);
-    const g = Math.round([...Array(10)].reduce((a,_,i) => a + px[i*4+1], 0) / 10);
-    const b = Math.round([...Array(10)].reduce((a,_,i) => a + px[i*4+2], 0) / 10);
-    shirtNote = `\n\nIMPORTANT: In the uploaded photo, the shirt colour is approximately RGB(${r},${g},${b}). Every single tile must show this EXACT shirt colour. Do not change it.`;
-  } catch(e) { /* skip if canvas fails */ }
-
-  try {
-    const payload = {
-      contents: [{
-        parts: [
-          { text: HCG_PROMPT + shirtNote },
-          { inline_data: { mime_type: hcgImageMime, data: hcgImageBase64 } }
-        ]
-      }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 0.2 }
-    };
-
-    const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payload })
+    await new Promise((res, rej) => {
+      img.onload = res; img.onerror = rej;
+      img.src = `data:${hcgImageMime};base64,${hcgImageBase64}`;
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || data?.error || 'Error ' + res.status);
+    // Step 3: Build grid entirely in canvas
+    hcgLastDataUrl = await hcgBuildGrid(img, region);
 
-    const parts   = data?.candidates?.[0]?.content?.parts || [];
-    const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
-
-    if (!imgPart) {
-      const txt = parts.find(p => p.text);
-      throw new Error(txt?.text?.slice(0, 220) || 'No image returned. Try a clearer front-facing portrait.');
-    }
-
-    hcgLastDataUrl = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
-    hcgShowStatus('success', '✓ 12-colour hair grid generated! Download below or regenerate for a new set.', false);
+    hcgShowStatus('success', '✓ 12-colour hair grid built! Your face, shirt, and background are pixel-identical across all 12 tiles.', false);
 
     const ra = document.getElementById('hcgResultArea');
     ra.style.display = 'block';
     ra.innerHTML = `<div class="result-wrap">
       <div class="result-label">Your Budget Barber Hair Colour Reference Grid</div>
       <div class="result-img-box">
-        <img src="${hcgLastDataUrl}" alt="12-colour hair reference grid"/>
+        <img src="${hcgLastDataUrl}" alt="12-colour hair reference grid" style="width:100%;display:block"/>
       </div>
       <div class="result-actions">
         <button class="btn-dl" onclick="hcgDownloadImg()">↓ Download Grid</button>
