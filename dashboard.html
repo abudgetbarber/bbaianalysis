@@ -1143,242 +1143,236 @@ function downloadImg() {
 // BEARD GRID MODULE
 // ═══════════════════════════════════════════════════
 
-const BD_PROMPT = `STRICT GENERATION MODE: BARBER REFERENCE SHEET
+const BD_PROMPT = `ULTRA STRICT GENERATION MODE: EXACTLY 12 BEARD STYLES ONLY
 
-IMPORTANT:
-DO NOT CREATE A COLLAGE AUTOMATICALLY.
-DO NOT DECIDE GRID SIZE YOURSELF.
-DO NOT ADD EXTRA TILES.
-DO NOT PRINT TILE NUMBERS ANYWHERE IN THE IMAGE.
-DO NOT DISPLAY TEXT LIKE "TILE 1", "TILE 2", etc.
+THIS IS NOT AN OPEN COLLAGE TASK.
+THIS IS A FIXED 12-TILE BARBER REFERENCE GRID.
+
+IF THE OUTPUT CONTAINS MORE THAN 12 IMAGES,
+THE OUTPUT IS INVALID.
+IF THE OUTPUT CONTAINS LESS THAN 12 IMAGES,
+THE OUTPUT IS INVALID.
 
 ==================================================
-LAYOUT (NON-NEGOTIABLE)
+ABSOLUTE HARD LIMIT
 ==================================================
 
-Create EXACTLY 12 PORTRAITS ONLY.
+GENERATE EXACTLY 12 PORTRAITS.
+NOT 13.
+NOT 14.
+NOT 15.
+NOT 16.
 
-FINAL LAYOUT MUST BE:
-- 3 columns
-- 4 rows
-- Total = EXACTLY 12 tiles
+STOP GENERATION IMMEDIATELY AFTER THE 12TH TILE.
 
-DO NOT create:
-- 16 images
-- 15 images
-- 9 images
+NEVER create:
 - 4x4 grids
+- 16 images
 - extra rows
 - extra columns
-
-Each tile must contain:
-- ONE portrait only
-- ONE beard style only
-- ONE label underneath only
-
-NO additional panels.
-
-IMPORTANT:
-The words "Tile 1", "Tile 2", etc. are ONLY INTERNAL GENERATION INSTRUCTIONS.
-THEY MUST NEVER APPEAR INSIDE THE FINAL IMAGE.
+- duplicate tiles
+- filler portraits
 
 ==================================================
-IMPORTANT ANTI-FAILURE RULE
+MANDATORY GRID STRUCTURE
 ==================================================
 
-Generate the image internally in this exact order.
-DO NOT print tile numbers visually.
+FINAL OUTPUT MUST CONTAIN:
 
-Internal order only:
+ROW 1:
+[1] [2] [3]
+
+ROW 2:
+[4] [5] [6]
+
+ROW 3:
+[7] [8] [9]
+
+ROW 4:
+[10] [11] [12]
+
+TOTAL:
+- 3 columns ONLY
+- 4 rows ONLY
+- EXACTLY 12 images ONLY
+
+NO additional panels allowed.
+
+==================================================
+ZERO TEXT RULE
+==================================================
+
+DO NOT display:
+- beard names
+- labels
+- captions
+- tile names
+- tile numbers
+- titles
+- watermarks
+- instructions
+- debug text
+
+THE IMAGE MUST CONTAIN ZERO TEXT.
+
+==================================================
+INTERNAL TILE ASSIGNMENT (INTERNAL ONLY)
+==================================================
+
+These names are INTERNAL REFERENCES ONLY.
+DO NOT display them visually.
 
 Tile 1 = Full Beard
 Tile 2 = Short Beard
 Tile 3 = Goatee
-
 Tile 4 = Stubble
 Tile 5 = Circle Beard
 Tile 6 = Van Dyke
-
 Tile 7 = Mutton Chops
 Tile 8 = Chin Strap
 Tile 9 = Balbo
-
 Tile 10 = Anchor Beard
 Tile 11 = French Fork
 Tile 12 = Clean Shave
 
-STOP after Tile 12.
-DO NOT generate more tiles.
+STOP AFTER TILE 12.
+DO NOT GENERATE TILE 13.
+DO NOT GENERATE TILE 14.
+DO NOT GENERATE TILE 15.
+DO NOT GENERATE TILE 16.
 
 ==================================================
-STRICT LABEL LOCK
+STRICT NO-REPEAT RULE
 ==================================================
 
-The ONLY visible labels allowed inside image are:
-
-Full Beard
-Short Beard
-Goatee
-Stubble
-Circle Beard
-Van Dyke
-Mutton Chops
-Chin Strap
-Balbo
-Anchor Beard
-French Fork
-Clean Shave
+ALL 12 beard styles MUST be visually DIFFERENT.
 
 STRICTLY FORBIDDEN:
-- Tile 1
-- Tile 2
-- Tile 3
-- Any numbering
-- Any debug text
-- Any internal instructions
+- repeating Circle Beard
+- repeating Balbo
+- repeating Chin Strap
+- repeating Full Beard
+- visually similar duplicates
 
-NEVER:
-- invent labels
-- misspell labels
-- duplicate labels
-- swap labels
+EVERY tile must represent a UNIQUE beard style.
+
+If ANY beard style repeats,
+REGENERATE ENTIRE IMAGE.
 
 ==================================================
-STRICT STYLE MATCHING
-==================================================
-
-The beard MUST visually match the label.
-
-If beard and label mismatch,
-REGENERATE that tile BEFORE final output.
-
-==================================================
-STYLE DEFINITIONS
+STRICT STYLE DEFINITIONS
 ==================================================
 
 FULL BEARD:
-- Thick beard covering cheeks, chin, jaw.
+Dense full beard covering cheeks, jaw, chin.
 
 SHORT BEARD:
-- Trimmed short boxed beard.
+Trimmed short boxed beard.
 
 GOATEE:
-- Chin beard only.
-- No cheek beard.
+Chin beard only. No cheek beard.
 
 STUBBLE:
-- Light short facial hair shadow.
+Very short beard shadow.
 
 CIRCLE BEARD:
-- Rounded beard around mouth.
-- Mustache connected to chin beard.
-- No cheek beard.
+Rounded connected mustache + chin beard.
+No cheek beard.
 
 VAN DYKE:
-- Pointed chin beard.
-- Separate floating mustache.
-- Mustache NOT connected.
+Pointed chin beard with disconnected mustache.
 
 MUTTON CHOPS:
-- Thick sideburn-heavy beard.
-- No chin beard.
+Heavy sideburn beard. No chin beard.
 
 CHIN STRAP:
-- Thin beard outlining jawline.
+Thin beard tracing jawline only.
 
 BALBO:
-- Floating mustache.
-- Separate chin beard.
-- No sideburns.
+Disconnected mustache + separate chin beard.
+No sideburns.
 
 ANCHOR BEARD:
-- Anchor-shaped beard.
-- Thin jaw extension connected to chin beard.
+Anchor-shaped beard with structured jaw extension.
 
 FRENCH FORK:
-- Full beard split into TWO visible chin sections.
+Full beard split into TWO distinct chin sections.
 
 CLEAN SHAVE:
-- Completely hairless face.
+No facial hair at all.
 
 ==================================================
-STRICT FACE PRESERVATION
+STRICT FACE LOCK
 ==================================================
 
 Use uploaded image as exact identity reference.
 
-The SAME MAN must appear in all 12 tiles.
+The SAME MAN must appear in ALL 12 images.
 
 LOCK:
 - hairstyle
-- forehead
 - eyes
 - nose
+- forehead
 - ears
-- expression
 - skin texture
 - lighting
+- expression
 - shirt
 - background
+- pose
 - camera angle
 
-ONLY change facial hair.
+ONLY facial hair may change.
 
 ==================================================
-ANTI-DUPLICATE RULE
+ANTI-AI COLLAGE RULE
 ==================================================
 
-Every beard style must look DIFFERENT.
+DO NOT auto-expand canvas.
+DO NOT auto-add tiles.
+DO NOT create montage variations.
+DO NOT create alternative versions.
 
-DO NOT repeat:
-- Circle Beard twice
-- Balbo twice
-- Chin Strap twice
-- Similar beard styles with different labels
-
-Each tile must be visually unique.
+ONLY create the REQUIRED 12 images.
 
 ==================================================
 FINAL VALIDATION (MANDATORY)
 ==================================================
 
-Before output:
-Count tiles manually.
+Before output, internally verify:
 
-Checklist:
-[ ] exactly 12 portraits
-[ ] exactly 12 labels
-[ ] 3 columns
-[ ] 4 rows
-[ ] no extra tiles
-[ ] no missing tiles
-[ ] all beard styles unique
-[ ] labels correctly matched
-[ ] no spelling mistakes
-[ ] NO visible tile numbers
-[ ] NO internal instruction text
+[ ] EXACTLY 12 images
+[ ] EXACTLY 3 columns
+[ ] EXACTLY 4 rows
+[ ] NO 4x4 layout
+[ ] NO extra portraits
+[ ] NO duplicate beard styles
+[ ] ALL beard styles unique
+[ ] NO visible text
+[ ] SAME FACE in all tiles
 
-If ANY checklist item fails:
-REGENERATE ENTIRE IMAGE.
+IF ANY CHECK FAILS:
+DELETE OUTPUT AND REGENERATE.
 
 ==================================================
 OUTPUT RULE
 ==================================================
 
 OUTPUT IMAGE ONLY.
-NO explanation.
-NO extra graphics.
-NO decorative elements.
+
+NO text.
+NO captions.
+NO labels.
+NO numbering.
+NO explanations.
 NO watermark.
-NO title text.
-NO tile numbering visible.
 
 ==================================================
 GOAL
 ==================================================
 
-Create a perfect professional barber beard reference chart with EXACTLY 12 correctly labeled beard styles on the SAME MALE FACE with ONLY facial hair changing.`;
-
+Create an ultra-clean professional barber reference grid with EXACTLY 12 UNIQUE beard styles on the SAME MAN with ZERO repeated beard styles and ZERO extra images.`;
 // ── State ──────────────────────────────────────────
 let bdImageBase64  = null;
 let bdImageMime    = 'image/jpeg';
