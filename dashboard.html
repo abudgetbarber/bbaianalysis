@@ -1905,35 +1905,86 @@ function skDelay(ms){return new Promise(r=>setTimeout(r,ms));}
 // HAIR COLOUR GRID MODULE
 // ═══════════════════════════════════════════════════
 
-const HCG_PROMPT = `Edit the uploaded portrait photo to create a hair colour reference grid.
+const HCG_PROMPT = `You are a hair recolouring tool. You will receive a portrait photo.
 
-OUTPUT: A single image. 3 columns × 4 rows = 12 portrait tiles. Portrait orientation (taller than wide).
+WHAT YOU MUST DO:
+Take the uploaded photo. Apply 12 different hair dye colours to the scalp hair only.
+Output all 12 versions in a 3-column × 4-row grid (12 tiles total).
 
-EDIT RULE: In each tile, recolour ONLY the scalp hair to the assigned colour. Every other part of the photo stays pixel-identical to the original — same face, same skin tone, same beard and moustache, same shirt, same background, same lighting, same framing.
+==================================================
+HAIR-ONLY EDIT — THE MOST IMPORTANT RULE
+==================================================
 
-THE 12 TILES (left to right, top to bottom):
-Tile 1 → Natural Black    (deep natural black)
-Tile 2 → Soft Black       (slightly soft off-black)
-Tile 3 → Dark Brown       (rich dark brown)
-Tile 4 → Chocolate Brown  (warm medium-dark chocolate)
-Tile 5 → Ash Brown        (cool smoky grey-brown)
-Tile 6 → Golden Brown     (warm brown with golden shine)
-Tile 7 → Burgundy         (deep wine-red)
-Tile 8 → Copper Brown     (warm copper-orange)
-Tile 9 → Dark Red         (deep muted red)
-Tile 10 → Silver Grey     (metallic silver-grey)
-Tile 11 → Platinum Blonde (very light icy blonde)
-Tile 12 → Blue Black      (black with blue sheen)
+You are ONLY allowed to change the colour of the hair on TOP of the head (scalp hair).
 
-LABEL: Print the colour name centred below each portrait tile in small clean text. No numbers. No other text.
+NOTHING ELSE MAY CHANGE. This means:
+- The FACE must look identical to the original in every tile. Same dark skin tone. Same features.
+- The BEARD must stay the same colour as the original in every single tile. Do NOT dye the beard.
+- The SHIRT must stay exactly as in the original. Do NOT change the shirt colour.
+- The BACKGROUND must stay exactly as in the original.
+- The SKIN must NOT become lighter or darker in any tile — especially for Platinum Blonde and Silver Grey.
 
-GRID CHECK before outputting:
-- Count rows: must be exactly 4
-- Count columns: must be exactly 3
-- Count tiles: must be exactly 12
-- If any row has 4 tiles → wrong, redo as 3 columns
-- The same man's face appears in all 12 tiles`;
+PLATINUM BLONDE AND SILVER GREY WARNING:
+These colours apply ONLY to the scalp hair.
+The face skin stays its natural dark tone — it does NOT become pale or white.
+The beard stays its natural colour — it does NOT turn blonde or grey.
+The shirt stays its original colour — it does NOT turn white or cream.
 
+==================================================
+THE 12 TILES — EXACT ORDER
+==================================================
+
+Place these in order, left to right, top to bottom:
+
+Tile 1  (Row 1, Col 1): Natural Black    — very deep natural black
+Tile 2  (Row 1, Col 2): Soft Black       — slightly soft, off-black
+Tile 3  (Row 1, Col 3): Dark Brown       — rich dark brown (NOT black)
+
+Tile 4  (Row 2, Col 1): Chocolate Brown  — warm medium-dark chocolate brown
+Tile 5  (Row 2, Col 2): Ash Brown        — cool grey-toned brown
+Tile 6  (Row 2, Col 3): Golden Brown     — warm brown with golden shine
+
+Tile 7  (Row 3, Col 1): Burgundy         — deep wine-red on hair ONLY
+Tile 8  (Row 3, Col 2): Copper Brown     — warm copper-orange brown
+Tile 9  (Row 3, Col 3): Dark Red         — deep muted red on hair ONLY
+
+Tile 10 (Row 4, Col 1): Silver Grey      — metallic silver on hair ONLY, face stays dark
+Tile 11 (Row 4, Col 2): Platinum Blonde  — icy blonde on hair ONLY, face stays dark, beard stays dark
+Tile 12 (Row 4, Col 3): Blue Black       — black with subtle blue sheen
+
+==================================================
+GRID RULES
+==================================================
+
+- Exactly 3 columns, exactly 4 rows, exactly 12 tiles
+- DO NOT output a 3×3 grid (9 tiles) — you must have 4 rows
+- DO NOT repeat any colour — all 12 tiles must be visually different
+- Natural Black and Soft Black must look different — Soft Black is slightly lighter/warmer
+- Dark Brown must look clearly brown, not black
+
+==================================================
+LABELS
+==================================================
+
+Print the exact colour name in small white text at the bottom of each tile:
+Natural Black | Soft Black | Dark Brown | Chocolate Brown | Ash Brown | Golden Brown |
+Burgundy | Copper Brown | Dark Red | Silver Grey | Platinum Blonde | Blue Black
+
+No tile numbers. No other text.
+
+==================================================
+FINAL CHECK BEFORE OUTPUTTING
+==================================================
+
+Look at every tile and confirm:
+✅ Hair colour matches the assigned colour
+✅ Face skin tone is the same dark tone as the original photo
+✅ Beard colour is unchanged from original
+✅ Shirt colour is unchanged from original
+✅ 12 tiles total (4 rows × 3 columns)
+✅ No colour is repeated
+
+If Platinum Blonde or Silver Grey tile shows a pale/white face → REDO that tile with the original dark skin tone.`;
 // ── State ──────────────────────────────────────────
 let hcgImageBase64 = null;
 let hcgImageMime   = 'image/jpeg';
