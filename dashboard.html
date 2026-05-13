@@ -1145,6 +1145,9 @@ function downloadImg() {
 
 const BD_PROMPT = `ULTRA STRICT GENERATION MODE: EXACTLY 12 BEARD STYLES ONLY.
 
+THIS IS A PHOTO EDIT TASK — NOT A FREE GENERATION TASK.
+You will receive ONE portrait photo. Copy it exactly 12 times and edit ONLY the facial hair in each copy.
+
 THIS IS NOT AN OPEN COLLAGE TASK.
 THIS IS A FIXED 12-TILE BARBER REFERENCE GRID.
 
@@ -1505,15 +1508,35 @@ async function bdGenerate() {
   document.getElementById('bdResultArea').style.display = 'none';
   bdShowStatus('info', 'Sending portrait to Gemini — generating your 12-beard-style grid. This takes 30–90 seconds…', true);
 
+  // ── Resize image to max 800px to help Gemini fit all 12 tiles ──
+  let finalBase64 = bdImageBase64;
+  let finalMime   = bdImageMime;
+  try {
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.src = `data:${bdImageMime};base64,${bdImageBase64}`; });
+    const MAX = 800;
+    if (img.width > MAX || img.height > MAX) {
+      const scale  = Math.min(MAX / img.width, MAX / img.height);
+      const c      = document.createElement('canvas');
+      c.width  = Math.round(img.width  * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const dataUrl   = c.toDataURL('image/jpeg', 0.88);
+      finalBase64     = dataUrl.split(',')[1];
+      finalMime       = 'image/jpeg';
+    }
+  } catch(e) { /* use original if resize fails */ }
+
   try {
     const payload = {
       contents: [{
         parts: [
           { text: BD_PROMPT },
-          { inline_data: { mime_type: bdImageMime, data: bdImageBase64 } }
+          { inline_data: { mime_type: finalMime, data: finalBase64 } }
         ]
       }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 1 }
+      // ✅ LOW temperature = strict layout compliance
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'], temperature: 0.2 }
     };
 
     const res = await fetch(WORKER_URL, {
@@ -1557,7 +1580,6 @@ async function bdGenerate() {
     bdCheckReady();
   }
 }
-
 function bdDownloadImg() {
   if (!bdLastDataUrl) return;
   const a = document.createElement('a');
